@@ -150,13 +150,25 @@ const BUDGET_RANGE: Record<BudgetTier, string> = {
 /*  Step definitions                                                   */
 /* ------------------------------------------------------------------ */
 
+/**
+ * The questionnaire sequence. Steps are addressed by `id` rather than by index
+ * everywhere below — a numeric literal like `step === 3` silently points at the
+ * wrong screen the moment a step is inserted, reordered or removed.
+ */
 const STEPS = [
-  { id: 0, title: 'Discipline', blurb: 'What are you riding, and which fit scale should we use?' },
-  { id: 1, title: 'Body metrics', blurb: 'Length and flex both scale off height and mass.' },
-  { id: 2, title: 'Ability & style', blurb: 'This drives waist width, length and boot stiffness.' },
-  { id: 3, title: 'Conditions', blurb: 'Temperature sets lens VLT and jacket insulation.' },
-  { id: 4, title: 'Budget', blurb: 'We filter the catalogue to your spend bracket.' },
+  { id: 'discipline', title: 'Discipline', blurb: 'What are you riding, and which fit scale should we use?' },
+  { id: 'metrics', title: 'Body metrics', blurb: 'Length and flex both scale off height and mass.' },
+  { id: 'ability', title: 'Ability & style', blurb: 'This drives waist width, length and boot stiffness.' },
+  { id: 'conditions', title: 'Conditions', blurb: 'Temperature sets lens VLT and jacket insulation.' },
+  { id: 'budget', title: 'Budget', blurb: 'We filter the catalogue to your spend bracket.' },
 ] as const;
+
+type StepId = (typeof STEPS)[number]['id'];
+
+const indexOfStep = (id: StepId): number => STEPS.findIndex((entry) => entry.id === id);
+
+/** Results may only be generated from this step — it is the last one by definition. */
+const LAST_STEP_INDEX = STEPS.length - 1;
 
 const DEFAULTS: UserStats = {
   activity: 'ski',
@@ -365,17 +377,20 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
     return undefined;
   }, [stats.weight]);
 
+  const currentStep: StepId = STEPS[step].id;
+  const isLastStep = step === LAST_STEP_INDEX;
+
   const stepValid = useMemo(() => {
-    if (step === 1) return !heightError && !weightError;
+    if (currentStep === 'metrics') return !heightError && !weightError;
     return true;
-  }, [step, heightError, weightError]);
+  }, [currentStep, heightError, weightError]);
 
   const goNext = () => {
     setTouched(true);
     if (!stepValid) return;
     setDirection('forward');
     setTouched(false);
-    setStep((current) => Math.min(current + 1, STEPS.length - 1));
+    setStep((current) => Math.min(current + 1, LAST_STEP_INDEX));
   };
 
   const goBack = () => {
@@ -386,10 +401,22 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     setTouched(true);
+
     if (heightError || weightError) {
-      setStep(1);
+      setStep(indexOfStep('metrics'));
       return;
     }
+
+    // A <form> submits implicitly on Enter from any focused field, so without
+    // this guard a stray Enter key — or any control that defaults to
+    // type="submit" — would generate results from a mid-questionnaire step and
+    // skip everything after it, budget included. Treat those as "next" instead:
+    // results are only ever generated from the final step.
+    if (!isLastStep) {
+      goNext();
+      return;
+    }
+
     onSubmit(stats);
   };
 
@@ -457,7 +484,7 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
       {/* Step body */}
       <div className="min-h-[22rem] px-5 py-6 sm:px-7">
         <div key={step} className={animation}>
-          {step === 0 && (
+          {currentStep === 'discipline' && (
             <div className="space-y-6">
               <section>
                 <SectionLabel icon={<MountainIcon className="h-4 w-4" />} text="Activity" />
@@ -481,7 +508,7 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
             </div>
           )}
 
-          {step === 1 && (
+          {currentStep === 'metrics' && (
             <div className="grid gap-4 sm:grid-cols-2">
               <MetricSlider
                 label="Height"
@@ -514,7 +541,7 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
             </div>
           )}
 
-          {step === 2 && (
+          {currentStep === 'ability' && (
             <div className="space-y-6">
               <section>
                 <SectionLabel icon={<SparkIcon className="h-4 w-4" />} text="Ability level" />
@@ -537,7 +564,7 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
             </div>
           )}
 
-          {step === 3 && (
+          {currentStep === 'conditions' && (
             <div className="space-y-6">
               <section>
                 <SectionLabel
@@ -563,7 +590,7 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
             </div>
           )}
 
-          {step === 4 && (
+          {currentStep === 'budget' && (
             <div className="space-y-6">
               <section>
                 <SectionLabel icon={<TagIcon className="h-4 w-4" />} text="Budget tier" />
@@ -638,7 +665,7 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
           Back
         </button>
 
-        {step < STEPS.length - 1 ? (
+        {!isLastStep ? (
           <button type="button" onClick={goNext} className="btn-primary !py-2.5">
             Continue
             <ArrowRightIcon className="h-4 w-4" />
