@@ -10,6 +10,7 @@ import type {
   Temperature,
   UserStats,
 } from '@/lib/types';
+import { LAST_STEP_INDEX, STEPS, indexOfStep, transition, type StepId } from '@/lib/stepFlow';
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
@@ -149,26 +150,6 @@ const BUDGET_RANGE: Record<BudgetTier, string> = {
 /* ------------------------------------------------------------------ */
 /*  Step definitions                                                   */
 /* ------------------------------------------------------------------ */
-
-/**
- * The questionnaire sequence. Steps are addressed by `id` rather than by index
- * everywhere below — a numeric literal like `step === 3` silently points at the
- * wrong screen the moment a step is inserted, reordered or removed.
- */
-const STEPS = [
-  { id: 'discipline', title: 'Discipline', blurb: 'What are you riding, and which fit scale should we use?' },
-  { id: 'metrics', title: 'Body metrics', blurb: 'Length and flex both scale off height and mass.' },
-  { id: 'ability', title: 'Ability & style', blurb: 'This drives waist width, length and boot stiffness.' },
-  { id: 'conditions', title: 'Conditions', blurb: 'Temperature sets lens VLT and jacket insulation.' },
-  { id: 'budget', title: 'Budget', blurb: 'We filter the catalogue to your spend bracket.' },
-] as const;
-
-type StepId = (typeof STEPS)[number]['id'];
-
-const indexOfStep = (id: StepId): number => STEPS.findIndex((entry) => entry.id === id);
-
-/** Results may only be generated from this step — it is the last one by definition. */
-const LAST_STEP_INDEX = STEPS.length - 1;
 
 const DEFAULTS: UserStats = {
   activity: 'ski',
@@ -385,17 +366,30 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
     return true;
   }, [currentStep, heightError, weightError]);
 
+  /** Single funnel for every navigation intent — see lib/stepFlow.ts. */
+  const move = (intent: 'next' | 'back' | 'jump' | 'submit', target?: number) => {
+    const next = transition({ from: step, intent, stepIsValid: stepValid, target });
+
+    if (next.blocked) {
+      setTouched(true);
+      return next;
+    }
+
+    setDirection(next.direction);
+    if (next.to !== step) {
+      setTouched(false);
+      setStep(next.to);
+    }
+    return next;
+  };
+
   const goNext = () => {
     setTouched(true);
-    if (!stepValid) return;
-    setDirection('forward');
-    setTouched(false);
-    setStep((current) => Math.min(current + 1, LAST_STEP_INDEX));
+    move('next');
   };
 
   const goBack = () => {
-    setDirection('back');
-    setStep((current) => Math.max(current - 1, 0));
+    move('back');
   };
 
   const handleSubmit = (event: React.FormEvent) => {
@@ -403,21 +397,17 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
     setTouched(true);
 
     if (heightError || weightError) {
+      setDirection('back');
       setStep(indexOfStep('metrics'));
       return;
     }
 
-    // A <form> submits implicitly on Enter from any focused field, so without
-    // this guard a stray Enter key — or any control that defaults to
-    // type="submit" — would generate results from a mid-questionnaire step and
-    // skip everything after it, budget included. Treat those as "next" instead:
-    // results are only ever generated from the final step.
-    if (!isLastStep) {
-      goNext();
-      return;
-    }
-
-    onSubmit(stats);
+    // A <form> submits implicitly on Enter from any focused field, so a submit
+    // can arrive from any step. `transition` returns complete:false for every
+    // step but the last, which is what stops an early submit from skipping the
+    // budget step and generating results.
+    const next = move('submit');
+    if (next.complete) onSubmit(stats);
   };
 
   const progress = ((step + 1) / STEPS.length) * 100;
@@ -459,12 +449,7 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
               <button
                 key={definition.id}
                 type="button"
-                onClick={() => {
-                  if (index < step || stepValid) {
-                    setDirection(index > step ? 'forward' : 'back');
-                    setStep(index);
-                  }
-                }}
+                onClick={() => move('jump', index)}
                 className={`focus-ring rounded-full px-2.5 py-1 text-[11px] font-medium transition-all duration-300 ${
                   state === 'current'
                     ? 'bg-frost-400/20 text-frost-200 ring-1 ring-frost-400/50'
@@ -666,12 +651,12 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
         </button>
 
         {!isLastStep ? (
-          <button type="button" onClick={goNext} className="btn-primary !py-2.5">
+          <button key="continue" type="button" onClick={goNext} className="btn-primary !py-2.5">
             Continue
             <ArrowRightIcon className="h-4 w-4" />
           </button>
         ) : (
-          <button type="submit" disabled={isLoading} className="btn-primary !py-2.5">
+          <button key="submit" type="submit" disabled={isLoading} className="btn-primary !py-2.5">
             {isLoading ? (
               <>
                 <span className="h-4 w-4 animate-spin-slow rounded-full border-2 border-glacier-1000/30 border-t-glacier-1000" />
