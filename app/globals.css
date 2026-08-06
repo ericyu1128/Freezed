@@ -1,0 +1,202 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-display: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-glacier-1000 text-slate-200 antialiased;
+    background-image:
+      radial-gradient(60rem 40rem at 12% -10%, rgba(14, 165, 233, 0.16), transparent 60%),
+      radial-gradient(50rem 38rem at 92% 4%, rgba(167, 139, 250, 0.13), transparent 62%),
+      radial-gradient(70rem 50rem at 50% 110%, rgba(103, 232, 249, 0.09), transparent 60%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+
+  ::selection {
+    @apply bg-frost-400/30 text-white;
+  }
+
+  /* Slim, icy scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.6);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(56, 189, 248, 0.55), rgba(167, 139, 250, 0.45));
+    border-radius: 9999px;
+    border: 2px solid rgba(5, 10, 20, 0.9);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(56, 189, 248, 0.8), rgba(167, 139, 250, 0.7));
+  }
+
+  /* Range slider — icy track and glowing thumb */
+  input[type='range'] {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+  }
+  input[type='range']::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 9999px;
+    background: rgba(148, 163, 184, 0.22);
+  }
+  input[type='range']::-moz-range-track {
+    height: 6px;
+    border-radius: 9999px;
+    background: rgba(148, 163, 184, 0.22);
+  }
+  input[type='range']::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 20px;
+    width: 20px;
+    margin-top: -7px;
+    border-radius: 9999px;
+    background: linear-gradient(140deg, #e0f2fe, #38bdf8);
+    border: 2px solid rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 16px rgba(56, 189, 248, 0.8);
+    transition: transform 0.15s ease;
+  }
+  input[type='range']::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+  }
+  input[type='range']::-moz-range-thumb {
+    height: 18px;
+    width: 18px;
+    border-radius: 9999px;
+    background: linear-gradient(140deg, #e0f2fe, #38bdf8);
+    border: 2px solid rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 16px rgba(56, 189, 248, 0.8);
+  }
+}
+
+/* Declared outside Tailwind's keyframe map so it is always emitted for the
+   inline `animation: snowfall …` used by <Snowfall />. */
+@keyframes snowfall {
+  0% {
+    transform: translate3d(0, -10vh, 0);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 0.65;
+  }
+  100% {
+    transform: translate3d(var(--drift, 30px), 112vh, 0);
+    opacity: 0;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply relative rounded-2xl border border-white/10 bg-white/[0.045] shadow-glass backdrop-blur-xl;
+  }
+
+  .glass-strong {
+    @apply relative rounded-2xl border border-white/15 bg-white/[0.075] shadow-glass backdrop-blur-2xl;
+  }
+
+  .glass-hover {
+    @apply transition-all duration-300 hover:border-frost-400/40 hover:bg-white/[0.08] hover:shadow-glow;
+  }
+
+  .pill {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-slate-300;
+  }
+
+  .gradient-text {
+    @apply bg-frost-gradient bg-clip-text text-transparent;
+  }
+
+  .focus-ring {
+    @apply outline-none ring-offset-0 focus-visible:ring-2 focus-visible:ring-frost-400/70;
+  }
+
+  .btn-primary {
+    @apply focus-ring inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-frost-400 to-neon-ice px-6 py-3 text-sm font-semibold text-glacier-1000 shadow-glow transition-all duration-300 hover:from-frost-300 hover:to-neon-mint hover:shadow-glow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none;
+  }
+
+  .btn-ghost {
+    @apply focus-ring inline-flex items-center justify-center gap-2 rounded-xl border border-white/12 bg-white/5 px-5 py-3 text-sm font-semibold text-slate-300 transition-all duration-300 hover:border-white/25 hover:bg-white/10 hover:text-white active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40;
+  }
+
+  /* NOTE: `group` is a marker class, not a utility, so Tailwind rejects it
+     inside @apply. Consumers add `group` alongside `option-card` in markup. */
+  .option-card {
+    @apply focus-ring relative flex h-full cursor-pointer flex-col items-start gap-1 overflow-hidden rounded-xl border border-white/10 bg-white/[0.03] p-4 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-frost-400/50 hover:bg-white/[0.07];
+  }
+
+  .option-card-active {
+    @apply border-frost-400/80 bg-frost-400/10 shadow-glow;
+  }
+
+  .divider {
+    @apply h-px w-full bg-gradient-to-r from-transparent via-white/12 to-transparent;
+  }
+
+  .skeleton {
+    background-image: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.04) 0%,
+      rgba(255, 255, 255, 0.11) 40%,
+      rgba(255, 255, 255, 0.04) 80%
+    );
+    background-size: 700px 100%;
+    @apply animate-shimmer rounded-lg;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .stagger > * {
+    animation: fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .stagger > *:nth-child(1) { animation-delay: 0.04s; }
+  .stagger > *:nth-child(2) { animation-delay: 0.10s; }
+  .stagger > *:nth-child(3) { animation-delay: 0.16s; }
+  .stagger > *:nth-child(4) { animation-delay: 0.22s; }
+  .stagger > *:nth-child(5) { animation-delay: 0.28s; }
+  .stagger > *:nth-child(6) { animation-delay: 0.34s; }
+  .stagger > *:nth-child(7) { animation-delay: 0.40s; }
+  .stagger > *:nth-child(8) { animation-delay: 0.46s; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
