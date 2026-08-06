@@ -2,7 +2,17 @@
  * Freezed — mock gear database
  * Made by Eric Yu
  *
- * Prices, links and availability are illustrative mock data for demo purposes.
+ * Prices are illustrative mock data for demo purposes.
+ *
+ * Retailer links are NOT mock: every one is generated at module load as a live
+ * search query against that retailer's own site (see `buildSearchUrl`), so a
+ * link always lands on real results rather than a dead product-detail URL.
+ *
+ * Product images are likewise generated, not stored: `buildGearImage` in
+ * `gearImages.ts` draws each item from the very spec values listed below, so
+ * a 78 mm carver and a 118 mm powder ski render with visibly different
+ * silhouettes and a 12% VLT lens renders darker than a 65% one.
+ *
  * Spec keys consumed by `matcherLogic.ts`:
  *   skis    -> specs.waistWidth (mm, number)
  *   boots   -> specs.flex (number; 1–10 scale for snowboard boots, 60–140 for ski boots)
@@ -11,30 +21,65 @@
  *   helmet  -> specs.warmth (1–5, number)
  */
 
-import type { GearItem } from './types';
+import type { GearItem, RetailerPrice } from './types';
+import { buildGearImage } from './gearImages';
 
-const IMG = {
-  skiPair: 'https://images.unsplash.com/photo-1605540436563-5bca919ae766?auto=format&fit=crop&w=900&q=80',
-  skiCarve: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?auto=format&fit=crop&w=900&q=80',
-  skiPowder: 'https://images.unsplash.com/photo-1522056615691-da7b8106c665?auto=format&fit=crop&w=900&q=80',
-  skiTour: 'https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=900&q=80',
-  board: 'https://images.unsplash.com/photo-1565992441121-4367c2967103?auto=format&fit=crop&w=900&q=80',
-  boardPark: 'https://images.unsplash.com/photo-1483721310020-03333e577078?auto=format&fit=crop&w=900&q=80',
-  boardPowder: 'https://images.unsplash.com/photo-1518604666860-9ed391f76460?auto=format&fit=crop&w=900&q=80',
-  boots: 'https://images.unsplash.com/photo-1610824352934-c10d87b700cc?auto=format&fit=crop&w=900&q=80',
-  bootsAlt: 'https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=900&q=80',
-  helmet: 'https://images.unsplash.com/photo-1551524164-687a55dd1126?auto=format&fit=crop&w=900&q=80',
-  helmetAlt: 'https://images.unsplash.com/photo-1516575334481-f85287c2c82d?auto=format&fit=crop&w=900&q=80',
-  goggles: 'https://images.unsplash.com/photo-1544829099-b9a0c07fad1a?auto=format&fit=crop&w=900&q=80',
-  gogglesAlt: 'https://images.unsplash.com/photo-1487252665478-49b61b47f302?auto=format&fit=crop&w=900&q=80',
-  jacket: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=900&q=80',
-  jacketAlt: 'https://images.unsplash.com/photo-1612459284970-e8f027596582?auto=format&fit=crop&w=900&q=80',
-  shell: 'https://images.unsplash.com/photo-1520891176399-a4c0f27e9c19?auto=format&fit=crop&w=900&q=80',
-} as const;
+/* ------------------------------------------------------------------ */
+/*  Retailers & live search links                                      */
+/* ------------------------------------------------------------------ */
 
 export const RETAILERS = ['Evo', 'REI', 'Sport Chek', 'Backcountry', 'The House'] as const;
 
-export const gearDatabase: GearItem[] = [
+export type Retailer = (typeof RETAILERS)[number];
+
+/** Each retailer's public search endpoint, keyed by display name. */
+const RETAILER_SEARCH: Record<Retailer, (encodedQuery: string) => string> = {
+  Evo: (q) => `https://www.evo.com/shop?text=${q}`,
+  REI: (q) => `https://www.rei.com/search?q=${q}`,
+  'Sport Chek': (q) => `https://www.sportchek.ca/search?q=${q}`,
+  Backcountry: (q) => `https://www.backcountry.com/search?q=${q}`,
+  'The House': (q) => `https://www.the-house.com/search?q=${q}`,
+};
+
+/**
+ * Turn a brand + product name into a retailer-friendly query.
+ *
+ * - Strips diacritics so `Völkl` matches `Volkl`
+ * - Drops apostrophes so `Arc'teryx` matches `Arcteryx`
+ * - Removes em/en-dash suffixes — `I/O MAG — ChromaPop Storm Rose` searches as
+ *   `I/O MAG`, since colourway names rarely match a retailer's index
+ * - Removes square brackets so Burton's `[ak]` collection reads as `ak`
+ * - Leaves hyphens intact: `GORE-TEX` and `Step-On` are real product tokens
+ */
+export const toSearchTerm = (value: string): string =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Völkl -> Volkl
+    .replace(/[\u2018\u2019']/g, '') // Arc'teryx -> Arcteryx
+    .replace(/\s*[\u2013\u2014]\s.*$/, '') // drop “— ChromaPop Storm Rose” suffixes
+    .replace(/[[\]]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+/** Build a live search URL for one retailer and one product. */
+export const buildSearchUrl = (retailer: Retailer, query: string): string =>
+  RETAILER_SEARCH[retailer](encodeURIComponent(toSearchTerm(query)));
+
+/** A price row before its link has been generated. */
+type PriceQuote = { retailer: Retailer; price: number };
+
+/** Database rows are authored without links; they are derived on export. */
+type GearListing = Omit<GearItem, 'prices' | 'image'> & {
+  prices: PriceQuote[];
+  /**
+   * Optional override for the retailer search string. Use when the brand field
+   * and the shelf name disagree — e.g. Anon is a Burton company but retailers
+   * index it under `Anon`.
+   */
+  searchTerm?: string;
+};
+
+const listings: GearListing[] = [
   /* ================================================================ */
   /*  SKIS                                                            */
   /* ================================================================ */
@@ -43,7 +88,6 @@ export const gearDatabase: GearItem[] = [
     category: 'skis',
     brand: 'K2',
     name: 'Disruption 78C',
-    image: IMG.skiCarve,
     priceTier: 'budget',
     activity: 'ski',
     styles: ['piste'],
@@ -63,9 +107,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'Built for riders learning to carve on hardpack who want a stable, confidence-inspiring ski at a value price.',
     prices: [
-      { retailer: 'Evo', price: 399.95, link: 'https://www.evo.com/skis/k2-disruption-78c' },
-      { retailer: 'REI', price: 429.0, link: 'https://www.rei.com/product/k2-disruption-78c' },
-      { retailer: 'Sport Chek', price: 449.99, link: 'https://www.sportchek.ca/k2-disruption-78c' },
+      { retailer: 'Evo', price: 399.95 },
+      { retailer: 'REI', price: 429.0 },
+      { retailer: 'Sport Chek', price: 449.99 },
     ],
   },
   {
@@ -73,7 +117,6 @@ export const gearDatabase: GearItem[] = [
     category: 'skis',
     brand: 'Salomon',
     name: 'Stance 84',
-    image: IMG.skiCarve,
     priceTier: 'budget',
     activity: 'ski',
     styles: ['piste', 'all-mountain'],
@@ -93,9 +136,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'A do-most-things frontside ski for riders who spend 80% of the day on groomers but want a little margin off-piste.',
     prices: [
-      { retailer: 'Evo', price: 449.95, link: 'https://www.evo.com/skis/salomon-stance-84' },
-      { retailer: 'Backcountry', price: 479.95, link: 'https://www.backcountry.com/salomon-stance-84' },
-      { retailer: 'Sport Chek', price: 499.99, link: 'https://www.sportchek.ca/salomon-stance-84' },
+      { retailer: 'Evo', price: 449.95 },
+      { retailer: 'Backcountry', price: 479.95 },
+      { retailer: 'Sport Chek', price: 499.99 },
     ],
   },
   {
@@ -103,7 +146,6 @@ export const gearDatabase: GearItem[] = [
     category: 'skis',
     brand: 'Salomon',
     name: 'QST 92',
-    image: IMG.skiPair,
     priceTier: 'mid-range',
     activity: 'ski',
     styles: ['all-mountain', 'freestyle'],
@@ -123,9 +165,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'Ideal for the rider whose day is genuinely mixed — groomers to the lift line, then side-country and chopped-up snow after lunch.',
     prices: [
-      { retailer: 'Evo', price: 599.95, link: 'https://www.evo.com/skis/salomon-qst-92' },
-      { retailer: 'REI', price: 629.0, link: 'https://www.rei.com/product/salomon-qst-92' },
-      { retailer: 'Backcountry', price: 649.95, link: 'https://www.backcountry.com/salomon-qst-92' },
+      { retailer: 'Evo', price: 599.95 },
+      { retailer: 'REI', price: 629.0 },
+      { retailer: 'Backcountry', price: 649.95 },
     ],
   },
   {
@@ -133,7 +175,6 @@ export const gearDatabase: GearItem[] = [
     category: 'skis',
     brand: 'K2',
     name: 'Mindbender 89Ti',
-    image: IMG.skiPair,
     priceTier: 'mid-range',
     activity: 'ski',
     styles: ['all-mountain', 'piste'],
@@ -153,9 +194,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'For strong skiers who want metal underfoot and a narrow enough waist to still carve a proper arc on firm snow.',
     prices: [
-      { retailer: 'Evo', price: 649.95, link: 'https://www.evo.com/skis/k2-mindbender-89ti' },
-      { retailer: 'The House', price: 674.99, link: 'https://www.the-house.com/k2-mindbender-89ti' },
-      { retailer: 'Sport Chek', price: 719.99, link: 'https://www.sportchek.ca/k2-mindbender-89ti' },
+      { retailer: 'Evo', price: 649.95 },
+      { retailer: 'The House', price: 674.99 },
+      { retailer: 'Sport Chek', price: 719.99 },
     ],
   },
   {
@@ -163,7 +204,6 @@ export const gearDatabase: GearItem[] = [
     category: 'skis',
     brand: 'Atomic',
     name: 'Bent 100',
-    image: IMG.skiPowder,
     priceTier: 'mid-range',
     activity: 'ski',
     styles: ['freestyle', 'all-mountain'],
@@ -183,9 +223,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'The pick for park-and-powder riders who ride switch, hit side hits and want one ski for the whole mountain.',
     prices: [
-      { retailer: 'Evo', price: 599.95, link: 'https://www.evo.com/skis/atomic-bent-100' },
-      { retailer: 'Backcountry', price: 629.95, link: 'https://www.backcountry.com/atomic-bent-100' },
-      { retailer: 'REI', price: 649.0, link: 'https://www.rei.com/product/atomic-bent-100' },
+      { retailer: 'Evo', price: 599.95 },
+      { retailer: 'Backcountry', price: 629.95 },
+      { retailer: 'REI', price: 649.0 },
     ],
   },
   {
@@ -193,7 +233,6 @@ export const gearDatabase: GearItem[] = [
     category: 'skis',
     brand: 'K2',
     name: 'Poacher',
-    image: IMG.skiPowder,
     priceTier: 'budget',
     activity: 'ski',
     styles: ['freestyle'],
@@ -213,9 +252,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'Value-focused freestyle ski for riders learning rails and jumps who do not want to babysit an expensive topsheet.',
     prices: [
-      { retailer: 'Evo', price: 379.95, link: 'https://www.evo.com/skis/k2-poacher' },
-      { retailer: 'The House', price: 399.99, link: 'https://www.the-house.com/k2-poacher' },
-      { retailer: 'Sport Chek', price: 429.99, link: 'https://www.sportchek.ca/k2-poacher' },
+      { retailer: 'Evo', price: 379.95 },
+      { retailer: 'The House', price: 399.99 },
+      { retailer: 'Sport Chek', price: 429.99 },
     ],
   },
   {
@@ -223,7 +262,6 @@ export const gearDatabase: GearItem[] = [
     category: 'skis',
     brand: 'Völkl',
     name: 'Mantra M7',
-    image: IMG.skiPair,
     priceTier: 'premium',
     activity: 'ski',
     styles: ['all-mountain', 'piste'],
@@ -243,9 +281,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'For powerful, aggressive skiers who want maximum damping and edge hold and are willing to work for it.',
     prices: [
-      { retailer: 'Evo', price: 849.95, link: 'https://www.evo.com/skis/volkl-mantra-m7' },
-      { retailer: 'Backcountry', price: 899.95, link: 'https://www.backcountry.com/volkl-mantra-m7' },
-      { retailer: 'REI', price: 925.0, link: 'https://www.rei.com/product/volkl-mantra-m7' },
+      { retailer: 'Evo', price: 849.95 },
+      { retailer: 'Backcountry', price: 899.95 },
+      { retailer: 'REI', price: 925.0 },
     ],
   },
   {
@@ -253,7 +291,6 @@ export const gearDatabase: GearItem[] = [
     category: 'skis',
     brand: 'Atomic',
     name: 'Redster X9S Revoshock S',
-    image: IMG.skiCarve,
     priceTier: 'premium',
     activity: 'ski',
     styles: ['piste'],
@@ -273,9 +310,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'Built for advanced piste specialists who measure a good day in clean, high-angle arcs on firm snow.',
     prices: [
-      { retailer: 'Evo', price: 899.95, link: 'https://www.evo.com/skis/atomic-redster-x9s' },
-      { retailer: 'Sport Chek', price: 949.99, link: 'https://www.sportchek.ca/atomic-redster-x9s' },
-      { retailer: 'The House', price: 979.99, link: 'https://www.the-house.com/atomic-redster-x9s' },
+      { retailer: 'Evo', price: 899.95 },
+      { retailer: 'Sport Chek', price: 949.99 },
+      { retailer: 'The House', price: 979.99 },
     ],
   },
   {
@@ -283,7 +320,6 @@ export const gearDatabase: GearItem[] = [
     category: 'skis',
     brand: 'Black Crows',
     name: 'Camox',
-    image: IMG.skiPowder,
     priceTier: 'mid-range',
     activity: 'ski',
     styles: ['all-mountain', 'freestyle'],
@@ -303,9 +339,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'A great match for playful all-mountain skiers who ride trees, chutes and side hits more than they ride the fall line.',
     prices: [
-      { retailer: 'Evo', price: 679.95, link: 'https://www.evo.com/skis/black-crows-camox' },
-      { retailer: 'Backcountry', price: 699.95, link: 'https://www.backcountry.com/black-crows-camox' },
-      { retailer: 'The House', price: 729.99, link: 'https://www.the-house.com/black-crows-camox' },
+      { retailer: 'Evo', price: 679.95 },
+      { retailer: 'Backcountry', price: 699.95 },
+      { retailer: 'The House', price: 729.99 },
     ],
   },
   {
@@ -313,7 +349,6 @@ export const gearDatabase: GearItem[] = [
     category: 'skis',
     brand: 'Black Crows',
     name: 'Corvus',
-    image: IMG.skiPowder,
     priceTier: 'premium',
     activity: 'ski',
     styles: ['backcountry', 'all-mountain'],
@@ -333,9 +368,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'For expert freeriders hunting deep days and committed lines who need float first and groomer manners second.',
     prices: [
-      { retailer: 'Evo', price: 899.95, link: 'https://www.evo.com/skis/black-crows-corvus' },
-      { retailer: 'Backcountry', price: 949.95, link: 'https://www.backcountry.com/black-crows-corvus' },
-      { retailer: 'REI', price: 979.0, link: 'https://www.rei.com/product/black-crows-corvus' },
+      { retailer: 'Evo', price: 899.95 },
+      { retailer: 'Backcountry', price: 949.95 },
+      { retailer: 'REI', price: 979.0 },
     ],
   },
   {
@@ -343,7 +378,6 @@ export const gearDatabase: GearItem[] = [
     category: 'skis',
     brand: 'Atomic',
     name: 'Backland 107',
-    image: IMG.skiTour,
     priceTier: 'premium',
     activity: 'ski',
     styles: ['backcountry'],
@@ -363,9 +397,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'The pick for riders earning turns — light enough for long skin tracks, wide enough to float on the way back down.',
     prices: [
-      { retailer: 'Evo', price: 799.95, link: 'https://www.evo.com/skis/atomic-backland-107' },
-      { retailer: 'Backcountry', price: 849.95, link: 'https://www.backcountry.com/atomic-backland-107' },
-      { retailer: 'REI', price: 869.0, link: 'https://www.rei.com/product/atomic-backland-107' },
+      { retailer: 'Evo', price: 799.95 },
+      { retailer: 'Backcountry', price: 849.95 },
+      { retailer: 'REI', price: 869.0 },
     ],
   },
   {
@@ -373,7 +407,6 @@ export const gearDatabase: GearItem[] = [
     category: 'skis',
     brand: 'Völkl',
     name: 'Blaze 114',
-    image: IMG.skiTour,
     priceTier: 'mid-range',
     activity: 'ski',
     styles: ['backcountry', 'all-mountain'],
@@ -393,9 +426,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'For riders splitting time between lift-served powder laps and short tours who do not want two separate setups.',
     prices: [
-      { retailer: 'Evo', price: 699.95, link: 'https://www.evo.com/skis/volkl-blaze-114' },
-      { retailer: 'The House', price: 724.99, link: 'https://www.the-house.com/volkl-blaze-114' },
-      { retailer: 'Sport Chek', price: 769.99, link: 'https://www.sportchek.ca/volkl-blaze-114' },
+      { retailer: 'Evo', price: 699.95 },
+      { retailer: 'The House', price: 724.99 },
+      { retailer: 'Sport Chek', price: 769.99 },
     ],
   },
 
@@ -407,7 +440,6 @@ export const gearDatabase: GearItem[] = [
     category: 'skis',
     brand: 'K2',
     name: 'Raygun',
-    image: IMG.board,
     priceTier: 'budget',
     activity: 'snowboard',
     styles: ['all-mountain', 'piste'],
@@ -427,9 +459,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'One of the best value first boards — catch-free feel, but with enough camber-free stability to progress on.',
     prices: [
-      { retailer: 'Evo', price: 349.95, link: 'https://www.evo.com/snowboards/k2-raygun' },
-      { retailer: 'The House', price: 369.99, link: 'https://www.the-house.com/k2-raygun' },
-      { retailer: 'Sport Chek', price: 399.99, link: 'https://www.sportchek.ca/k2-raygun' },
+      { retailer: 'Evo', price: 349.95 },
+      { retailer: 'The House', price: 369.99 },
+      { retailer: 'Sport Chek', price: 399.99 },
     ],
   },
   {
@@ -437,7 +469,6 @@ export const gearDatabase: GearItem[] = [
     category: 'skis',
     brand: 'Salomon',
     name: 'Assassin',
-    image: IMG.board,
     priceTier: 'mid-range',
     activity: 'snowboard',
     styles: ['all-mountain', 'freestyle'],
@@ -457,9 +488,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'Perfect for riders who lap the park in the morning and chase side hits and soft snow in the afternoon.',
     prices: [
-      { retailer: 'Evo', price: 499.95, link: 'https://www.evo.com/snowboards/salomon-assassin' },
-      { retailer: 'Backcountry', price: 529.95, link: 'https://www.backcountry.com/salomon-assassin' },
-      { retailer: 'REI', price: 549.0, link: 'https://www.rei.com/product/salomon-assassin' },
+      { retailer: 'Evo', price: 499.95 },
+      { retailer: 'Backcountry', price: 529.95 },
+      { retailer: 'REI', price: 549.0 },
     ],
   },
   {
@@ -467,7 +498,6 @@ export const gearDatabase: GearItem[] = [
     category: 'skis',
     brand: 'Burton',
     name: 'Custom Camber',
-    image: IMG.board,
     priceTier: 'premium',
     activity: 'snowboard',
     styles: ['all-mountain', 'piste'],
@@ -487,9 +517,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'For confident riders who load the board hard through turns and want maximum edge hold and rebound.',
     prices: [
-      { retailer: 'Evo', price: 649.95, link: 'https://www.evo.com/snowboards/burton-custom' },
-      { retailer: 'Backcountry', price: 679.95, link: 'https://www.backcountry.com/burton-custom' },
-      { retailer: 'Sport Chek', price: 719.99, link: 'https://www.sportchek.ca/burton-custom' },
+      { retailer: 'Evo', price: 649.95 },
+      { retailer: 'Backcountry', price: 679.95 },
+      { retailer: 'Sport Chek', price: 719.99 },
     ],
   },
   {
@@ -497,7 +527,6 @@ export const gearDatabase: GearItem[] = [
     category: 'skis',
     brand: 'Burton',
     name: 'Process Flying V',
-    image: IMG.boardPark,
     priceTier: 'mid-range',
     activity: 'snowboard',
     styles: ['freestyle'],
@@ -517,9 +546,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'A forgiving freestyle platform for riders drilling butters, boxes and switch riding in the park.',
     prices: [
-      { retailer: 'Evo', price: 499.95, link: 'https://www.evo.com/snowboards/burton-process' },
-      { retailer: 'The House', price: 519.99, link: 'https://www.the-house.com/burton-process' },
-      { retailer: 'REI', price: 549.0, link: 'https://www.rei.com/product/burton-process' },
+      { retailer: 'Evo', price: 499.95 },
+      { retailer: 'The House', price: 519.99 },
+      { retailer: 'REI', price: 549.0 },
     ],
   },
   {
@@ -527,7 +556,6 @@ export const gearDatabase: GearItem[] = [
     category: 'skis',
     brand: 'K2',
     name: 'Party Platter',
-    image: IMG.boardPowder,
     priceTier: 'mid-range',
     activity: 'snowboard',
     styles: ['freestyle', 'backcountry'],
@@ -547,9 +575,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'For surfy riders on storm days who want a playful powder board rather than a straight-lining big-mountain deck.',
     prices: [
-      { retailer: 'Evo', price: 479.95, link: 'https://www.evo.com/snowboards/k2-party-platter' },
-      { retailer: 'The House', price: 499.99, link: 'https://www.the-house.com/k2-party-platter' },
-      { retailer: 'Backcountry', price: 529.95, link: 'https://www.backcountry.com/k2-party-platter' },
+      { retailer: 'Evo', price: 479.95 },
+      { retailer: 'The House', price: 499.99 },
+      { retailer: 'Backcountry', price: 529.95 },
     ],
   },
   {
@@ -557,7 +585,6 @@ export const gearDatabase: GearItem[] = [
     category: 'skis',
     brand: 'Burton',
     name: 'Family Tree Hometown Hero',
-    image: IMG.boardPowder,
     priceTier: 'premium',
     activity: 'snowboard',
     styles: ['backcountry', 'all-mountain'],
@@ -577,9 +604,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'For expert riders charging big backcountry lines who still want the board to carve on the traverse out.',
     prices: [
-      { retailer: 'Evo', price: 699.95, link: 'https://www.evo.com/snowboards/burton-hometown-hero' },
-      { retailer: 'Backcountry', price: 729.95, link: 'https://www.backcountry.com/burton-hometown-hero' },
-      { retailer: 'Sport Chek', price: 779.99, link: 'https://www.sportchek.ca/burton-hometown-hero' },
+      { retailer: 'Evo', price: 699.95 },
+      { retailer: 'Backcountry', price: 729.95 },
+      { retailer: 'Sport Chek', price: 779.99 },
     ],
   },
   {
@@ -587,7 +614,6 @@ export const gearDatabase: GearItem[] = [
     category: 'skis',
     brand: 'Salomon',
     name: 'Huck Knife',
-    image: IMG.boardPark,
     priceTier: 'mid-range',
     activity: 'snowboard',
     styles: ['freestyle'],
@@ -607,9 +633,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'For strong freestyle riders sending medium-to-large jumps who need a board that stays stable on landings.',
     prices: [
-      { retailer: 'Evo', price: 519.95, link: 'https://www.evo.com/snowboards/salomon-huck-knife' },
-      { retailer: 'The House', price: 539.99, link: 'https://www.the-house.com/salomon-huck-knife' },
-      { retailer: 'REI', price: 569.0, link: 'https://www.rei.com/product/salomon-huck-knife' },
+      { retailer: 'Evo', price: 519.95 },
+      { retailer: 'The House', price: 539.99 },
+      { retailer: 'REI', price: 569.0 },
     ],
   },
 
@@ -621,7 +647,6 @@ export const gearDatabase: GearItem[] = [
     category: 'boots',
     brand: 'Atomic',
     name: 'Hawx Prime 90 GW',
-    image: IMG.boots,
     priceTier: 'budget',
     activity: 'ski',
     styles: ['piste', 'all-mountain'],
@@ -640,9 +665,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'The classic first "real" boot: shop-customisable shell, medium volume fit and a flex that will not overpower a developing skier.',
     prices: [
-      { retailer: 'Evo', price: 349.95, link: 'https://www.evo.com/ski-boots/atomic-hawx-prime-90' },
-      { retailer: 'REI', price: 369.0, link: 'https://www.rei.com/product/atomic-hawx-prime-90' },
-      { retailer: 'Sport Chek', price: 399.99, link: 'https://www.sportchek.ca/atomic-hawx-prime-90' },
+      { retailer: 'Evo', price: 349.95 },
+      { retailer: 'REI', price: 369.0 },
+      { retailer: 'Sport Chek', price: 399.99 },
     ],
   },
   {
@@ -650,7 +675,6 @@ export const gearDatabase: GearItem[] = [
     category: 'boots',
     brand: 'K2',
     name: 'Anthem 85 BOA',
-    image: IMG.bootsAlt,
     priceTier: 'budget',
     activity: 'ski',
     styles: ['piste', 'all-mountain'],
@@ -669,9 +693,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'A warm, easy-entry women’s boot for progressing skiers who want precision without a punishing flex.',
     prices: [
-      { retailer: 'Evo', price: 399.95, link: 'https://www.evo.com/ski-boots/k2-anthem-85-boa' },
-      { retailer: 'REI', price: 419.0, link: 'https://www.rei.com/product/k2-anthem-85-boa' },
-      { retailer: 'The House', price: 439.99, link: 'https://www.the-house.com/k2-anthem-85-boa' },
+      { retailer: 'Evo', price: 399.95 },
+      { retailer: 'REI', price: 419.0 },
+      { retailer: 'The House', price: 439.99 },
     ],
   },
   {
@@ -679,7 +703,6 @@ export const gearDatabase: GearItem[] = [
     category: 'boots',
     brand: 'Salomon',
     name: 'Shift Pro 110 W',
-    image: IMG.bootsAlt,
     priceTier: 'mid-range',
     activity: 'ski',
     styles: ['all-mountain', 'backcountry'],
@@ -698,9 +721,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'For advancing women skiers who ride aggressively inbounds but want hike mode for boot-packs and short tours.',
     prices: [
-      { retailer: 'Evo', price: 599.95, link: 'https://www.evo.com/ski-boots/salomon-shift-pro-110-w' },
-      { retailer: 'Backcountry', price: 629.95, link: 'https://www.backcountry.com/salomon-shift-pro-110-w' },
-      { retailer: 'REI', price: 649.0, link: 'https://www.rei.com/product/salomon-shift-pro-110-w' },
+      { retailer: 'Evo', price: 599.95 },
+      { retailer: 'Backcountry', price: 629.95 },
+      { retailer: 'REI', price: 649.0 },
     ],
   },
   {
@@ -708,7 +731,6 @@ export const gearDatabase: GearItem[] = [
     category: 'boots',
     brand: 'K2',
     name: 'Method 100 MV',
-    image: IMG.boots,
     priceTier: 'mid-range',
     activity: 'ski',
     styles: ['freestyle', 'all-mountain'],
@@ -727,9 +749,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'A freestyle-friendly 100 flex for park skiers who need shock absorption and a liner that packs out to their foot.',
     prices: [
-      { retailer: 'Evo', price: 549.95, link: 'https://www.evo.com/ski-boots/k2-method-100-mv' },
-      { retailer: 'The House', price: 569.99, link: 'https://www.the-house.com/k2-method-100-mv' },
-      { retailer: 'Sport Chek', price: 599.99, link: 'https://www.sportchek.ca/k2-method-100-mv' },
+      { retailer: 'Evo', price: 549.95 },
+      { retailer: 'The House', price: 569.99 },
+      { retailer: 'Sport Chek', price: 599.99 },
     ],
   },
   {
@@ -737,7 +759,6 @@ export const gearDatabase: GearItem[] = [
     category: 'boots',
     brand: 'Salomon',
     name: 'S/Pro Supra BOA 120',
-    image: IMG.boots,
     priceTier: 'premium',
     activity: 'ski',
     styles: ['piste', 'all-mountain'],
@@ -756,9 +777,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'For advanced skiers who want race-adjacent response and a precise, dialled fit without a 130-flex punishment.',
     prices: [
-      { retailer: 'Evo', price: 749.95, link: 'https://www.evo.com/ski-boots/salomon-spro-supra-boa-120' },
-      { retailer: 'Backcountry', price: 799.95, link: 'https://www.backcountry.com/salomon-spro-supra-boa-120' },
-      { retailer: 'REI', price: 819.0, link: 'https://www.rei.com/product/salomon-spro-supra-boa-120' },
+      { retailer: 'Evo', price: 749.95 },
+      { retailer: 'Backcountry', price: 799.95 },
+      { retailer: 'REI', price: 819.0 },
     ],
   },
   {
@@ -766,7 +787,6 @@ export const gearDatabase: GearItem[] = [
     category: 'boots',
     brand: 'Atomic',
     name: 'Hawx Ultra XTD 130 BOA',
-    image: IMG.boots,
     priceTier: 'premium',
     activity: 'ski',
     styles: ['all-mountain', 'backcountry', 'piste'],
@@ -785,9 +805,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'The one-boot answer for expert skiers who ride hard inbounds and occasionally clip into a touring binding.',
     prices: [
-      { retailer: 'Evo', price: 899.95, link: 'https://www.evo.com/ski-boots/atomic-hawx-ultra-xtd-130' },
-      { retailer: 'Backcountry', price: 929.95, link: 'https://www.backcountry.com/atomic-hawx-ultra-xtd-130' },
-      { retailer: 'Sport Chek', price: 999.99, link: 'https://www.sportchek.ca/atomic-hawx-ultra-xtd-130' },
+      { retailer: 'Evo', price: 899.95 },
+      { retailer: 'Backcountry', price: 929.95 },
+      { retailer: 'Sport Chek', price: 999.99 },
     ],
   },
   {
@@ -795,7 +815,6 @@ export const gearDatabase: GearItem[] = [
     category: 'boots',
     brand: 'Völkl',
     name: 'Secret Pro 105 W',
-    image: IMG.bootsAlt,
     priceTier: 'premium',
     activity: 'ski',
     styles: ['all-mountain', 'piste'],
@@ -814,9 +833,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'For expert women skiers who have outgrown 90-flex boots and need real lateral support at speed.',
     prices: [
-      { retailer: 'Evo', price: 779.95, link: 'https://www.evo.com/ski-boots/volkl-secret-pro-105-w' },
-      { retailer: 'Backcountry', price: 799.95, link: 'https://www.backcountry.com/volkl-secret-pro-105-w' },
-      { retailer: 'REI', price: 829.0, link: 'https://www.rei.com/product/volkl-secret-pro-105-w' },
+      { retailer: 'Evo', price: 779.95 },
+      { retailer: 'Backcountry', price: 799.95 },
+      { retailer: 'REI', price: 829.0 },
     ],
   },
 
@@ -828,7 +847,6 @@ export const gearDatabase: GearItem[] = [
     category: 'boots',
     brand: 'Salomon',
     name: 'Launch BOA SJ',
-    image: IMG.bootsAlt,
     priceTier: 'budget',
     activity: 'snowboard',
     styles: ['all-mountain', 'freestyle', 'piste'],
@@ -847,9 +865,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'A comfortable, low-effort entry boot for riders still building ankle strength and board feel.',
     prices: [
-      { retailer: 'Evo', price: 249.95, link: 'https://www.evo.com/snowboard-boots/salomon-launch-boa-sj' },
-      { retailer: 'The House', price: 259.99, link: 'https://www.the-house.com/salomon-launch-boa-sj' },
-      { retailer: 'Sport Chek', price: 279.99, link: 'https://www.sportchek.ca/salomon-launch-boa-sj' },
+      { retailer: 'Evo', price: 249.95 },
+      { retailer: 'The House', price: 259.99 },
+      { retailer: 'Sport Chek', price: 279.99 },
     ],
   },
   {
@@ -857,7 +875,6 @@ export const gearDatabase: GearItem[] = [
     category: 'boots',
     brand: 'Burton',
     name: 'Ruler BOA',
-    image: IMG.bootsAlt,
     priceTier: 'mid-range',
     activity: 'snowboard',
     styles: ['all-mountain', 'freestyle'],
@@ -876,9 +893,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'Balanced support for riders who mix park laps with all-mountain riding and want one boot for everything.',
     prices: [
-      { retailer: 'Evo', price: 329.95, link: 'https://www.evo.com/snowboard-boots/burton-ruler-boa' },
-      { retailer: 'REI', price: 349.0, link: 'https://www.rei.com/product/burton-ruler-boa' },
-      { retailer: 'Backcountry', price: 359.95, link: 'https://www.backcountry.com/burton-ruler-boa' },
+      { retailer: 'Evo', price: 329.95 },
+      { retailer: 'REI', price: 349.0 },
+      { retailer: 'Backcountry', price: 359.95 },
     ],
   },
   {
@@ -886,7 +903,6 @@ export const gearDatabase: GearItem[] = [
     category: 'boots',
     brand: 'K2',
     name: 'Maysis Clicker X HB',
-    image: IMG.boots,
     priceTier: 'mid-range',
     activity: 'snowboard',
     styles: ['all-mountain', 'backcountry'],
@@ -905,9 +921,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'For riders whose heels lift in standard boots and who want stiffer support for bigger terrain.',
     prices: [
-      { retailer: 'Evo', price: 379.95, link: 'https://www.evo.com/snowboard-boots/k2-maysis' },
-      { retailer: 'The House', price: 399.99, link: 'https://www.the-house.com/k2-maysis' },
-      { retailer: 'Sport Chek', price: 429.99, link: 'https://www.sportchek.ca/k2-maysis' },
+      { retailer: 'Evo', price: 379.95 },
+      { retailer: 'The House', price: 399.99 },
+      { retailer: 'Sport Chek', price: 429.99 },
     ],
   },
   {
@@ -915,7 +931,6 @@ export const gearDatabase: GearItem[] = [
     category: 'boots',
     brand: 'Burton',
     name: 'Photon Step On',
-    image: IMG.boots,
     priceTier: 'premium',
     activity: 'snowboard',
     styles: ['all-mountain', 'piste', 'backcountry'],
@@ -934,9 +949,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'For advanced riders who charge hard and value response and fast entry over a soft, playful feel.',
     prices: [
-      { retailer: 'Evo', price: 549.95, link: 'https://www.evo.com/snowboard-boots/burton-photon-step-on' },
-      { retailer: 'Backcountry', price: 569.95, link: 'https://www.backcountry.com/burton-photon-step-on' },
-      { retailer: 'REI', price: 589.0, link: 'https://www.rei.com/product/burton-photon-step-on' },
+      { retailer: 'Evo', price: 549.95 },
+      { retailer: 'Backcountry', price: 569.95 },
+      { retailer: 'REI', price: 589.0 },
     ],
   },
 
@@ -948,7 +963,6 @@ export const gearDatabase: GearItem[] = [
     category: 'helmet',
     brand: 'K2',
     name: 'Phase Pro',
-    image: IMG.helmetAlt,
     priceTier: 'budget',
     activity: 'both',
     styles: ['piste', 'all-mountain', 'freestyle'],
@@ -969,9 +983,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'Reliable certified protection and real warmth without paying for rotational-impact tech.',
     prices: [
-      { retailer: 'Evo', price: 89.95, link: 'https://www.evo.com/helmets/k2-phase-pro' },
-      { retailer: 'The House', price: 99.99, link: 'https://www.the-house.com/k2-phase-pro' },
-      { retailer: 'Sport Chek', price: 109.99, link: 'https://www.sportchek.ca/k2-phase-pro' },
+      { retailer: 'Evo', price: 89.95 },
+      { retailer: 'The House', price: 99.99 },
+      { retailer: 'Sport Chek', price: 109.99 },
     ],
   },
   {
@@ -979,7 +993,6 @@ export const gearDatabase: GearItem[] = [
     category: 'helmet',
     brand: 'Salomon',
     name: 'Pioneer LT Visor',
-    image: IMG.helmetAlt,
     priceTier: 'budget',
     activity: 'both',
     styles: ['piste', 'all-mountain'],
@@ -1000,9 +1013,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'A well-priced, warm helmet for riders who mostly stay on-piste in cold conditions.',
     prices: [
-      { retailer: 'Evo', price: 99.95, link: 'https://www.evo.com/helmets/salomon-pioneer-lt' },
-      { retailer: 'REI', price: 109.0, link: 'https://www.rei.com/product/salomon-pioneer-lt' },
-      { retailer: 'Sport Chek', price: 119.99, link: 'https://www.sportchek.ca/salomon-pioneer-lt' },
+      { retailer: 'Evo', price: 99.95 },
+      { retailer: 'REI', price: 109.0 },
+      { retailer: 'Sport Chek', price: 119.99 },
     ],
   },
   {
@@ -1010,7 +1023,6 @@ export const gearDatabase: GearItem[] = [
     category: 'helmet',
     brand: 'Smith',
     name: 'Mission MIPS',
-    image: IMG.helmet,
     priceTier: 'mid-range',
     activity: 'both',
     styles: ['all-mountain', 'piste', 'freestyle'],
@@ -1031,9 +1043,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'The sweet spot for value and safety tech — MIPS plus proper goggle integration at a mid-tier price.',
     prices: [
-      { retailer: 'Evo', price: 139.95, link: 'https://www.evo.com/helmets/smith-mission-mips' },
-      { retailer: 'REI', price: 149.0, link: 'https://www.rei.com/product/smith-mission-mips' },
-      { retailer: 'Backcountry', price: 154.95, link: 'https://www.backcountry.com/smith-mission-mips' },
+      { retailer: 'Evo', price: 139.95 },
+      { retailer: 'REI', price: 149.0 },
+      { retailer: 'Backcountry', price: 154.95 },
     ],
   },
   {
@@ -1041,7 +1053,6 @@ export const gearDatabase: GearItem[] = [
     category: 'helmet',
     brand: 'Oakley',
     name: 'MOD3 MIPS',
-    image: IMG.helmet,
     priceTier: 'mid-range',
     activity: 'both',
     styles: ['freestyle', 'all-mountain', 'piste'],
@@ -1062,9 +1073,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'Best for riders who run hot or ride spring conditions and want big adjustable airflow.',
     prices: [
-      { retailer: 'Evo', price: 149.95, link: 'https://www.evo.com/helmets/oakley-mod3-mips' },
-      { retailer: 'Backcountry', price: 159.95, link: 'https://www.backcountry.com/oakley-mod3-mips' },
-      { retailer: 'Sport Chek', price: 179.99, link: 'https://www.sportchek.ca/oakley-mod3-mips' },
+      { retailer: 'Evo', price: 149.95 },
+      { retailer: 'Backcountry', price: 159.95 },
+      { retailer: 'Sport Chek', price: 179.99 },
     ],
   },
   {
@@ -1072,7 +1083,6 @@ export const gearDatabase: GearItem[] = [
     category: 'helmet',
     brand: 'Smith',
     name: 'Vantage MIPS',
-    image: IMG.helmet,
     priceTier: 'premium',
     activity: 'both',
     styles: ['all-mountain', 'piste', 'backcountry'],
@@ -1093,9 +1103,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'Top-tier impact protection with the widest temperature range of any helmet here — the buy-once option.',
     prices: [
-      { retailer: 'Evo', price: 279.95, link: 'https://www.evo.com/helmets/smith-vantage-mips' },
-      { retailer: 'REI', price: 289.0, link: 'https://www.rei.com/product/smith-vantage-mips' },
-      { retailer: 'Backcountry', price: 299.95, link: 'https://www.backcountry.com/smith-vantage-mips' },
+      { retailer: 'Evo', price: 279.95 },
+      { retailer: 'REI', price: 289.0 },
+      { retailer: 'Backcountry', price: 299.95 },
     ],
   },
   {
@@ -1103,7 +1113,6 @@ export const gearDatabase: GearItem[] = [
     category: 'helmet',
     brand: 'Oakley',
     name: 'MOD5 MIPS',
-    image: IMG.helmetAlt,
     priceTier: 'premium',
     activity: 'both',
     styles: ['all-mountain', 'freestyle', 'backcountry'],
@@ -1124,9 +1133,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'For riders who want a precise micro-adjustable fit and a seamless goggle seal across changing conditions.',
     prices: [
-      { retailer: 'Evo', price: 259.95, link: 'https://www.evo.com/helmets/oakley-mod5-mips' },
-      { retailer: 'Backcountry', price: 269.95, link: 'https://www.backcountry.com/oakley-mod5-mips' },
-      { retailer: 'The House', price: 289.99, link: 'https://www.the-house.com/oakley-mod5-mips' },
+      { retailer: 'Evo', price: 259.95 },
+      { retailer: 'Backcountry', price: 269.95 },
+      { retailer: 'The House', price: 289.99 },
     ],
   },
 
@@ -1138,7 +1147,6 @@ export const gearDatabase: GearItem[] = [
     category: 'goggles',
     brand: 'Smith',
     name: 'Squad — Yellow Sensor Mirror',
-    image: IMG.goggles,
     priceTier: 'budget',
     activity: 'both',
     styles: ['piste', 'all-mountain', 'freestyle'],
@@ -1159,9 +1167,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'Maximum light transmission for storm days and dusk — the right lens when the light goes flat.',
     prices: [
-      { retailer: 'Evo', price: 109.95, link: 'https://www.evo.com/goggles/smith-squad' },
-      { retailer: 'The House', price: 119.99, link: 'https://www.the-house.com/smith-squad' },
-      { retailer: 'Sport Chek', price: 129.99, link: 'https://www.sportchek.ca/smith-squad' },
+      { retailer: 'Evo', price: 109.95 },
+      { retailer: 'The House', price: 119.99 },
+      { retailer: 'Sport Chek', price: 129.99 },
     ],
   },
   {
@@ -1169,7 +1177,6 @@ export const gearDatabase: GearItem[] = [
     category: 'goggles',
     brand: 'Salomon',
     name: 'Radium Pro Sigma',
-    image: IMG.gogglesAlt,
     priceTier: 'mid-range',
     activity: 'both',
     styles: ['all-mountain', 'piste', 'backcountry'],
@@ -1190,9 +1197,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'The most versatile VLT window there is — usable in bright sun and passable when clouds roll in.',
     prices: [
-      { retailer: 'Evo', price: 159.95, link: 'https://www.evo.com/goggles/salomon-radium-pro-sigma' },
-      { retailer: 'REI', price: 169.0, link: 'https://www.rei.com/product/salomon-radium-pro-sigma' },
-      { retailer: 'Backcountry', price: 174.95, link: 'https://www.backcountry.com/salomon-radium-pro-sigma' },
+      { retailer: 'Evo', price: 159.95 },
+      { retailer: 'REI', price: 169.0 },
+      { retailer: 'Backcountry', price: 174.95 },
     ],
   },
   {
@@ -1200,7 +1207,6 @@ export const gearDatabase: GearItem[] = [
     category: 'goggles',
     brand: 'Oakley',
     name: 'Line Miner L — Prizm Sapphire',
-    image: IMG.goggles,
     priceTier: 'mid-range',
     activity: 'both',
     styles: ['freestyle', 'all-mountain', 'piste'],
@@ -1221,17 +1227,17 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'A bright-light lens for sunny, high-albedo days — spring corn and mid-winter bluebird.',
     prices: [
-      { retailer: 'Evo', price: 179.95, link: 'https://www.evo.com/goggles/oakley-line-miner-l' },
-      { retailer: 'Sport Chek', price: 194.99, link: 'https://www.sportchek.ca/oakley-line-miner-l' },
-      { retailer: 'REI', price: 199.0, link: 'https://www.rei.com/product/oakley-line-miner-l' },
+      { retailer: 'Evo', price: 179.95 },
+      { retailer: 'Sport Chek', price: 194.99 },
+      { retailer: 'REI', price: 199.0 },
     ],
   },
   {
     id: 'goggle-burton-anon-m4',
+    searchTerm: 'Anon M4 Toric',
     category: 'goggles',
     brand: 'Burton',
     name: 'Anon M4 Toric — Perceive Cloudy Pink',
-    image: IMG.gogglesAlt,
     priceTier: 'premium',
     activity: 'both',
     styles: ['freestyle', 'all-mountain', 'backcountry'],
@@ -1253,9 +1259,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'A high-VLT storm lens with a bright spare in the box — one purchase that covers the entire light spectrum.',
     prices: [
-      { retailer: 'Evo', price: 259.95, link: 'https://www.evo.com/goggles/anon-m4-toric' },
-      { retailer: 'Backcountry', price: 269.95, link: 'https://www.backcountry.com/anon-m4-toric' },
-      { retailer: 'The House', price: 279.99, link: 'https://www.the-house.com/anon-m4-toric' },
+      { retailer: 'Evo', price: 259.95 },
+      { retailer: 'Backcountry', price: 269.95 },
+      { retailer: 'The House', price: 279.99 },
     ],
   },
   {
@@ -1263,7 +1269,6 @@ export const gearDatabase: GearItem[] = [
     category: 'goggles',
     brand: 'Smith',
     name: 'I/O MAG — ChromaPop Storm Rose',
-    image: IMG.goggles,
     priceTier: 'premium',
     activity: 'both',
     styles: ['all-mountain', 'backcountry', 'piste'],
@@ -1284,9 +1289,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'Storm-day clarity with a low-VLT spare included, so one goggle covers freezing overcast and bright sun.',
     prices: [
-      { retailer: 'Evo', price: 269.95, link: 'https://www.evo.com/goggles/smith-io-mag' },
-      { retailer: 'REI', price: 280.0, link: 'https://www.rei.com/product/smith-io-mag' },
-      { retailer: 'Backcountry', price: 289.95, link: 'https://www.backcountry.com/smith-io-mag' },
+      { retailer: 'Evo', price: 269.95 },
+      { retailer: 'REI', price: 280.0 },
+      { retailer: 'Backcountry', price: 289.95 },
     ],
   },
   {
@@ -1294,7 +1299,6 @@ export const gearDatabase: GearItem[] = [
     category: 'goggles',
     brand: 'Smith',
     name: '4D MAG — ChromaPop Sun Black',
-    image: IMG.gogglesAlt,
     priceTier: 'premium',
     activity: 'both',
     styles: ['piste', 'all-mountain', 'backcountry'],
@@ -1315,9 +1319,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'Built for high-glare spring sun and reflective snowpack where standard tints let too much light through.',
     prices: [
-      { retailer: 'Evo', price: 299.95, link: 'https://www.evo.com/goggles/smith-4d-mag' },
-      { retailer: 'Backcountry', price: 309.95, link: 'https://www.backcountry.com/smith-4d-mag' },
-      { retailer: 'Sport Chek', price: 329.99, link: 'https://www.sportchek.ca/smith-4d-mag' },
+      { retailer: 'Evo', price: 299.95 },
+      { retailer: 'Backcountry', price: 309.95 },
+      { retailer: 'Sport Chek', price: 329.99 },
     ],
   },
   {
@@ -1325,7 +1329,6 @@ export const gearDatabase: GearItem[] = [
     category: 'goggles',
     brand: 'Oakley',
     name: 'Flight Deck L — Prizm Torch',
-    image: IMG.goggles,
     priceTier: 'premium',
     activity: 'both',
     styles: ['all-mountain', 'backcountry', 'freestyle'],
@@ -1346,9 +1349,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'A mid-low VLT all-rounder for variable light, with peripheral vision that genuinely helps in trees and traffic.',
     prices: [
-      { retailer: 'Evo', price: 229.95, link: 'https://www.evo.com/goggles/oakley-flight-deck-l' },
-      { retailer: 'REI', price: 239.0, link: 'https://www.rei.com/product/oakley-flight-deck-l' },
-      { retailer: 'Backcountry', price: 249.95, link: 'https://www.backcountry.com/oakley-flight-deck-l' },
+      { retailer: 'Evo', price: 229.95 },
+      { retailer: 'REI', price: 239.0 },
+      { retailer: 'Backcountry', price: 249.95 },
     ],
   },
 
@@ -1360,7 +1363,6 @@ export const gearDatabase: GearItem[] = [
     category: 'jacket',
     brand: 'Oakley',
     name: 'Sub Temp RC GORE-TEX Shell',
-    image: IMG.shell,
     priceTier: 'budget',
     activity: 'both',
     styles: ['all-mountain', 'freestyle', 'piste'],
@@ -1381,9 +1383,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'The right call for warm, wet spring days and for anyone who runs hot and prefers layering to built-in loft.',
     prices: [
-      { retailer: 'Evo', price: 229.95, link: 'https://www.evo.com/jackets/oakley-sub-temp-rc' },
-      { retailer: 'The House', price: 249.99, link: 'https://www.the-house.com/oakley-sub-temp-rc' },
-      { retailer: 'Sport Chek', price: 279.99, link: 'https://www.sportchek.ca/oakley-sub-temp-rc' },
+      { retailer: 'Evo', price: 229.95 },
+      { retailer: 'The House', price: 249.99 },
+      { retailer: 'Sport Chek', price: 279.99 },
     ],
   },
   {
@@ -1391,7 +1393,6 @@ export const gearDatabase: GearItem[] = [
     category: 'jacket',
     brand: 'Salomon',
     name: 'Brilliant Insulated Jacket',
-    image: IMG.jacketAlt,
     priceTier: 'budget',
     activity: 'both',
     styles: ['piste', 'all-mountain'],
@@ -1412,9 +1413,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'Reliable warmth at an entry price for cold lift-served days — synthetic fill handles moisture better than down.',
     prices: [
-      { retailer: 'Evo', price: 199.95, link: 'https://www.evo.com/jackets/salomon-brilliant' },
-      { retailer: 'Sport Chek', price: 219.99, link: 'https://www.sportchek.ca/salomon-brilliant' },
-      { retailer: 'REI', price: 229.0, link: 'https://www.rei.com/product/salomon-brilliant' },
+      { retailer: 'Evo', price: 199.95 },
+      { retailer: 'Sport Chek', price: 219.99 },
+      { retailer: 'REI', price: 229.0 },
     ],
   },
   {
@@ -1422,7 +1423,6 @@ export const gearDatabase: GearItem[] = [
     category: 'jacket',
     brand: 'Burton',
     name: 'Covert 2.0 Insulated',
-    image: IMG.jacket,
     priceTier: 'mid-range',
     activity: 'both',
     styles: ['freestyle', 'all-mountain', 'piste'],
@@ -1443,9 +1443,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'A balanced mid-weight for typical -5 °C to 0 °C days, cut loose enough for a mid-layer when it gets colder.',
     prices: [
-      { retailer: 'Evo', price: 279.95, link: 'https://www.evo.com/jackets/burton-covert-2' },
-      { retailer: 'REI', price: 289.0, link: 'https://www.rei.com/product/burton-covert-2' },
-      { retailer: 'The House', price: 299.99, link: 'https://www.the-house.com/burton-covert-2' },
+      { retailer: 'Evo', price: 279.95 },
+      { retailer: 'REI', price: 289.0 },
+      { retailer: 'The House', price: 299.99 },
     ],
   },
   {
@@ -1453,7 +1453,6 @@ export const gearDatabase: GearItem[] = [
     category: 'jacket',
     brand: 'Burton',
     name: 'Frostner 2L Down Jacket',
-    image: IMG.jacket,
     priceTier: 'mid-range',
     activity: 'both',
     styles: ['piste', 'all-mountain'],
@@ -1474,9 +1473,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'Purpose-built for deep-cold days — the hybrid fill avoids down’s classic failure mode in wet weather.',
     prices: [
-      { retailer: 'Evo', price: 349.95, link: 'https://www.evo.com/jackets/burton-frostner-down' },
-      { retailer: 'Backcountry', price: 369.95, link: 'https://www.backcountry.com/burton-frostner-down' },
-      { retailer: 'Sport Chek', price: 399.99, link: 'https://www.sportchek.ca/burton-frostner-down' },
+      { retailer: 'Evo', price: 349.95 },
+      { retailer: 'Backcountry', price: 369.95 },
+      { retailer: 'Sport Chek', price: 399.99 },
     ],
   },
   {
@@ -1484,7 +1483,6 @@ export const gearDatabase: GearItem[] = [
     category: 'jacket',
     brand: 'Salomon',
     name: 'Stance 3L Shell',
-    image: IMG.shell,
     priceTier: 'mid-range',
     activity: 'both',
     styles: ['backcountry', 'all-mountain'],
@@ -1505,9 +1503,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'For riders generating their own heat on the skin track who need breathability over insulation.',
     prices: [
-      { retailer: 'Evo', price: 379.95, link: 'https://www.evo.com/jackets/salomon-stance-3l' },
-      { retailer: 'Backcountry', price: 399.95, link: 'https://www.backcountry.com/salomon-stance-3l' },
-      { retailer: 'REI', price: 409.0, link: 'https://www.rei.com/product/salomon-stance-3l' },
+      { retailer: 'Evo', price: 379.95 },
+      { retailer: 'Backcountry', price: 399.95 },
+      { retailer: 'REI', price: 409.0 },
     ],
   },
   {
@@ -1515,7 +1513,6 @@ export const gearDatabase: GearItem[] = [
     category: 'jacket',
     brand: "Arc'teryx",
     name: 'Macai Down Jacket',
-    image: IMG.jacket,
     priceTier: 'premium',
     activity: 'both',
     styles: ['piste', 'all-mountain'],
@@ -1536,9 +1533,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'The definitive deep-cold jacket — for chairlift days at -15 °C and below where nothing else is warm enough.',
     prices: [
-      { retailer: 'Backcountry', price: 949.0, link: 'https://www.backcountry.com/arcteryx-macai' },
-      { retailer: 'REI', price: 975.0, link: 'https://www.rei.com/product/arcteryx-macai' },
-      { retailer: 'Evo', price: 999.95, link: 'https://www.evo.com/jackets/arcteryx-macai' },
+      { retailer: 'Backcountry', price: 949.0 },
+      { retailer: 'REI', price: 975.0 },
+      { retailer: 'Evo', price: 999.95 },
     ],
   },
   {
@@ -1546,7 +1543,6 @@ export const gearDatabase: GearItem[] = [
     category: 'jacket',
     brand: "Arc'teryx",
     name: 'Sabre Jacket',
-    image: IMG.jacketAlt,
     priceTier: 'premium',
     activity: 'both',
     styles: ['all-mountain', 'backcountry', 'freestyle'],
@@ -1567,9 +1563,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'For riders who want one shell for everything and layer underneath to match the day’s temperature.',
     prices: [
-      { retailer: 'Backcountry', price: 649.0, link: 'https://www.backcountry.com/arcteryx-sabre' },
-      { retailer: 'REI', price: 675.0, link: 'https://www.rei.com/product/arcteryx-sabre' },
-      { retailer: 'Evo', price: 699.95, link: 'https://www.evo.com/jackets/arcteryx-sabre' },
+      { retailer: 'Backcountry', price: 649.0 },
+      { retailer: 'REI', price: 675.0 },
+      { retailer: 'Evo', price: 699.95 },
     ],
   },
   {
@@ -1577,7 +1573,6 @@ export const gearDatabase: GearItem[] = [
     category: 'jacket',
     brand: "Arc'teryx",
     name: 'Rush Jacket',
-    image: IMG.shell,
     priceTier: 'premium',
     activity: 'both',
     styles: ['backcountry'],
@@ -1598,9 +1593,9 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'For committed ski tourers and splitboarders where sweat management matters more than raw warmth.',
     prices: [
-      { retailer: 'Backcountry', price: 699.0, link: 'https://www.backcountry.com/arcteryx-rush' },
-      { retailer: 'REI', price: 725.0, link: 'https://www.rei.com/product/arcteryx-rush' },
-      { retailer: 'Evo', price: 749.95, link: 'https://www.evo.com/jackets/arcteryx-rush' },
+      { retailer: 'Backcountry', price: 699.0 },
+      { retailer: 'REI', price: 725.0 },
+      { retailer: 'Evo', price: 749.95 },
     ],
   },
   {
@@ -1608,7 +1603,6 @@ export const gearDatabase: GearItem[] = [
     category: 'jacket',
     brand: 'Burton',
     name: '[ak] Cyclic GORE-TEX 2L',
-    image: IMG.jacketAlt,
     priceTier: 'premium',
     activity: 'snowboard',
     styles: ['backcountry', 'freestyle', 'all-mountain'],
@@ -1629,12 +1623,30 @@ export const gearDatabase: GearItem[] = [
     matchReason:
       'A snowboard-specific freeride shell built for movement, hiking and layering across changing conditions.',
     prices: [
-      { retailer: 'Evo', price: 429.95, link: 'https://www.evo.com/jackets/burton-ak-cyclic' },
-      { retailer: 'Backcountry', price: 449.95, link: 'https://www.backcountry.com/burton-ak-cyclic' },
-      { retailer: 'The House', price: 479.99, link: 'https://www.the-house.com/burton-ak-cyclic' },
+      { retailer: 'Evo', price: 429.95 },
+      { retailer: 'Backcountry', price: 449.95 },
+      { retailer: 'The House', price: 479.99 },
     ],
   },
 ];
+
+/**
+ * Public database.
+ *
+ * Retailer links are generated here rather than stored, so every link is a live
+ * search on that retailer's own site for the exact product — no dead
+ * product-detail URLs to rot. Cards render these with
+ * `target="_blank" rel="noopener noreferrer"`.
+ */
+export const gearDatabase: GearItem[] = listings.map(({ searchTerm, prices, ...item }) => ({
+  ...item,
+  image: buildGearImage(item),
+  prices: prices.map<RetailerPrice>(({ retailer, price }) => ({
+    retailer,
+    price,
+    link: buildSearchUrl(retailer, searchTerm ?? `${item.brand} ${item.name}`),
+  })),
+}));
 
 /** Lookup helper. */
 export const getGearById = (id: string): GearItem | undefined =>

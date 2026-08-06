@@ -55,8 +55,8 @@ export default function Footer() {
 
         <div className="flex flex-col gap-3 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
           <p>
-            © {new Date().getFullYear()} Freezed. Built by Eric Yu. Prices, links and availability
-            are illustrative demo data.
+            © {new Date().getFullYear()} Freezed. Built by Eric Yu. Prices are illustrative demo
+            data; retailer links run a live search on each store.
           </p>
           <p className="text-slate-500">
             Sizing output is guidance, not a fitting. Always shell-fit boots with a qualified

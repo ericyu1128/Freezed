@@ -245,14 +245,24 @@ export default function GearCard({
               Also considered
             </h4>
             <div className="flex flex-wrap gap-2">
-              {alternates.map((alternate) => (
-                <span key={alternate.id} className="pill">
-                  {alternate.brand} {alternate.name}
-                  <span className="text-slate-500">
-                    ${Math.min(...alternate.prices.map((price) => price.price)).toFixed(0)}
-                  </span>
-                </span>
-              ))}
+              {alternates.map((alternate) => {
+                const cheapest = [...alternate.prices].sort((a, b) => a.price - b.price)[0];
+                return (
+                  <a
+                    key={alternate.id}
+                    href={cheapest.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(event) => event.stopPropagation()}
+                    title={`Search ${cheapest.retailer} for ${alternate.brand} ${alternate.name}`}
+                    className="pill focus-ring transition-colors hover:border-frost-400/40 hover:bg-white/10 hover:text-white"
+                  >
+                    {alternate.brand} {alternate.name}
+                    <span className="text-slate-500">${cheapest.price.toFixed(0)}</span>
+                    <ExternalIcon className="h-3 w-3 text-slate-500" />
+                  </a>
+                );
+              })}
             </div>
           </section>
         )}

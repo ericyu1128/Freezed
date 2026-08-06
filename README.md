@@ -53,7 +53,8 @@ components/
   Navbar / Footer / Logo / Snowfall / Icons
 lib/
   types.ts              All domain types
-  gearDatabase.ts       40+ mock items with specs and multi-retailer pricing
+  gearDatabase.ts       52 items with specs and multi-retailer pricing
+  gearImages.ts         Spec-driven SVG product renderer
   matcherLogic.ts       Pure sizing + scoring engine
 ```
 
@@ -112,6 +113,51 @@ Snowboards switch to a board-waist check (standard vs. wide) driven by estimated
 scoring. Exact-tier matches then score +60, one tier away +22. Every card shows a full retailer
 price comparison with the cheapest option flagged, and the dashboard totals the kit at best price.
 
+### Product images
+
+Images are generated, not stored. `lib/gearImages.ts` draws every item as an SVG data URI from
+**the same spec values the matcher reads**, so the picture is always of that specific product:
+
+| Category | Driven by |
+| --- | --- |
+| Skis / boards | `specs.waistWidth` sets the silhouette — a 72 mm carver is visibly pinched next to a 118 mm powder ski. `specs.profile` draws the camber/rocker diagram beneath. Twin tips get a tail marker; swallowtails get the notch. |
+| Boots | `specs.flex` sets cuff height and buckle count (2/3/4), and is printed on the cuff like the real thing. BOA dials, Step On cleats and walk mode appear when the specs list them. |
+| Helmets | `specs.vents` sets the vent count on the shell; a MIPS badge appears when `specs.rotational` says so. |
+| Goggles | `specs.lensTint` picks the hue, `specs.vlt` sets how dark and mirrored the lens reads, and lens shape sets the frame curve. A 12% VLT sun lens renders near-black; a 65% storm lens renders bright yellow. |
+| Jackets | `specs.insulation` decides down baffles vs. a clean shell, and `specs.warmth` sets the baffle count. Pit zips appear when specced. |
+
+Brand palettes come from a lookup table, so an Atomic ski reads red and a Black Crows ski reads
+charcoal-and-orange. Output averages ~7.5 KB per item — smaller than a single product JPEG, with no
+network request and nothing to 404.
+
+**Layout constraint worth knowing if you edit this:** the gear card renders images with
+`object-cover`, which crops the sides on narrow screens and lays the brand/name block over the
+bottom. Artwork is therefore composed into a safe window of `x ∈ [110, 690]`, `y ∈ [24, 238]` on an
+800 × 300 canvas, with the bottom strip left empty for the card's own title.
+
+### Retailer links
+
+Prices are mock data, but **links are not stored** — they're generated at module load by
+`buildSearchUrl()` as a live search query against each retailer's own site, so nothing rots into a
+dead product URL:
+
+| Retailer | Pattern |
+| --- | --- |
+| Evo | `evo.com/shop?text=…` |
+| REI | `rei.com/search?q=…` |
+| Sport Chek | `sportchek.ca/search?q=…` |
+| Backcountry | `backcountry.com/search?q=…` |
+| The House | `the-house.com/search?q=…` |
+
+`toSearchTerm()` normalises the query first: strips diacritics (`Völkl` → `Volkl`) and apostrophes
+(`Arc'teryx` → `Arcteryx`), drops em-dash colourway suffixes (`I/O MAG — ChromaPop Storm Rose` →
+`I/O MAG`) and square brackets (`[ak]` → `ak`), while leaving real hyphenated tokens like `GORE-TEX`
+and `Step-On` intact. An optional per-item `searchTerm` overrides it where the brand field and the
+shelf name disagree — Anon is a Burton company, but retailers index it as Anon.
+
+Every outbound link — the price rows, the "View deal" button and the "also considered" pills —
+opens with `target="_blank" rel="noopener noreferrer"`.
+
 ### Scoring
 
 Each candidate accumulates points for activity, budget, style, ability, gendered fit, condition
@@ -152,5 +198,6 @@ angled board based on the selected discipline.
 
 ## Notes
 
-Prices, links and availability are illustrative mock data for demo purposes. Sizing output is
-guidance, not a fitting — always shell-fit boots with a qualified bootfitter.
+Prices and availability are illustrative mock data for demo purposes; retailer links are live
+searches on each store. Sizing output is guidance, not a fitting — always shell-fit boots with a
+qualified bootfitter.
