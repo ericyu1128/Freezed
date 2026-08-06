@@ -23,6 +23,7 @@
 
 import type { GearItem, RetailerPrice } from './types';
 import { buildGearImage } from './gearImages';
+import { computePerformanceProfile } from './performanceProfile';
 
 /* ------------------------------------------------------------------ */
 /*  Retailers & live search links                                      */
@@ -68,8 +69,8 @@ export const buildSearchUrl = (retailer: Retailer, query: string): string =>
 /** A price row before its link has been generated. */
 type PriceQuote = { retailer: Retailer; price: number };
 
-/** Database rows are authored without links; they are derived on export. */
-type GearListing = Omit<GearItem, 'prices' | 'image'> & {
+/** Database rows are authored without links or performance scores; both are derived on export. */
+type GearListing = Omit<GearItem, 'prices' | 'image' | 'performance'> & {
   prices: PriceQuote[];
   /**
    * Optional override for the retailer search string. Use when the brand field
@@ -1641,6 +1642,7 @@ const listings: GearListing[] = [
 export const gearDatabase: GearItem[] = listings.map(({ searchTerm, prices, ...item }) => ({
   ...item,
   image: buildGearImage(item),
+  performance: computePerformanceProfile(item),
   prices: prices.map<RetailerPrice>(({ retailer, price }) => ({
     retailer,
     price,

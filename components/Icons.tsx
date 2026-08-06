@@ -135,6 +135,64 @@ export const MountainIcon = ({ className = base }: IconProps) => (
   </svg>
 );
 
+export const BookmarkIcon = ({ className = base }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className={className}>
+    <path
+      d="M6 3.6h12a1 1 0 0 1 1 1V21l-7-4.2L5 21V4.6a1 1 0 0 1 1-1Z"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+export const SaveIcon = ({ className = base }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className={className}>
+    <path
+      d="M5 3.6h11.4L20 7.2V19a1.4 1.4 0 0 1-1.4 1.4H5A1.4 1.4 0 0 1 3.6 19V5A1.4 1.4 0 0 1 5 3.6Z"
+      strokeLinejoin="round"
+    />
+    <path d="M7.5 3.6V9h8V3.6" strokeLinejoin="round" />
+    <path d="M7.5 20.4v-6.6h9v6.6" strokeLinejoin="round" />
+  </svg>
+);
+
+export const TrashIcon = ({ className = base }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className={className}>
+    <path d="M4.5 6.6h15" strokeLinecap="round" />
+    <path
+      d="M9 6.6V4.8a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1.8"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M6.5 6.6 7.3 19a1.6 1.6 0 0 0 1.6 1.5h6.2A1.6 1.6 0 0 0 16.7 19l.8-12.4"
+      strokeLinejoin="round"
+    />
+    <path d="M10.2 10.2v6.4M13.8 10.2v6.4" strokeLinecap="round" />
+  </svg>
+);
+
+export const PencilIcon = ({ className = base }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className={className}>
+    <path
+      d="m14.2 4.6 5.2 5.2L8.4 20.8 3 22l1.2-5.4Z"
+      strokeLinejoin="round"
+    />
+    <path d="m12.6 6.2 5.2 5.2" strokeLinecap="round" />
+  </svg>
+);
+
+export const XIcon = ({ className = base }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
+    <path d="M5 5 19 19M19 5 5 19" strokeLinecap="round" />
+  </svg>
+);
+
+export const UploadIcon = ({ className = base }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className={className}>
+    <path d="M12 15.5V4M12 4 7.5 8.5M12 4l4.5 4.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M4.5 15.5V19a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5v-3.5" strokeLinecap="round" />
+  </svg>
+);
+
 export const categoryIcon = (
   category: GearCategory,
   activity: 'ski' | 'snowboard',

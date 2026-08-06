@@ -75,6 +75,8 @@ export interface GearItem {
   /** Static, editorial "who is this for" blurb. */
   matchReason: string;
   prices: RetailerPrice[];
+  /** Normalized 0–10 scores across the six hexagon axes, derived from this item's specs. */
+  performance: PerformanceProfile;
 
   /* -------- optional matching metadata (used by matcherLogic) -------- */
   /** Which discipline the item serves. `both` = shared hardgood/softgood. */
@@ -88,6 +90,22 @@ export interface GearItem {
   /** Conditions the item is tuned for (apparel + optics). */
   temps?: Temperature[];
 }
+
+/* ------------------------------------------------------------------ */
+/*  Performance profile (hexagon / radar chart)                        */
+/* ------------------------------------------------------------------ */
+
+/** The six axes plotted on the gear performance hexagon. */
+export type PerformanceAxis =
+  | 'carving'
+  | 'powderFloat'
+  | 'playfulness'
+  | 'stability'
+  | 'versatility'
+  | 'accessibility';
+
+/** Normalized 0–10 score per axis, derived from an item's real specs. */
+export type PerformanceProfile = Record<PerformanceAxis, number>;
 
 /* ------------------------------------------------------------------ */
 /*  Calculated output                                                  */
@@ -174,4 +192,30 @@ export interface HotspotDefinition {
   /** SVG coordinates within the 260 × 460 stickman viewBox. */
   x: number;
   y: number;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Saved setups (local vault)                                         */
+/* ------------------------------------------------------------------ */
+
+/** Slim per-item snapshot stored with a saved setup — enough to render the vault list. */
+export interface SavedGearSummary {
+  category: GearCategory;
+  itemId: string;
+  brand: string;
+  name: string;
+  image: string;
+  bestPrice: number;
+  retailer: string;
+}
+
+/** A user-named snapshot of a match result, persisted to `localStorage`. */
+export interface SavedSetup {
+  id: string;
+  name: string;
+  /** ISO timestamp. */
+  timestamp: string;
+  stats: UserStats;
+  recommendations: SavedGearSummary[];
+  totalBestPrice: number;
 }

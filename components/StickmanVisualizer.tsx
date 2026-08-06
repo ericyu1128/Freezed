@@ -23,6 +23,86 @@ const HOTSPOTS: Hotspot[] = [
   { category: 'skis', bodyPart: 'Base', x: 130, y: 424, side: 'right' },
 ];
 
+/**
+ * One distinct accent per gear category so the figure reads as actually
+ * "dressed" — each equipped zone, its marker and its gear tag all share the
+ * same colour, tying the SVG figure to the badges below it.
+ */
+const CATEGORY_TAG: Record<
+  GearCategory,
+  {
+    /** Raw hex used for inline SVG stroke/glow, which cannot consume Tailwind classes. */
+    accent: string;
+    markerBorder: string;
+    markerText: string;
+    ring: string;
+    chipBorder: string;
+    chipBg: string;
+    chipText: string;
+    dot: string;
+  }
+> = {
+  helmet: {
+    accent: '#38bdf8',
+    markerBorder: 'border-frost-400/70',
+    markerText: 'text-frost-200',
+    ring: 'bg-frost-400/50',
+    chipBorder: 'border-frost-400/40',
+    chipBg: 'bg-frost-400/12',
+    chipText: 'text-frost-100',
+    dot: 'bg-frost-400',
+  },
+  goggles: {
+    accent: '#67e8f9',
+    markerBorder: 'border-neon-ice/70',
+    markerText: 'text-neon-ice',
+    ring: 'bg-neon-ice/50',
+    chipBorder: 'border-neon-ice/40',
+    chipBg: 'bg-neon-ice/12',
+    chipText: 'text-neon-ice',
+    dot: 'bg-neon-ice',
+  },
+  jacket: {
+    accent: '#a78bfa',
+    markerBorder: 'border-neon-violet/70',
+    markerText: 'text-neon-violet',
+    ring: 'bg-neon-violet/50',
+    chipBorder: 'border-neon-violet/40',
+    chipBg: 'bg-neon-violet/12',
+    chipText: 'text-violet-100',
+    dot: 'bg-neon-violet',
+  },
+  boots: {
+    accent: '#5eead4',
+    markerBorder: 'border-neon-mint/70',
+    markerText: 'text-neon-mint',
+    ring: 'bg-neon-mint/50',
+    chipBorder: 'border-neon-mint/40',
+    chipBg: 'bg-neon-mint/12',
+    chipText: 'text-neon-mint',
+    dot: 'bg-neon-mint',
+  },
+  skis: {
+    accent: '#7dd3fc',
+    markerBorder: 'border-frost-300/70',
+    markerText: 'text-frost-200',
+    ring: 'bg-frost-300/50',
+    chipBorder: 'border-frost-300/40',
+    chipBg: 'bg-frost-300/12',
+    chipText: 'text-frost-100',
+    dot: 'bg-frost-300',
+  },
+};
+
+/** Hex string + alpha -> rgba(), used to derive per-category zone fills from `CATEGORY_TAG.accent`. */
+const hexToRgba = (hex: string, alpha: number): string => {
+  const value = Number.parseInt(hex.slice(1), 16);
+  const r = (value >> 16) & 255;
+  const g = (value >> 8) & 255;
+  const b = value & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
 interface StickmanVisualizerProps {
   activity: Activity;
   recommendations: Recommendation[];
@@ -49,18 +129,22 @@ export default function StickmanVisualizer({
   const isEquipped = (category: GearCategory) => byCategory.has(category);
   const isActive = (category: GearCategory) => activeCategory === category;
 
-  /** Stroke colour for a body zone: bright when active, icy when equipped, dim otherwise. */
+  /** Stroke colour for a body zone: bright white when active, the item's own accent when equipped, dim otherwise. */
   const zoneStroke = (category: GearCategory) =>
-    isActive(category) ? '#ffffff' : isEquipped(category) ? '#7dd3fc' : '#475569';
+    isActive(category) ? '#ffffff' : isEquipped(category) ? CATEGORY_TAG[category].accent : '#475569';
 
-  const zoneFill = (category: GearCategory, equippedFill: string) =>
-    isActive(category) ? 'rgba(255,255,255,0.22)' : isEquipped(category) ? equippedFill : 'rgba(71,85,105,0.18)';
+  const zoneFill = (category: GearCategory, equippedFill?: string) =>
+    isActive(category)
+      ? 'rgba(255,255,255,0.22)'
+      : isEquipped(category)
+        ? (equippedFill ?? hexToRgba(CATEGORY_TAG[category].accent, 0.3))
+        : 'rgba(71,85,105,0.18)';
 
   const zoneGlow = (category: GearCategory) =>
     isActive(category)
       ? 'drop-shadow(0 0 12px rgba(255,255,255,0.75))'
       : isEquipped(category)
-        ? 'drop-shadow(0 0 7px rgba(56,189,248,0.6))'
+        ? `drop-shadow(0 0 7px ${hexToRgba(CATEGORY_TAG[category].accent, 0.6)})`
         : 'none';
 
   return (
@@ -210,7 +294,7 @@ export default function StickmanVisualizer({
               width="30"
               height="46"
               rx="9"
-              fill={zoneFill('boots', 'rgba(56,189,248,0.32)')}
+              fill={zoneFill('boots')}
               stroke={zoneStroke('boots')}
               strokeWidth="2.5"
             />
@@ -220,7 +304,7 @@ export default function StickmanVisualizer({
               width="30"
               height="46"
               rx="9"
-              fill={zoneFill('boots', 'rgba(56,189,248,0.32)')}
+              fill={zoneFill('boots')}
               stroke={zoneStroke('boots')}
               strokeWidth="2.5"
             />
@@ -344,7 +428,7 @@ export default function StickmanVisualizer({
           >
             <path
               d="M96 62a34 34 0 0 1 68 0v4a3 3 0 0 1-3 3H99a3 3 0 0 1-3-3Z"
-              fill={zoneFill('helmet', 'rgba(56,189,248,0.42)')}
+              fill={zoneFill('helmet')}
               stroke={zoneStroke('helmet')}
               strokeWidth="2.5"
               strokeLinejoin="round"
@@ -388,11 +472,11 @@ export default function StickmanVisualizer({
                 top: `${(hotspot.y / 470) * 100}%`,
               }}
             >
-              {/* pulsing ring */}
+              {/* pulsing ring — colour matches this item's gear tag below */}
               {equipped && (
                 <span
                   className={`absolute inset-0 rounded-full ${
-                    active ? 'bg-white/60' : 'bg-frost-400/50'
+                    active ? 'bg-white/60' : CATEGORY_TAG[hotspot.category].ring
                   } animate-pulse-ring`}
                 />
               )}
@@ -403,7 +487,7 @@ export default function StickmanVisualizer({
                   active
                     ? 'scale-110 border-white bg-white text-glacier-1000 shadow-glow-lg'
                     : equipped
-                      ? 'border-frost-300/70 bg-glacier-900/90 text-frost-200 shadow-glow backdrop-blur'
+                      ? `${CATEGORY_TAG[hotspot.category].markerBorder} bg-glacier-900/90 ${CATEGORY_TAG[hotspot.category].markerText} shadow-glow backdrop-blur`
                       : 'border-white/15 bg-glacier-900/80 text-slate-600'
                 }`}
               >
@@ -433,6 +517,38 @@ export default function StickmanVisualizer({
           );
         })}
       </div>
+
+      {/* Colour-coded gear tags — the same accent worn on the figure above */}
+      {recommendations.length > 0 && (
+        <div className="mt-4">
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+            Equipped gear
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {recommendations.map((rec) => {
+              const tag = CATEGORY_TAG[rec.category];
+              const active = isActive(rec.category);
+              return (
+                <button
+                  key={rec.category}
+                  type="button"
+                  onMouseEnter={() => onHover(rec.category)}
+                  onMouseLeave={() => onHover(null)}
+                  onClick={() => onSelect(rec.category)}
+                  className={`focus-ring inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-all duration-300 ${
+                    active
+                      ? 'scale-105 border-white/50 bg-white/15 text-white shadow-glow'
+                      : `${tag.chipBorder} ${tag.chipBg} ${tag.chipText} hover:scale-105`
+                  }`}
+                >
+                  <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${active ? 'bg-white' : tag.dot}`} />
+                  {rec.item.brand} {rec.item.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Key metrics under the figure */}
       {specs && (

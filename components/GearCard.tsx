@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import type { Activity, GearCategory, Recommendation } from '@/lib/types';
 import { categoryLabel } from '@/lib/matcherLogic';
+import { PERFORMANCE_AXES } from '@/lib/performanceProfile';
 import { categoryIcon, CheckIcon, ExternalIcon, SparkIcon } from './Icons';
 import GearImage from './GearImage';
+import PerformanceHexagon from './PerformanceHexagon';
 
 const TIER_STYLE: Record<string, string> = {
   budget: 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200',
@@ -87,6 +89,37 @@ export default function GearCard({
 
       <div className="space-y-5 p-5">
         <p className="text-sm leading-relaxed text-slate-400">{item.description}</p>
+
+        {/* ---------- performance hexagon ---------- */}
+        <section>
+          <h4 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            Performance profile
+          </h4>
+          <div className="flex flex-col items-center gap-4 rounded-2xl border border-white/8 bg-white/[0.02] p-4 sm:flex-row">
+            <PerformanceHexagon profile={item.performance} className="h-40 w-40 shrink-0" />
+            <dl className="grid w-full grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
+              {PERFORMANCE_AXES.map((axis) => {
+                const value = item.performance[axis.key];
+                return (
+                  <div key={axis.key} className="flex items-center justify-between gap-2">
+                    <dt className="truncate text-xs text-slate-400">{axis.label}</dt>
+                    <dd className="flex shrink-0 items-center gap-1.5">
+                      <span className="h-1.5 w-10 overflow-hidden rounded-full bg-white/10">
+                        <span
+                          className="block h-full rounded-full bg-gradient-to-r from-frost-400 to-neon-mint"
+                          style={{ width: `${(value / 10) * 100}%` }}
+                        />
+                      </span>
+                      <span className="w-7 text-right text-xs font-bold tabular-nums text-slate-200">
+                        {value.toFixed(1)}
+                      </span>
+                    </dd>
+                  </div>
+                );
+              })}
+            </dl>
+          </div>
+        </section>
 
         {/* ---------- calculated specs ---------- */}
         <section>

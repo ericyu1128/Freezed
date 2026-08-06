@@ -1,6 +1,7 @@
 'use client';
 
-import type { GearCategory, MatchResult } from '@/lib/types';
+import { useState } from 'react';
+import type { GearCategory, MatchResult, UserStats } from '@/lib/types';
 import {
   LEVEL_LABEL,
   STYLE_LABEL,
@@ -8,8 +9,11 @@ import {
   TIER_LABEL,
   categoryLabel,
 } from '@/lib/matcherLogic';
+import { addSavedSetup } from '@/lib/savedSetups';
 import GearCard from './GearCard';
-import { MountainIcon, RefreshIcon, SparkIcon, TagIcon, ThermometerIcon } from './Icons';
+import SaveConfigurationModal from './SaveConfigurationModal';
+import SavedVault from './SavedVault';
+import { MountainIcon, RefreshIcon, SaveIcon, SparkIcon, TagIcon, ThermometerIcon } from './Icons';
 
 interface DashboardProps {
   result: MatchResult;
@@ -17,6 +21,7 @@ interface DashboardProps {
   onHover: (category: GearCategory | null) => void;
   onSelect: (category: GearCategory) => void;
   onReset: () => void;
+  onLoadSetup: (stats: UserStats) => void;
 }
 
 export default function Dashboard({
@@ -25,8 +30,17 @@ export default function Dashboard({
   onHover,
   onSelect,
   onReset,
+  onLoadSetup,
 }: DashboardProps) {
   const { stats, specs, recommendations, totalBestPrice } = result;
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [vaultRefreshToken, setVaultRefreshToken] = useState(0);
+
+  const handleSaveConfiguration = (name: string) => {
+    addSavedSetup(name, result);
+    setVaultRefreshToken((token) => token + 1);
+    setSaveModalOpen(false);
+  };
 
   const profilePills: { icon?: React.ReactNode; label: string; accent?: boolean }[] = [
     { icon: <MountainIcon className="h-3.5 w-3.5" />, label: stats.activity === 'ski' ? 'Ski' : 'Snowboard' },
@@ -56,10 +70,17 @@ export default function Dashboard({
               {recommendations.length} pieces matched to your profile
             </h2>
           </div>
-          <button type="button" onClick={onReset} className="btn-ghost !py-2.5">
-            <RefreshIcon className="h-4 w-4" />
-            Start over
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <SavedVault onLoad={onLoadSetup} refreshToken={vaultRefreshToken} />
+            <button type="button" onClick={() => setSaveModalOpen(true)} className="btn-ghost !py-2.5">
+              <SaveIcon className="h-4 w-4" />
+              Save Configuration
+            </button>
+            <button type="button" onClick={onReset} className="btn-ghost !py-2.5">
+              <RefreshIcon className="h-4 w-4" />
+              Start over
+            </button>
+          </div>
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
@@ -202,6 +223,14 @@ export default function Dashboard({
           ))}
         </div>
       )}
+
+      <SaveConfigurationModal
+        open={saveModalOpen}
+        itemCount={recommendations.length}
+        totalPrice={totalBestPrice}
+        onClose={() => setSaveModalOpen(false)}
+        onSave={handleSaveConfiguration}
+      />
     </div>
   );
 }

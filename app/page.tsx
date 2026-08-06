@@ -155,6 +155,7 @@ export default function HomePage() {
                 onHover={setActiveCategory}
                 onSelect={handleSelect}
                 onReset={handleReset}
+                onLoadSetup={handleSubmit}
               />
             )}
           </div>
