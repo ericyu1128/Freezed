@@ -152,7 +152,10 @@ export interface Dictionary {
     save: (amount: string) => string;
     best: string;
     whyThisMatches: string;
-    alsoConsidered: string;
+    compatibilityScore: string;
+    compatibilityBreakdown: string;
+    rankedMatches: (count: number) => string;
+    sortedByMatch: string;
     bestPrice: string;
     at: string;
     viewDeal: string;
@@ -449,7 +452,10 @@ export const en: Dictionary = {
     save: (amount) => `Save ${amount}`,
     best: 'Best',
     whyThisMatches: 'Why this matches you',
-    alsoConsidered: 'Also considered',
+    compatibilityScore: 'Compatibility',
+    compatibilityBreakdown: 'Score breakdown',
+    rankedMatches: (count) => `Ranked matches (${count})`,
+    sortedByMatch: 'Sorted by best match',
     bestPrice: 'Best price',
     at: 'at',
     viewDeal: 'View deal',
@@ -752,7 +758,10 @@ export const zh: Dictionary = {
     save: (amount) => `省 ${amount}`,
     best: '最优',
     whyThisMatches: '为什么它适合你',
-    alsoConsidered: '其他备选',
+    compatibilityScore: '匹配度',
+    compatibilityBreakdown: '评分细分',
+    rankedMatches: (count) => `匹配排名 (${count})`,
+    sortedByMatch: '按匹配度排序',
     bestPrice: '最优价格',
     at: '来自',
     viewDeal: '查看优惠',

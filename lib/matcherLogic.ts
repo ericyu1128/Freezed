@@ -6,6 +6,7 @@
  * profile always produces the same recommendation set.
  */
 
+import { computeCompatibility } from './compatibilityScore';
 import gearDatabase from './gearDatabase';
 import type { Language } from './i18n/translations';
 import type {
@@ -20,6 +21,7 @@ import type {
   Level,
   MatchResult,
   NumericRange,
+  RankedCandidate,
   Recommendation,
   RetailerPrice,
   RidingStyle,
@@ -488,22 +490,15 @@ export const calculateSpecs = (stats: UserStats): CalculatedSpecs => {
 };
 
 /* ------------------------------------------------------------------ */
-/*  6. Budget filtering & scoring                                      */
+/*  6. Budget filtering                                                */
 /* ------------------------------------------------------------------ */
 
 /**
- * Budget alignment score. An exact tier match dominates; one tier away is a
- * usable compromise; two tiers away is heavily penalised so a premium item
- * never surfaces for a budget rider.
+ * Items that survive the hard budget filter (never more than one tier
+ * away). This is the one hard constraint left in the pipeline — category
+ * and price tier decide what's even in the running; everything else is
+ * scored continuously by `computeCompatibility` (see `compatibilityScore.ts`).
  */
-export const budgetScore = (item: GearItem, budgetTier: BudgetTier): number => {
-  const distance = Math.abs(TIER_INDEX[item.priceTier] - TIER_INDEX[budgetTier]);
-  if (distance === 0) return 60;
-  if (distance === 1) return 22;
-  return -30;
-};
-
-/** Items that survive the hard budget filter (never more than one tier away). */
 export const filterByBudget = (items: GearItem[], budgetTier: BudgetTier): GearItem[] => {
   const withinOneTier = items.filter(
     (item) => Math.abs(TIER_INDEX[item.priceTier] - TIER_INDEX[budgetTier]) <= 1,
@@ -520,114 +515,6 @@ const numericSpec = (item: GearItem, key: string): number | null => {
   }
   return null;
 };
-
-/** Distance-from-window penalty: 0 inside the window, scaled outside it. */
-const rangePenalty = (value: number, range: NumericRange, perUnit: number): number => {
-  if (value >= range.min && value <= range.max) return 0;
-  const distance = value < range.min ? range.min - value : value - range.max;
-  return distance * perUnit;
-};
-
-export const scoreItem = (item: GearItem, stats: UserStats, specs: CalculatedSpecs): number => {
-  let score = 0;
-
-  // --- activity ------------------------------------------------------
-  if (item.activity && item.activity !== 'both' && item.activity !== stats.activity) {
-    return -Infinity; // hard filter: a snowboard is never a ski recommendation
-  }
-  score += item.activity === stats.activity ? 30 : 20;
-
-  // --- budget --------------------------------------------------------
-  score += budgetScore(item, stats.budgetTier);
-
-  // --- style / level / gender ---------------------------------------
-  if (item.styles) score += item.styles.includes(stats.style) ? 26 : -6;
-  if (item.levels) score += item.levels.includes(stats.level) ? 22 : -10;
-  if (item.genders) {
-    if (item.genders.includes(stats.gender)) score += 12;
-    else if (stats.gender === 'unisex' && item.genders.includes('male')) score += 6;
-    else if (item.genders.includes('unisex')) score += 4;
-    else score -= 26; // e.g. a women's-specific boot for a male rider
-  }
-
-  // --- conditions ----------------------------------------------------
-  if (item.temps) score += item.temps.includes(stats.temperature) ? 24 : -8;
-
-  // --- category-specific numeric fit ---------------------------------
-  switch (item.category) {
-    case 'skis': {
-      const waist = numericSpec(item, 'waistWidth');
-      if (waist !== null) {
-        const penalty = rangePenalty(
-          waist,
-          specs.waistWidth,
-          stats.activity === 'snowboard' ? 1.2 : 2.4,
-        );
-        score += penalty === 0 ? 40 : Math.max(-40, 40 - penalty);
-      }
-      break;
-    }
-    case 'boots': {
-      const flex = numericSpec(item, 'flex');
-      if (flex !== null) {
-        const perUnit = stats.activity === 'snowboard' ? 9 : 1.6;
-        const penalty = rangePenalty(flex, specs.bootFlex, perUnit);
-        score += penalty === 0 ? 40 : Math.max(-40, 40 - penalty);
-      }
-      break;
-    }
-    case 'bindings': {
-      if (stats.activity === 'snowboard') {
-        const flexMatch = String(item.specs.flexRating ?? '').match(/(\d+(?:\.\d+)?)\s*\/\s*10/);
-        const flexRating = flexMatch ? Number(flexMatch[1]) : null;
-        if (flexRating !== null) {
-          const idealFlex: Record<Level, number> = { beginner: 3, intermediate: 5, advanced: 7, expert: 9 };
-          const penalty = Math.abs(flexRating - idealFlex[stats.level]) * 5;
-          score += penalty === 0 ? 34 : Math.max(-30, 34 - penalty);
-        }
-      } else {
-        const dinNumbers = String(item.specs.dinRange ?? '').match(/[\d.]+/g)?.map(Number) ?? [];
-        const dinMax = dinNumbers[dinNumbers.length - 1];
-        if (dinMax !== undefined) {
-          const idealDin: Record<Level, number> = { beginner: 5, intermediate: 8, advanced: 11, expert: 14 };
-          const penalty = Math.abs(dinMax - idealDin[stats.level]) * 4;
-          score += penalty === 0 ? 34 : Math.max(-30, 34 - penalty);
-        }
-      }
-      break;
-    }
-    case 'goggles': {
-      const vlt = numericSpec(item, 'vlt');
-      if (vlt !== null) {
-        // Weighted heavily: a lens outside the light window is the wrong lens,
-        // even if it is a perfect budget match.
-        const penalty = rangePenalty(vlt, specs.vlt, 2.2);
-        score += penalty === 0 ? 44 : Math.max(-40, 44 - penalty);
-      }
-      break;
-    }
-    case 'jacket':
-    case 'helmet': {
-      const warmth = numericSpec(item, 'warmth');
-      if (warmth !== null) {
-        const penalty = rangePenalty(warmth, specs.warmth, item.category === 'jacket' ? 16 : 7);
-        score += penalty === 0 ? 36 : Math.max(-30, 36 - penalty);
-      }
-      break;
-    }
-    default:
-      break;
-  }
-
-  return score;
-};
-
-/**
- * Normalise a raw score into a friendly 0–100 confidence figure.
- * The divisor is deliberately above the practical maximum so near-perfect
- * matches still land in the high 80s / low 90s rather than all reading 99.
- */
-const toConfidence = (raw: number): number => clamp(Math.round(((raw + 40) / 262) * 100), 40, 99);
 
 /* ------------------------------------------------------------------ */
 /*  7. Dynamic card specs + generated reasoning                        */
@@ -752,7 +639,7 @@ export const buildCalculatedSpecs = (
   return rows;
 };
 
-const buildReasonBullets = (
+export const buildReasonBullets = (
   item: GearItem,
   stats: UserStats,
   specs: CalculatedSpecs,
@@ -845,7 +732,7 @@ const buildReasonBullets = (
   return bullets;
 };
 
-const buildReasoning = (item: GearItem, stats: UserStats, specs: CalculatedSpecs): string => {
+export const buildReasoning = (item: GearItem, stats: UserStats, specs: CalculatedSpecs): string => {
   const rider = `a ${stats.height} cm / ${stats.weight} kg ${LEVEL_LABEL[stats.level].toLowerCase()} ${
     stats.activity === 'ski' ? 'skier' : 'snowboarder'
   }`;
@@ -876,6 +763,9 @@ const buildReasoning = (item: GearItem, stats: UserStats, specs: CalculatedSpecs
 /*  8. Public entry point                                              */
 /* ------------------------------------------------------------------ */
 
+/** How many ranked candidates to surface per category in the UI. */
+const MAX_CANDIDATES = 6;
+
 export const matchGear = (stats: UserStats, database: GearItem[] = gearDatabase): MatchResult => {
   const specs = calculateSpecs(stats);
 
@@ -891,10 +781,13 @@ export const matchGear = (stats: UserStats, database: GearItem[] = gearDatabase)
 
     if (pool.length === 0) return null;
 
-    const ranked = pool
-      .map((item) => ({ item, score: scoreItem(item, stats, specs) }))
-      .filter((entry) => Number.isFinite(entry.score))
-      .sort((a, b) => b.score - a.score);
+    const ranked: RankedCandidate[] = pool
+      .map((item) => {
+        const { score, contributions } = computeCompatibility(item, stats, specs);
+        return { item, score, breakdown: contributions, bestPrice: cheapest(item.prices) };
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, MAX_CANDIDATES);
 
     if (ranked.length === 0) return null;
 
@@ -903,11 +796,11 @@ export const matchGear = (stats: UserStats, database: GearItem[] = gearDatabase)
     return {
       category,
       item: winner.item,
-      score: toConfidence(winner.score),
+      score: winner.score,
       reasoning: buildReasoning(winner.item, stats, specs),
       reasonBullets: buildReasonBullets(winner.item, stats, specs),
-      bestPrice: cheapest(winner.item.prices),
-      alternates: ranked.slice(1, 3).map((entry) => entry.item),
+      bestPrice: winner.bestPrice,
+      candidates: ranked,
     } satisfies Recommendation;
   }).filter((entry): entry is Recommendation => entry !== null);
 

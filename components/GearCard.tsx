@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { Activity, CalculatedSpecs, GearCategory, Recommendation, UserStats } from '@/lib/types';
-import { buildCalculatedSpecs, categoryLabel } from '@/lib/matcherLogic';
+import { buildCalculatedSpecs, buildReasonBullets, buildReasoning, categoryLabel } from '@/lib/matcherLogic';
 import { getPerformanceAxes } from '@/lib/performanceProfile';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { categoryIcon, CheckIcon, ExternalIcon, SparkIcon } from './Icons';
@@ -36,7 +36,24 @@ export default function GearCard({
 }: GearCardProps) {
   const { t, language } = useLanguage();
   const [showAllSpecs, setShowAllSpecs] = useState(false);
-  const { item, reasoning, reasonBullets, score, bestPrice, alternates } = recommendation;
+  const { candidates } = recommendation;
+  const [selectedId, setSelectedId] = useState(recommendation.item.id);
+
+  const activeCandidate = candidates.find((candidate) => candidate.item.id === selectedId) ?? candidates[0];
+  const isTopPick = activeCandidate.item.id === recommendation.item.id;
+  const { item, score, breakdown, bestPrice } = activeCandidate;
+
+  const { reasoning, reasonBullets } = useMemo(
+    () =>
+      isTopPick
+        ? { reasoning: recommendation.reasoning, reasonBullets: recommendation.reasonBullets }
+        : {
+            reasoning: buildReasoning(item, stats, specs),
+            reasonBullets: buildReasonBullets(item, stats, specs),
+          },
+    [isTopPick, item, recommendation.reasonBullets, recommendation.reasoning, specs, stats],
+  );
+
   const calculatedSpecs = buildCalculatedSpecs(item, stats, specs, language);
 
   const sortedPrices = [...item.prices].sort((a, b) => a.price - b.price);
@@ -79,9 +96,9 @@ export default function GearCard({
           </span>
         </div>
 
-        {/* confidence ring */}
+        {/* compatibility score ring */}
         <div className="absolute right-4 top-4">
-          <ScoreRing score={score} />
+          <ScoreRing score={score} label={t.gearCard.compatibilityScore} />
         </div>
 
         <div className="absolute bottom-3 left-4 right-4">
@@ -279,35 +296,83 @@ export default function GearCard({
                 </li>
               ))}
             </ul>
+
+            <div className="mt-4 border-t border-white/10 pt-3">
+              <h5 className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                {t.gearCard.compatibilityBreakdown}
+              </h5>
+              <dl className="space-y-1.5">
+                {breakdown.map((feature) => (
+                  <div key={feature.key} className="flex items-center gap-2">
+                    <dt className="w-28 shrink-0 truncate text-[11px] text-slate-500">{feature.label}</dt>
+                    <dd className="flex flex-1 items-center gap-2">
+                      <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
+                        <span
+                          className="block h-full rounded-full bg-gradient-to-r from-frost-400 to-neon-mint"
+                          style={{ width: `${Math.round(feature.fit * 100)}%` }}
+                        />
+                      </span>
+                      <span className="w-9 shrink-0 text-right text-[11px] font-bold tabular-nums text-slate-300">
+                        {Math.round(feature.fit * 100)}%
+                      </span>
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
           </div>
         </section>
 
-        {/* ---------- alternates ---------- */}
-        {alternates.length > 0 && (
+        {/* ---------- ranked matches ---------- */}
+        {candidates.length > 1 && (
           <section>
-            <h4 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-              {t.gearCard.alsoConsidered}
-            </h4>
-            <div className="flex flex-wrap gap-2">
-              {alternates.map((alternate) => {
-                const cheapest = [...alternate.prices].sort((a, b) => a.price - b.price)[0];
+            <div className="mb-2 flex items-baseline justify-between">
+              <h4 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                {t.gearCard.rankedMatches(candidates.length)}
+              </h4>
+              <span className="text-[11px] font-medium text-slate-500">{t.gearCard.sortedByMatch}</span>
+            </div>
+            <ul className="space-y-1.5">
+              {candidates.map((candidate) => {
+                const isSelected = candidate.item.id === activeCandidate.item.id;
                 return (
-                  <a
-                    key={alternate.id}
-                    href={cheapest.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(event) => event.stopPropagation()}
-                    title={`Search ${cheapest.retailer} for ${alternate.brand} ${alternate.name}`}
-                    className="pill focus-ring transition-colors hover:border-frost-400/40 hover:bg-white/10 hover:text-white"
-                  >
-                    {alternate.brand} {alternate.name}
-                    <span className="text-slate-500">${cheapest.price.toFixed(0)}</span>
-                    <ExternalIcon className="h-3 w-3 text-slate-500" />
-                  </a>
+                  <li key={candidate.item.id}>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setSelectedId(candidate.item.id);
+                      }}
+                      className={`focus-ring flex w-full items-center justify-between gap-3 rounded-xl border px-3 py-2 text-left transition-all duration-200 ${
+                        isSelected
+                          ? 'border-frost-400/50 bg-frost-400/[0.08]'
+                          : 'border-white/8 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.05]'
+                      }`}
+                    >
+                      <span className="flex min-w-0 items-center gap-2.5">
+                        <span
+                          className={`shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-black tabular-nums ${
+                            candidate.score >= 70
+                              ? 'bg-emerald-400/15 text-emerald-200'
+                              : candidate.score >= 45
+                                ? 'bg-amber-400/15 text-amber-200'
+                                : 'bg-rose-400/15 text-rose-200'
+                          }`}
+                        >
+                          {candidate.score}%
+                        </span>
+                        <span className="truncate text-sm font-medium text-slate-300">
+                          {candidate.item.brand} {candidate.item.name}
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-xs font-bold tabular-nums text-slate-400">
+                        ${candidate.bestPrice.price.toFixed(0)}
+                      </span>
+                    </button>
+                  </li>
                 );
               })}
-            </div>
+            </ul>
           </section>
         )}
 
@@ -341,13 +406,13 @@ export default function GearCard({
 
 /* ------------------------------------------------------------------ */
 
-function ScoreRing({ score }: { score: number }) {
+function ScoreRing({ score, label }: { score: number; label: string }) {
   const radius = 20;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (score / 100) * circumference;
 
   return (
-    <div className="relative h-12 w-12">
+    <div className="relative h-12 w-12" role="img" aria-label={`${label}: ${score}%`}>
       <svg viewBox="0 0 48 48" className="h-full w-full -rotate-90">
         <circle cx="24" cy="24" r={radius} fill="rgba(5,10,20,0.7)" stroke="rgba(255,255,255,0.12)" strokeWidth="4" />
         <circle

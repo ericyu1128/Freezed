@@ -160,19 +160,41 @@ export interface CalculatedSpecRow {
   highlight?: boolean;
 }
 
-export interface Recommendation {
-  category: GearCategory;
+/** One feature's contribution to a Compatibility Score — see `computeCompatibility` in `compatibilityScore.ts`. */
+export interface FeatureContribution {
+  key: string;
+  label: string;
+  /** Renormalized weight (0-1) this feature carries in the final score; every candidate's weights sum to 1. */
+  weight: number;
+  /** How well the item satisfies this feature, 0 (poor) to 1 (ideal). */
+  fit: number;
+}
+
+/** One item ranked within a category, carrying its own Compatibility Score. */
+export interface RankedCandidate {
   item: GearItem;
-  /** 0–100 confidence that the item fits the rider. */
+  /** 0–100% Compatibility Score against the rider's profile. */
   score: number;
-  /** Generated "why this matches you" narrative. */
-  reasoning: string;
-  /** Short bullet justifications. */
-  reasonBullets: string[];
+  /** Per-feature breakdown behind `score`, most-influential first. */
+  breakdown: FeatureContribution[];
   /** Cheapest retailer price found. */
   bestPrice: RetailerPrice;
-  /** Runner-up items in the same category. */
-  alternates: GearItem[];
+}
+
+export interface Recommendation {
+  category: GearCategory;
+  /** The top-ranked item — `candidates[0].item`. */
+  item: GearItem;
+  /** 0–100% Compatibility Score for `item`. */
+  score: number;
+  /** Generated "why this matches you" narrative for `item`. */
+  reasoning: string;
+  /** Short bullet justifications for `item`. */
+  reasonBullets: string[];
+  /** Cheapest retailer price found for `item`. */
+  bestPrice: RetailerPrice;
+  /** Every item in this category that survived hard filtering, sorted by Compatibility Score descending. */
+  candidates: RankedCandidate[];
 }
 
 export interface MatchResult {
