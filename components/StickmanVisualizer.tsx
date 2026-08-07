@@ -20,6 +20,7 @@ const HOTSPOTS: Hotspot[] = [
   { category: 'goggles', bodyPart: 'Face', x: 130, y: 74, side: 'left' },
   { category: 'jacket', bodyPart: 'Torso', x: 130, y: 168, side: 'right' },
   { category: 'boots', bodyPart: 'Feet', x: 130, y: 368, side: 'left' },
+  { category: 'bindings', bodyPart: 'Bindings', x: 130, y: 400, side: 'left' },
   { category: 'skis', bodyPart: 'Base', x: 130, y: 424, side: 'right' },
 ];
 
@@ -93,8 +94,6 @@ const CATEGORY_TAG: Record<
     dot: 'bg-frost-300',
   },
   bindings: {
-    // Bindings have no dedicated stickman zone (they mount to the ski/board
-    // itself), so this accent only shows up in gear tags and card chips.
     accent: '#fbbf24',
     markerBorder: 'border-amber-400/70',
     markerText: 'text-amber-200',
@@ -160,7 +159,7 @@ export default function StickmanVisualizer({
         : 'none';
 
   return (
-    <div className="glass-strong relative overflow-hidden p-5 sm:p-6">
+    <div className="glass-strong relative p-5 sm:p-6">
       {/* Panel header */}
       <div className="mb-2 flex items-center justify-between gap-3">
         <div>
@@ -290,6 +289,36 @@ export default function StickmanVisualizer({
                 />
               </g>
             )}
+          </g>
+
+          {/* ---------- BINDINGS ---------- */}
+          <g
+            style={{ filter: zoneGlow('bindings'), transition: 'filter 300ms ease' }}
+            onMouseEnter={() => onHover('bindings')}
+            onMouseLeave={() => onHover(null)}
+            onClick={() => onSelect('bindings')}
+            className="cursor-pointer"
+          >
+            <rect
+              x="72"
+              y="396"
+              width="26"
+              height="12"
+              rx="3"
+              fill={zoneFill('bindings')}
+              stroke={zoneStroke('bindings')}
+              strokeWidth="2"
+            />
+            <rect
+              x="162"
+              y="396"
+              width="26"
+              height="12"
+              rx="3"
+              fill={zoneFill('bindings')}
+              stroke={zoneStroke('bindings')}
+              strokeWidth="2"
+            />
           </g>
 
           {/* ---------- BOOTS ---------- */}
@@ -508,7 +537,7 @@ export default function StickmanVisualizer({
 
               {/* flyout label */}
               <span
-                className={`pointer-events-none absolute top-1/2 -translate-y-1/2 whitespace-nowrap rounded-lg border px-2.5 py-1.5 text-left text-[11px] leading-tight backdrop-blur-xl transition-all duration-300 ${
+                className={`pointer-events-none absolute top-1/2 z-30 max-w-[min(11rem,calc(100vw-2rem))] -translate-y-1/2 rounded-lg border px-2.5 py-1.5 text-left text-[11px] leading-tight backdrop-blur-xl transition-all duration-300 ${
                   hotspot.side === 'right'
                     ? 'left-full ml-2 origin-left'
                     : 'right-full mr-2 origin-right'
