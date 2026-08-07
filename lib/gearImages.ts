@@ -14,6 +14,8 @@
  *                    translucency from `specs.vlt`, frame curve from lens shape
  *   jackets       -> down baffles vs. clean shell panels from `specs.insulation`
  *                    and `specs.warmth`
+ *   bindings      -> DIN dial reading from `specs.dinRange` (ski) or highback
+ *                    height from `specs.flexRating` (snowboard)
  *
  * Output is a URL-encoded SVG data URI: no network requests, no broken images,
  * no licensing questions, and it renders crisply at any card size.
@@ -46,6 +48,8 @@ const BRAND_PALETTE: Record<string, Palette> = {
   "Arc'teryx": { base: '#d64123', deep: '#5f1a0c', accent: '#f5f7fa', ink: '#ffffff' },
   Smith: { base: '#212734', deep: '#0c0f15', accent: '#ffcf3f', ink: '#e7ecf5' },
   Oakley: { base: '#181c25', deep: '#080a10', accent: '#b7e80b', ink: '#e7ecf5' },
+  Marker: { base: '#e10600', deep: '#3a0402', accent: '#f2f4f8', ink: '#ffffff' },
+  Union: { base: '#1c1f24', deep: '#08090b', accent: '#ff5a1f', ink: '#e7ecf5' },
 };
 
 const FALLBACK_PALETTE: Palette = {
@@ -526,6 +530,60 @@ const renderJacket = (
   return `${shadow(228, 126, 9, 0.42)}${compose(art, 0.74, 213, 136)}`;
 };
 
+const renderSnowboardBinding = (
+  brand: string,
+  specs: Record<string, string | number>,
+  palette: Palette,
+): string => {
+  const flexMatch = text(specs, 'flexRating').match(/(\d+)/);
+  const flex = flexMatch ? clamp(Number(flexMatch[1]), 1, 10) : 6;
+  const highbackTop = round(258 - flex * 6.5);
+
+  const art = `
+<g>
+  <path d="M280 300 Q400 316 520 300 L536 344 Q400 362 264 344 Z" fill="${palette.deep}" stroke="#0b0f17" stroke-width="2.4"/>
+  <path d="M300 300 L500 300" stroke="#0b0f17" stroke-width="1.5" opacity="0.5"/>
+  <path d="M320 ${highbackTop} Q400 ${round(highbackTop - 12)} 480 ${highbackTop} L488 300 L312 300 Z" fill="url(#topsheet)" stroke="#0b0f17" stroke-width="2.6"/>
+  <path d="M320 ${highbackTop} Q400 ${round(highbackTop - 12)} 480 ${highbackTop} L488 300 L312 300 Z" fill="url(#sheen)"/>
+  <rect x="330" y="${round(highbackTop + 26)}" width="140" height="14" rx="7" fill="#0b0f17" opacity="0.85"/>
+  <path d="M296 262 Q400 246 504 262 L512 280 Q400 264 288 280 Z" fill="#111827" stroke="#0b0f17" stroke-width="2"/>
+  <rect x="360" y="266" width="80" height="10" rx="5" fill="${palette.accent}" opacity="0.7"/>
+  <text x="400" y="330" fill="${palette.ink}" font-family="ui-sans-serif,system-ui,sans-serif" font-size="15" font-weight="800" letter-spacing="3" text-anchor="middle" opacity="0.9">${esc(brand.toUpperCase())}</text>
+</g>`;
+
+  return `${shadow(228, 118, 9, 0.42)}${compose(art, 0.85, 300, 142)}`;
+};
+
+const renderSkiBinding = (
+  brand: string,
+  specs: Record<string, string | number>,
+  palette: Palette,
+): string => {
+  const dinNumbers = text(specs, 'dinRange').match(/[\d.]+/g)?.map(Number) ?? [];
+  const dinMax = dinNumbers[dinNumbers.length - 1] ?? 10;
+
+  const dialTicks = Array.from({ length: 6 }, (_, i) => {
+    const x = 486 + i * 8;
+    return `<line x1="${x}" y1="248" x2="${x}" y2="${round(248 - (i + 1) * 2.2)}" stroke="${palette.accent}" stroke-width="1.6" opacity="0.7"/>`;
+  }).join('');
+
+  const art = `
+<g>
+  <path d="M240 300 h320 v14 h-320 Z" fill="#111827" stroke="#0b0f17" stroke-width="2"/>
+  <path d="M256 300 L544 300" stroke="#0b0f17" stroke-width="1.5" stroke-dasharray="6 6" opacity="0.6"/>
+  <path d="M258 300 L258 276 Q258 262 274 260 L318 254 Q332 252 336 264 L340 300 Z" fill="url(#topsheet)" stroke="#0b0f17" stroke-width="2.4"/>
+  <path d="M258 300 L258 276 Q258 262 274 260 L318 254 Q332 252 336 264 L340 300 Z" fill="url(#sheen)"/>
+  <rect x="460" y="256" width="66" height="44" rx="8" fill="url(#topsheet)" stroke="#0b0f17" stroke-width="2.4"/>
+  <rect x="460" y="256" width="66" height="44" rx="8" fill="url(#sheen)"/>
+  ${dialTicks}
+  <circle cx="493" cy="278" r="10" fill="#0b0f17"/>
+  <text x="493" y="282" fill="${palette.accent}" font-family="ui-sans-serif,system-ui,sans-serif" font-size="11" font-weight="900" text-anchor="middle">${round(dinMax)}</text>
+  <text x="400" y="336" fill="${palette.ink}" font-family="ui-sans-serif,system-ui,sans-serif" font-size="15" font-weight="800" letter-spacing="3" text-anchor="middle" opacity="0.9">${esc(brand.toUpperCase())}</text>
+</g>`;
+
+  return `${shadow(228, 150, 9, 0.42)}${compose(art, 0.85, 300, 142)}`;
+};
+
 /* ------------------------------------------------------------------ */
 /*  Public entry point                                                 */
 /* ------------------------------------------------------------------ */
@@ -567,6 +625,12 @@ export const buildGearImage = (item: GearImageInput): string => {
       break;
     case 'jacket':
       body = renderJacket(item.brand, item.specs, palette);
+      break;
+    case 'bindings':
+      body =
+        item.activity === 'snowboard'
+          ? renderSnowboardBinding(item.brand, item.specs, palette)
+          : renderSkiBinding(item.brand, item.specs, palette);
       break;
     default:
       body = '';

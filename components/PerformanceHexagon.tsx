@@ -1,11 +1,13 @@
 'use client';
 
-import { useId } from 'react';
-import type { PerformanceProfile } from '@/lib/types';
-import { PERFORMANCE_AXES } from '@/lib/performanceProfile';
+import { useId, useMemo } from 'react';
+import type { GearCategory, PerformanceProfile } from '@/lib/types';
+import { getPerformanceAxes } from '@/lib/performanceProfile';
 
 interface PerformanceHexagonProps {
   profile: PerformanceProfile;
+  /** Selects which 6-axis attribute set to plot — see `GEAR_CATEGORY_AXES`. */
+  category: GearCategory;
   className?: string;
   /** Hide the axis label text — used at very small render sizes. */
   showLabels?: boolean;
@@ -16,35 +18,39 @@ const VIEW = 260;
 const CENTER = VIEW / 2;
 const RADIUS = 76;
 const RING_FRACTIONS = [0.25, 0.5, 0.75, 1];
-const AXIS_COUNT = PERFORMANCE_AXES.length;
-
-const angleFor = (index: number) => (Math.PI * 2 * index) / AXIS_COUNT - Math.PI / 2;
-
-const pointAt = (index: number, fraction: number) => {
-  const angle = angleFor(index);
-  const r = RADIUS * fraction;
-  return { x: CENTER + r * Math.cos(angle), y: CENTER + r * Math.sin(angle) };
-};
 
 /**
  * Responsive SVG radar/hexagon chart. No charting library — every point is a
- * trig-computed coordinate from a normalized 0–10 score per axis.
+ * trig-computed coordinate from a normalized 0–10 score per axis. The axis
+ * set itself is looked up dynamically from `gear.category`, so a boot and a
+ * binding plot entirely different attributes on the same six spokes.
  */
 export default function PerformanceHexagon({
   profile,
+  category,
   className = '',
   showLabels = true,
 }: PerformanceHexagonProps) {
   const gradientId = useId();
+  const axes = useMemo(() => getPerformanceAxes(category), [category]);
+  const axisCount = axes.length;
+
+  const angleFor = (index: number) => (Math.PI * 2 * index) / axisCount - Math.PI / 2;
+
+  const pointAt = (index: number, fraction: number) => {
+    const angle = angleFor(index);
+    const r = RADIUS * fraction;
+    return { x: CENTER + r * Math.cos(angle), y: CENTER + r * Math.sin(angle) };
+  };
 
   const ringPolygons = RING_FRACTIONS.map((fraction) =>
-    PERFORMANCE_AXES.map((_, index) => {
+    axes.map((_, index) => {
       const { x, y } = pointAt(index, fraction);
       return `${x},${y}`;
     }).join(' '),
   );
 
-  const dataPoints = PERFORMANCE_AXES.map((axis, index) => {
+  const dataPoints = axes.map((axis, index) => {
     const value = Math.min(Math.max(profile[axis.key], 0), 10);
     return { ...pointAt(index, value / 10), value, axis };
   });
@@ -57,9 +63,9 @@ export default function PerformanceHexagon({
         viewBox={`0 0 ${VIEW} ${VIEW}`}
         className="h-full w-full"
         role="img"
-        aria-label={`Performance hexagon: ${PERFORMANCE_AXES.map(
-          (axis) => `${axis.label} ${profile[axis.key].toFixed(1)} out of 10`,
-        ).join(', ')}`}
+        aria-label={`Performance hexagon: ${axes
+          .map((axis) => `${axis.label} ${profile[axis.key].toFixed(1)} out of 10`)
+          .join(', ')}`}
       >
         <defs>
           <linearGradient id={`hexfill-${gradientId}`} x1="0" y1="0" x2="1" y2="1">
@@ -80,7 +86,7 @@ export default function PerformanceHexagon({
         ))}
 
         {/* axis spokes */}
-        {PERFORMANCE_AXES.map((axis, index) => {
+        {axes.map((axis, index) => {
           const { x, y } = pointAt(index, 1);
           return (
             <line
@@ -123,7 +129,7 @@ export default function PerformanceHexagon({
 
         {/* axis labels */}
         {showLabels &&
-          PERFORMANCE_AXES.map((axis, index) => {
+          axes.map((axis, index) => {
             const { x, y } = pointAt(index, 1.24);
             const cos = Math.cos(angleFor(index));
             const anchor = cos > 0.25 ? 'start' : cos < -0.25 ? 'end' : 'middle';

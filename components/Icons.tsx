@@ -36,6 +36,15 @@ export const BootIcon = ({ className = base }: IconProps) => (
   </svg>
 );
 
+export const BindingIcon = ({ className = base }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className={className}>
+    <path d="M2.5 17h19" strokeLinecap="round" />
+    <path d="M6.4 17v-6.6a1 1 0 0 1 1-1h1.2a1 1 0 0 1 .96.72L10.6 14H6.4" strokeLinejoin="round" />
+    <rect x="13.6" y="10.2" width="5.4" height="4.8" rx="1.1" />
+    <path d="M8.6 14h2" strokeLinecap="round" />
+  </svg>
+);
+
 export const HelmetIcon = ({ className = base }: IconProps) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className={className}>
     <path d="M3.6 14.5a8.4 8.4 0 0 1 16.8 0v1.2a2 2 0 0 1-2 2H5.6a2 2 0 0 1-2-2Z" strokeLinejoin="round" />
@@ -207,6 +216,8 @@ export const categoryIcon = (
       );
     case 'boots':
       return <BootIcon className={className} />;
+    case 'bindings':
+      return <BindingIcon className={className} />;
     case 'helmet':
       return <HelmetIcon className={className} />;
     case 'goggles':

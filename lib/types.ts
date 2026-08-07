@@ -32,7 +32,8 @@ export type Temperature = 'freezing' | 'moderate' | 'spring';
  */
 export type BudgetTier = 'budget' | 'mid-range' | 'premium';
 
-export type GearCategory = 'skis' | 'boots' | 'helmet' | 'goggles' | 'jacket';
+/** `bindings` covers both ski and snowboard bindings — see `activity` on `GearItem` to tell them apart. */
+export type GearCategory = 'skis' | 'boots' | 'helmet' | 'goggles' | 'jacket' | 'bindings';
 
 /* ------------------------------------------------------------------ */
 /*  User profile                                                       */
@@ -95,14 +96,13 @@ export interface GearItem {
 /*  Performance profile (hexagon / radar chart)                        */
 /* ------------------------------------------------------------------ */
 
-/** The six axes plotted on the gear performance hexagon. */
-export type PerformanceAxis =
-  | 'carving'
-  | 'powderFloat'
-  | 'playfulness'
-  | 'stability'
-  | 'versatility'
-  | 'accessibility';
+/**
+ * The six positional slots plotted on the gear performance hexagon. Every
+ * `GearItem` fills all six, but what each slot *means* is category-dependent —
+ * see `GEAR_CATEGORY_AXES` in `performanceProfile.ts` for the label mapping
+ * (e.g. slot A is "Carving" for skis but "Flex" for boots).
+ */
+export type PerformanceAxis = 'axisA' | 'axisB' | 'axisC' | 'axisD' | 'axisE' | 'axisF';
 
 /** Normalized 0–10 score per axis, derived from an item's real specs. */
 export type PerformanceProfile = Record<PerformanceAxis, number>;

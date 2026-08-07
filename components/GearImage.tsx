@@ -15,6 +15,7 @@ interface GearImageProps {
 const GRADIENTS: Record<GearCategory, string> = {
   skis: 'from-frost-600/40 via-glacier-800 to-neon-violet/25',
   boots: 'from-neon-violet/30 via-glacier-800 to-frost-600/30',
+  bindings: 'from-neon-mint/25 via-glacier-800 to-frost-600/30',
   helmet: 'from-frost-500/35 via-glacier-800 to-glacier-900',
   goggles: 'from-neon-ice/25 via-glacier-800 to-frost-700/35',
   jacket: 'from-frost-400/25 via-glacier-800 to-neon-violet/25',

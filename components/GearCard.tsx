@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import type { Activity, GearCategory, Recommendation } from '@/lib/types';
 import { categoryLabel } from '@/lib/matcherLogic';
-import { PERFORMANCE_AXES } from '@/lib/performanceProfile';
+import { getPerformanceAxes } from '@/lib/performanceProfile';
 import { categoryIcon, CheckIcon, ExternalIcon, SparkIcon } from './Icons';
 import GearImage from './GearImage';
 import PerformanceHexagon from './PerformanceHexagon';
@@ -35,6 +35,7 @@ export default function GearCard({
 
   const sortedPrices = [...item.prices].sort((a, b) => a.price - b.price);
   const spread = sortedPrices[sortedPrices.length - 1].price - sortedPrices[0].price;
+  const performanceAxes = getPerformanceAxes(item.category);
 
   return (
     <article
@@ -96,9 +97,13 @@ export default function GearCard({
             Performance profile
           </h4>
           <div className="flex flex-col items-center gap-4 rounded-2xl border border-white/8 bg-white/[0.02] p-4 sm:flex-row">
-            <PerformanceHexagon profile={item.performance} className="h-40 w-40 shrink-0" />
+            <PerformanceHexagon
+              profile={item.performance}
+              category={item.category}
+              className="h-40 w-40 shrink-0"
+            />
             <dl className="grid w-full grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
-              {PERFORMANCE_AXES.map((axis) => {
+              {performanceAxes.map((axis) => {
                 const value = item.performance[axis.key];
                 return (
                   <div key={axis.key} className="flex items-center justify-between gap-2">

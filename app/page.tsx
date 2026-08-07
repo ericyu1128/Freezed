@@ -104,8 +104,8 @@ export default function HomePage() {
         <div className="mx-auto mt-10 grid max-w-3xl grid-cols-2 gap-3 sm:grid-cols-4">
           {[
             { value: `${gearDatabase.length}`, label: 'Catalogue items' },
-            { value: '9', label: 'Brands' },
-            { value: '5', label: 'Gear categories' },
+            { value: `${new Set(gearDatabase.map((item) => item.brand)).size}`, label: 'Brands' },
+            { value: `${new Set(gearDatabase.map((item) => item.category)).size}`, label: 'Gear categories' },
             { value: '3', label: 'Budget tiers' },
           ].map((stat) => (
             <div key={stat.label} className="glass px-4 py-3">

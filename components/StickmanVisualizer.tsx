@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import type { Activity, CalculatedSpecs, GearCategory, Recommendation } from '@/lib/types';
-import { categoryLabel } from '@/lib/matcherLogic';
+import { CATEGORY_ORDER, categoryLabel } from '@/lib/matcherLogic';
 import { categoryIcon } from './Icons';
 
 interface Hotspot {
@@ -92,6 +92,18 @@ const CATEGORY_TAG: Record<
     chipText: 'text-frost-100',
     dot: 'bg-frost-300',
   },
+  bindings: {
+    // Bindings have no dedicated stickman zone (they mount to the ski/board
+    // itself), so this accent only shows up in gear tags and card chips.
+    accent: '#fbbf24',
+    markerBorder: 'border-amber-400/70',
+    markerText: 'text-amber-200',
+    ring: 'bg-amber-400/50',
+    chipBorder: 'border-amber-400/40',
+    chipBg: 'bg-amber-400/12',
+    chipText: 'text-amber-100',
+    dot: 'bg-amber-400',
+  },
 };
 
 /** Hex string + alpha -> rgba(), used to derive per-category zone fills from `CATEGORY_TAG.accent`. */
@@ -165,7 +177,7 @@ export default function StickmanVisualizer({
               recommendations.length > 0 ? 'bg-neon-mint' : 'bg-slate-600'
             }`}
           />
-          {byCategory.size}/5 equipped
+          {byCategory.size}/{CATEGORY_ORDER.length} equipped
         </span>
       </div>
 

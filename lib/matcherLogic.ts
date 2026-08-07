@@ -33,7 +33,7 @@ const clamp = (value: number, min: number, max: number) => Math.min(Math.max(val
 
 const round = (value: number) => Math.round(value);
 
-export const CATEGORY_ORDER: GearCategory[] = ['skis', 'boots', 'helmet', 'goggles', 'jacket'];
+export const CATEGORY_ORDER: GearCategory[] = ['skis', 'boots', 'bindings', 'helmet', 'goggles', 'jacket'];
 
 const TIER_INDEX: Record<BudgetTier, number> = {
   budget: 0,
@@ -73,6 +73,8 @@ export const categoryLabel = (category: GearCategory, activity: UserStats['activ
       return activity === 'snowboard' ? 'Snowboard' : 'Skis';
     case 'boots':
       return activity === 'snowboard' ? 'Snowboard Boots' : 'Ski Boots';
+    case 'bindings':
+      return activity === 'snowboard' ? 'Snowboard Bindings' : 'Ski Bindings';
     case 'helmet':
       return 'Helmet';
     case 'goggles':
@@ -473,6 +475,26 @@ export const scoreItem = (item: GearItem, stats: UserStats, specs: CalculatedSpe
       }
       break;
     }
+    case 'bindings': {
+      if (stats.activity === 'snowboard') {
+        const flexMatch = String(item.specs.flexRating ?? '').match(/(\d+(?:\.\d+)?)\s*\/\s*10/);
+        const flexRating = flexMatch ? Number(flexMatch[1]) : null;
+        if (flexRating !== null) {
+          const idealFlex: Record<Level, number> = { beginner: 3, intermediate: 5, advanced: 7, expert: 9 };
+          const penalty = Math.abs(flexRating - idealFlex[stats.level]) * 5;
+          score += penalty === 0 ? 34 : Math.max(-30, 34 - penalty);
+        }
+      } else {
+        const dinNumbers = String(item.specs.dinRange ?? '').match(/[\d.]+/g)?.map(Number) ?? [];
+        const dinMax = dinNumbers[dinNumbers.length - 1];
+        if (dinMax !== undefined) {
+          const idealDin: Record<Level, number> = { beginner: 5, intermediate: 8, advanced: 11, expert: 14 };
+          const penalty = Math.abs(dinMax - idealDin[stats.level]) * 4;
+          score += penalty === 0 ? 34 : Math.max(-30, 34 - penalty);
+        }
+      }
+      break;
+    }
     case 'goggles': {
       const vlt = numericSpec(item, 'vlt');
       if (vlt !== null) {
@@ -560,6 +582,19 @@ const buildCalculatedSpecs = (
       if (item.specs.lastWidth) rows.push({ label: 'Last width', value: String(item.specs.lastWidth) });
       break;
 
+    case 'bindings':
+      rows.push({
+        label: stats.activity === 'snowboard' ? 'Flex rating' : 'DIN range',
+        value: String(item.specs.flexRating ?? item.specs.dinRange ?? '—'),
+        highlight: true,
+      });
+      rows.push({ label: 'Weight', value: String(item.specs.weight ?? '—') });
+      rows.push({
+        label: stats.activity === 'snowboard' ? 'Mount compatibility' : 'Sole compatibility',
+        value: String(item.specs.compatibility ?? item.specs.soleCompatibility ?? '—'),
+      });
+      break;
+
     case 'helmet':
       rows.push({ label: 'Recommended size', value: specs.helmetSize, highlight: true });
       rows.push({ label: 'Head circumference', value: specs.helmetCircumference });
@@ -636,6 +671,22 @@ const buildReasonBullets = (
       bullets.push(`Your estimated Mondopoint size is ${specs.mondoSize.toFixed(1)} — get shell-fitted to confirm.`);
       break;
     }
+    case 'bindings': {
+      if (stats.activity === 'snowboard') {
+        bullets.push(
+          `Flex rating ${item.specs.flexRating} suits ${LEVEL_LABEL[stats.level].toLowerCase()} riders who want ${
+            stats.level === 'beginner' || stats.level === 'intermediate'
+              ? 'a forgiving, easy-to-load response'
+              : 'a stiffer, more direct power transfer'
+          }.`,
+        );
+      } else {
+        bullets.push(
+          `A ${item.specs.dinRange} DIN range gives a ${LEVEL_LABEL[stats.level].toLowerCase()} skier a release setting with real headroom either side.`,
+        );
+      }
+      break;
+    }
     case 'goggles': {
       const vlt = numericSpec(item, 'vlt');
       if (vlt !== null) {
@@ -683,6 +734,12 @@ const buildReasoning = (item: GearItem, stats: UserStats, specs: CalculatedSpecs
       return `For ${rider} riding mostly ${STYLE_LABEL[stats.style].toLowerCase()} terrain, the ${item.brand} ${item.name} is sized to ${specs.length.value} cm with a ${item.specs.waistWidth} mm waist. ${item.matchReason} Filtered to your ${TIER_LABEL[stats.budgetTier].toLowerCase()} budget, it was the strongest hardgood match in the database.`;
     case 'boots':
       return `Boots are the highest-leverage purchase in the kit. Your profile calls for a ${specs.bootFlex.min}–${specs.bootFlex.max} flex${stats.activity === 'snowboard' ? '/10' : ''}, and the ${item.brand} ${item.name} sits at ${item.specs.flex}. ${item.matchReason} Get a shell fit at a shop before you commit — the estimated Mondo ${specs.mondoSize.toFixed(1)} is a starting point, not a verdict.`;
+    case 'bindings':
+      return `The ${item.brand} ${item.name} is set up around ${
+        stats.activity === 'snowboard' ? `a ${item.specs.flexRating} flex rating` : `a ${item.specs.dinRange} DIN range`
+      } for ${rider}. ${item.matchReason} A shop tech should still set and check the ${
+        stats.activity === 'snowboard' ? 'strap tension' : 'release DIN'
+      } against your boot before the first run.`;
     case 'helmet':
       return `${item.brand} ${item.name} in size ${specs.helmetSize}. ${item.matchReason} It also pairs cleanly with the goggle recommendation below, which matters more than most riders expect — a gap between brim and goggle is the fastest way to a cold forehead.`;
     case 'goggles':

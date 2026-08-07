@@ -14,11 +14,12 @@
  * silhouettes and a 12% VLT lens renders darker than a 65% one.
  *
  * Spec keys consumed by `matcherLogic.ts`:
- *   skis    -> specs.waistWidth (mm, number)
- *   boots   -> specs.flex (number; 1–10 scale for snowboard boots, 60–140 for ski boots)
- *   goggles -> specs.vlt (percentage, number)
- *   jacket  -> specs.warmth (1–5, number)
- *   helmet  -> specs.warmth (1–5, number)
+ *   skis     -> specs.waistWidth (mm, number)
+ *   boots    -> specs.flex (number; 1–10 scale for snowboard boots, 60–140 for ski boots)
+ *   goggles  -> specs.vlt (percentage, number)
+ *   jacket   -> specs.warmth (1–5, number)
+ *   helmet   -> specs.warmth (1–5, number)
+ *   bindings -> specs.dinRange (ski, string range) / specs.flexRating (snowboard, "n/10")
  */
 
 import type { GearItem, RetailerPrice } from './types';
@@ -1627,6 +1628,188 @@ const listings: GearListing[] = [
       { retailer: 'Evo', price: 429.95 },
       { retailer: 'Backcountry', price: 449.95 },
       { retailer: 'The House', price: 479.99 },
+    ],
+  },
+
+  /* ================================================================ */
+  /*  BINDINGS — SKI                                                  */
+  /* ================================================================ */
+  {
+    id: 'binding-salomon-strive-10',
+    category: 'bindings',
+    brand: 'Salomon',
+    name: 'Strive 10',
+    priceTier: 'budget',
+    activity: 'ski',
+    styles: ['piste', 'all-mountain'],
+    levels: ['beginner', 'intermediate'],
+    genders: ['male', 'female', 'unisex'],
+    specs: {
+      dinRange: '3.5–10',
+      weight: '780 g (pair)',
+      brakeWidth: '90–120 mm (adjustable)',
+      elasticity: 'Standard (8mm toe / 9mm heel travel)',
+      material: 'Composite chassis, steel pins',
+      certification: 'ISO 9462 certified',
+      soleCompatibility: 'Alpine (adjustable AFD)',
+    },
+    description:
+      'A light, forgiving release binding built around a low DIN range so a developing skier releases when they should.',
+    matchReason:
+      'The right release range for beginners and early intermediates — protective without being twitchy.',
+    prices: [
+      { retailer: 'Evo', price: 149.95 },
+      { retailer: 'REI', price: 159.0 },
+      { retailer: 'Sport Chek', price: 169.99 },
+    ],
+  },
+  {
+    id: 'binding-atomic-warden-13',
+    category: 'bindings',
+    brand: 'Atomic',
+    name: 'Warden MNC 13',
+    priceTier: 'mid-range',
+    activity: 'ski',
+    styles: ['all-mountain', 'freestyle'],
+    levels: ['intermediate', 'advanced'],
+    genders: ['male', 'unisex'],
+    specs: {
+      dinRange: '4–13',
+      weight: '890 g (pair)',
+      brakeWidth: '90–120 mm (adjustable)',
+      elasticity: 'High (18mm toe / 15mm heel travel)',
+      material: 'Aluminum toe piece, steel heel',
+      certification: 'ISO 9462 / TÜV certified',
+      soleCompatibility: 'Multi-Norm Certified — Alpine / GripWalk / touring (adjustable)',
+    },
+    description:
+      'A wide-range Multi-Norm binding that mounts almost anything in a boot rack, with enough elasticity to shrug off park landings.',
+    matchReason:
+      'A do-everything all-mountain binding for intermediate-to-advanced skiers who want one setup for groomers and park laps.',
+    prices: [
+      { retailer: 'Evo', price: 219.95 },
+      { retailer: 'Backcountry', price: 229.95 },
+      { retailer: 'Sport Chek', price: 239.99 },
+    ],
+  },
+  {
+    id: 'binding-marker-jester-16',
+    category: 'bindings',
+    brand: 'Marker',
+    name: 'Jester 16 ID',
+    priceTier: 'premium',
+    activity: 'ski',
+    styles: ['all-mountain', 'freestyle', 'backcountry'],
+    levels: ['advanced', 'expert'],
+    genders: ['male', 'unisex'],
+    specs: {
+      dinRange: '6–16',
+      weight: '980 g (pair)',
+      brakeWidth: '90–130 mm (adjustable)',
+      elasticity: 'Very high (24mm toe / 20mm heel travel — Triple Pivot)',
+      material: 'Aluminum chassis, steel pins, Triple Pivot toe',
+      certification: 'ISO 9462 / TÜV certified',
+      soleCompatibility: 'Alpine / GripWalk (adjustable AFD)',
+    },
+    description:
+      'A freeride workhorse: a high-DIN Triple Pivot toe that holds through chattery snow and hucked landings without pre-releasing.',
+    matchReason:
+      'Built for expert skiers who ski aggressively across variable terrain and need retention that will not back off under load.',
+    prices: [
+      { retailer: 'Evo', price: 289.95 },
+      { retailer: 'Backcountry', price: 299.95 },
+      { retailer: 'REI', price: 309.0 },
+    ],
+  },
+
+  /* ================================================================ */
+  /*  BINDINGS — SNOWBOARD                                            */
+  /* ================================================================ */
+  {
+    id: 'binding-burton-freestyle-reflex',
+    category: 'bindings',
+    brand: 'Burton',
+    name: 'Freestyle Re:Flex',
+    priceTier: 'budget',
+    activity: 'snowboard',
+    styles: ['freestyle', 'all-mountain'],
+    levels: ['beginner', 'intermediate'],
+    genders: ['male', 'unisex'],
+    specs: {
+      highback: 'Shaped, low profile, no canting',
+      baseplate: 'Re:Flex EVA cushioned, dampens board flex underfoot',
+      straps: 'Single ratchet ankle strap, mini heel hoop',
+      flexRating: '4/10 (soft)',
+      compatibility: '3D / 4x4 / 2x4',
+      weight: '820 g (pair, size M)',
+      material: 'Nylon composite baseplate, aluminum buckles',
+    },
+    description:
+      'A soft, forgiving binding with a cushioned baseplate that takes the edge off flat-landing park laps.',
+    matchReason:
+      'Easy to strap in and forgiving underfoot — a comfortable first binding for riders still building confidence.',
+    prices: [
+      { retailer: 'Evo', price: 129.95 },
+      { retailer: 'The House', price: 139.99 },
+      { retailer: 'Sport Chek', price: 149.99 },
+    ],
+  },
+  {
+    id: 'binding-union-force',
+    category: 'bindings',
+    brand: 'Union',
+    name: 'Force',
+    priceTier: 'mid-range',
+    activity: 'snowboard',
+    styles: ['all-mountain', 'freestyle'],
+    levels: ['intermediate', 'advanced'],
+    genders: ['male', 'unisex'],
+    specs: {
+      highback: 'Duraflex, canted, forward-lean adjustable',
+      baseplate: 'Aluminum heel hoop, EVA cushioned footbed',
+      straps: 'Dual ratchet ladder straps',
+      flexRating: '7/10 (medium-stiff)',
+      compatibility: '4x4 / 2x4 / Channel',
+      weight: '910 g (pair, size M)',
+      material: 'Duraflex composite baseplate, aluminum highback',
+    },
+    description:
+      'The reference all-mountain binding: a canted highback and dual ratchet straps that lock the boot down without dead spots.',
+    matchReason:
+      'Medium-stiff response for riders who charge all-mountain terrain and still want to press a jib on the way down.',
+    prices: [
+      { retailer: 'Evo', price: 229.95 },
+      { retailer: 'Backcountry', price: 239.95 },
+      { retailer: 'The House', price: 249.99 },
+    ],
+  },
+  {
+    id: 'binding-burton-genesis-x',
+    category: 'bindings',
+    brand: 'Burton',
+    name: 'Genesis X',
+    priceTier: 'premium',
+    activity: 'snowboard',
+    styles: ['all-mountain', 'freestyle', 'backcountry'],
+    levels: ['advanced', 'expert'],
+    genders: ['male', 'female', 'unisex'],
+    specs: {
+      highback: 'Carbon-infused, fully canted, forward-lean adjustable',
+      baseplate: 'Hammockstrap suspension, Living Hinge toe strap',
+      straps: 'Dual ratchet, Living Hinge toe wrap',
+      flexRating: '8/10 (stiff)',
+      compatibility: 'Channel / EST / 4x4 (adjustable)',
+      weight: '760 g (pair, size M)',
+      material: 'Carbon-infused nylon baseplate, aluminum highback',
+    },
+    description:
+      'Burton’s flagship binding: a carbon highback and Hammockstrap suspension that wrap the boot instead of clamping it, at a genuinely light weight.',
+    matchReason:
+      'Stiff, precise and light enough to disappear underfoot — for expert riders who feel every dead spot in a lesser binding.',
+    prices: [
+      { retailer: 'Evo', price: 329.95 },
+      { retailer: 'Backcountry', price: 339.95 },
+      { retailer: 'REI', price: 349.0 },
     ],
   },
 ];
