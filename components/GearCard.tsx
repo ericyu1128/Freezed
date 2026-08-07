@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import type { Activity, GearCategory, Recommendation } from '@/lib/types';
-import { categoryLabel } from '@/lib/matcherLogic';
+import type { Activity, CalculatedSpecs, GearCategory, Recommendation, UserStats } from '@/lib/types';
+import { buildCalculatedSpecs, categoryLabel } from '@/lib/matcherLogic';
 import { getPerformanceAxes } from '@/lib/performanceProfile';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { categoryIcon, CheckIcon, ExternalIcon, SparkIcon } from './Icons';
@@ -17,6 +17,8 @@ const TIER_STYLE: Record<string, string> = {
 
 interface GearCardProps {
   recommendation: Recommendation;
+  stats: UserStats;
+  specs: CalculatedSpecs;
   activity: Activity;
   isActive: boolean;
   onHover: (category: GearCategory | null) => void;
@@ -25,6 +27,8 @@ interface GearCardProps {
 
 export default function GearCard({
   recommendation,
+  stats,
+  specs,
   activity,
   isActive,
   onHover,
@@ -32,8 +36,8 @@ export default function GearCard({
 }: GearCardProps) {
   const { t, language } = useLanguage();
   const [showAllSpecs, setShowAllSpecs] = useState(false);
-  const { item, calculatedSpecs, reasoning, reasonBullets, score, bestPrice, alternates } =
-    recommendation;
+  const { item, reasoning, reasonBullets, score, bestPrice, alternates } = recommendation;
+  const calculatedSpecs = buildCalculatedSpecs(item, stats, specs, language);
 
   const sortedPrices = [...item.prices].sort((a, b) => a.price - b.price);
   const spread = sortedPrices[sortedPrices.length - 1].price - sortedPrices[0].price;

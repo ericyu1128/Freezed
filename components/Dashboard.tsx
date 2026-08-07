@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { GearCategory, MatchResult, UserStats } from '@/lib/types';
-import { categoryLabel, levelLabel, styleLabel, temperatureLabel, tierLabel } from '@/lib/matcherLogic';
+import { calculateLength, categoryLabel, levelLabel, styleLabel, temperatureLabel, tierLabel } from '@/lib/matcherLogic';
 import { addSavedSetup } from '@/lib/savedSetups';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import GearCard from './GearCard';
@@ -32,6 +32,7 @@ export default function Dashboard({
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [vaultRefreshToken, setVaultRefreshToken] = useState(0);
   const lengthLabel = stats.activity === 'snowboard' ? t.dashboard.boardLength : t.dashboard.skiLength;
+  const derivationSteps = calculateLength(stats, language).steps;
 
   const handleSaveConfiguration = (name: string) => {
     addSavedSetup(name, result);
@@ -137,7 +138,7 @@ export default function Dashboard({
         </div>
 
         <ol className="space-y-2">
-          {specs.length.steps.map((step, index) => (
+          {derivationSteps.map((step, index) => (
             <li
               key={step.label}
               className="flex items-start gap-3 rounded-xl border border-white/8 bg-white/[0.02] px-3 py-2.5"
@@ -217,6 +218,8 @@ export default function Dashboard({
             <GearCard
               key={rec.item.id}
               recommendation={rec}
+              stats={stats}
+              specs={specs}
               activity={stats.activity}
               isActive={activeCategory === rec.category}
               onHover={onHover}

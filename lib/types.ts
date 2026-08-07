@@ -153,13 +153,18 @@ export interface CalculatedSpecs {
   helmetCircumference: string;
 }
 
+/** One row of the "calculated for you" spec block on a gear card. */
+export interface CalculatedSpecRow {
+  label: string;
+  value: string;
+  highlight?: boolean;
+}
+
 export interface Recommendation {
   category: GearCategory;
   item: GearItem;
   /** 0–100 confidence that the item fits the rider. */
   score: number;
-  /** Dynamic, user-specific specs surfaced on the card. */
-  calculatedSpecs: { label: string; value: string; highlight?: boolean }[];
   /** Generated "why this matches you" narrative. */
   reasoning: string;
   /** Short bullet justifications. */

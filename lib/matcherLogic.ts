@@ -10,6 +10,7 @@ import gearDatabase from './gearDatabase';
 import type { Language } from './i18n/translations';
 import type {
   BudgetTier,
+  CalculatedSpecRow,
   CalculatedSpecs,
   DerivationStep,
   GearCategory,
@@ -126,6 +127,14 @@ const CATEGORY_LABEL_ZH: Record<GearCategory, { ski: string; snowboard: string }
   jacket: { ski: '外套', snowboard: '外套' },
 };
 
+const LENGTH_TYPE_LABEL: Record<UserStats['activity'], { en: string; zh: string }> = {
+  ski: { en: 'Ski length', zh: '滑雪板长度' },
+  snowboard: { en: 'Board length', zh: '单板长度' },
+};
+
+export const lengthTypeLabel = (activity: UserStats['activity'], language: Language): string =>
+  LENGTH_TYPE_LABEL[activity][language];
+
 export const categoryLabel = (
   category: GearCategory,
   activity: UserStats['activity'],
@@ -205,8 +214,9 @@ const weightModifier = (stats: UserStats): number => {
   return clamp(Math.round(delta / 6), -5, 5);
 };
 
-export const calculateLength = (stats: UserStats): LengthCalculation => {
+export const calculateLength = (stats: UserStats, language: Language = 'en'): LengthCalculation => {
   const isBoard = stats.activity === 'snowboard';
+  const zh = language === 'zh';
   const steps: DerivationStep[] = [];
 
   let value: number;
@@ -214,43 +224,63 @@ export const calculateLength = (stats: UserStats): LengthCalculation => {
   if (isBoard) {
     const base = stats.height * 0.88;
     steps.push({
-      label: 'Base (height × 0.88)',
+      label: zh ? '基础值(身高 × 0.88)' : 'Base (height × 0.88)',
       delta: round(base),
-      note: `${stats.height} cm rider height`,
+      note: zh ? `身高 ${stats.height} 厘米` : `${stats.height} cm rider height`,
     });
     value = base;
   } else {
-    steps.push({ label: 'Standing height', delta: stats.height, note: 'Starting point' });
+    steps.push({
+      label: zh ? '站立身高' : 'Standing height',
+      delta: stats.height,
+      note: zh ? '起始基准' : 'Starting point',
+    });
     value = stats.height;
   }
 
   const styleOffset = isBoard ? BOARD_STYLE_OFFSET[stats.style] : SKI_STYLE_OFFSET[stats.style];
   steps.push({
-    label: STYLE_LABEL[stats.style],
+    label: styleLabel(stats.style, language),
     delta: styleOffset,
     note:
       stats.style === 'backcountry'
-        ? 'Longer for float and high-speed stability in soft snow'
+        ? zh
+          ? '增加长度以提升浮力和高速稳定性，适应松软雪况'
+          : 'Longer for float and high-speed stability in soft snow'
         : stats.style === 'freestyle'
-          ? 'Shorter for spins, switch landings and rail control'
+          ? zh
+            ? '缩短长度以便于转体、反脚落地和玩道具'
+            : 'Shorter for spins, switch landings and rail control'
           : stats.style === 'piste'
-            ? 'Shorter for quicker edge-to-edge on hardpack'
-            : 'Balanced length for mixed terrain',
+            ? zh
+              ? '缩短长度以在硬雪面上更快换刃'
+              : 'Shorter for quicker edge-to-edge on hardpack'
+            : zh
+              ? '适合综合地形的平衡长度'
+              : 'Balanced length for mixed terrain',
   });
   value += styleOffset;
 
   const levelOffset = isBoard ? BOARD_LEVEL_OFFSET[stats.level] : SKI_LEVEL_OFFSET[stats.level];
   steps.push({
-    label: LEVEL_LABEL[stats.level],
+    label: levelLabel(stats.level, language),
     delta: levelOffset,
     note:
       stats.level === 'beginner'
-        ? 'Extra 5 cm shorter — easier to initiate and finish turns'
+        ? zh
+          ? '再缩短 5 厘米——更容易入弯和收弯'
+          : 'Extra 5 cm shorter — easier to initiate and finish turns'
         : stats.level === 'expert'
-          ? 'Longer for stability at speed'
+          ? zh
+            ? '增加长度以提升高速稳定性'
+            : 'Longer for stability at speed'
           : stats.level === 'advanced'
-            ? 'Slightly longer for edge hold at speed'
-            : 'Standard length for this ability',
+            ? zh
+              ? '略微增加长度以提升高速抓地力'
+              : 'Slightly longer for edge hold at speed'
+            : zh
+              ? '该水平的标准长度'
+              : 'Standard length for this ability',
   });
   value += levelOffset;
 
@@ -258,9 +288,9 @@ export const calculateLength = (stats: UserStats): LengthCalculation => {
   if (stats.style === 'backcountry' && (stats.level === 'advanced' || stats.level === 'expert')) {
     const bonus = isBoard ? 2 : 4;
     steps.push({
-      label: 'Freeride float bonus',
+      label: zh ? '自由滑雪浮力加成' : 'Freeride float bonus',
       delta: bonus,
-      note: 'Additional surface area for deep snow at speed',
+      note: zh ? '增加板面面积以应对深雪高速滑行' : 'Additional surface area for deep snow at speed',
     });
     value += bonus;
   }
@@ -268,21 +298,27 @@ export const calculateLength = (stats: UserStats): LengthCalculation => {
   const wMod = weightModifier(stats);
   if (wMod !== 0) {
     steps.push({
-      label: 'Rider load',
+      label: zh ? '体重负荷' : 'Rider load',
       delta: wMod,
       note:
         wMod > 0
-          ? `${stats.weight} kg is above the reference mass for ${stats.height} cm — more length to avoid over-flexing`
-          : `${stats.weight} kg is below the reference mass for ${stats.height} cm — less length to keep the flex accessible`,
+          ? zh
+            ? `体重 ${stats.weight} 公斤高于身高 ${stats.height} 厘米对应的参考体重——增加长度以避免过度形变`
+            : `${stats.weight} kg is above the reference mass for ${stats.height} cm — more length to avoid over-flexing`
+          : zh
+            ? `体重 ${stats.weight} 公斤低于身高 ${stats.height} 厘米对应的参考体重——减少长度以保持硬度易于压弯`
+            : `${stats.weight} kg is below the reference mass for ${stats.height} cm — less length to keep the flex accessible`,
     });
     value += wMod;
   }
 
   if (stats.gender === 'female' && !isBoard) {
     steps.push({
-      label: "Women's construction",
+      label: zh ? '女款结构' : "Women's construction",
       delta: -2,
-      note: "Women's skis are typically built lighter and ride best slightly shorter",
+      note: zh
+        ? '女款雪板通常更轻，略短的长度骑行效果最佳'
+        : "Women's skis are typically built lighter and ride best slightly shorter",
     });
     value -= 2;
   }
@@ -293,7 +329,7 @@ export const calculateLength = (stats: UserStats): LengthCalculation => {
     value: final,
     range: { min: final - 4, max: final + 4 },
     steps,
-    label: isBoard ? 'Board length' : 'Ski length',
+    label: lengthTypeLabel(stats.activity, language),
   };
 };
 
@@ -600,35 +636,38 @@ const toConfidence = (raw: number): number => clamp(Math.round(((raw + 40) / 262
 const cheapest = (prices: RetailerPrice[]): RetailerPrice =>
   prices.reduce((best, current) => (current.price < best.price ? current : best), prices[0]);
 
-const buildCalculatedSpecs = (
+export const buildCalculatedSpecs = (
   item: GearItem,
   stats: UserStats,
   specs: CalculatedSpecs,
-): Recommendation['calculatedSpecs'] => {
-  const rows: Recommendation['calculatedSpecs'] = [];
+  language: Language = 'en',
+): CalculatedSpecRow[] => {
+  const rows: CalculatedSpecRow[] = [];
+  const zh = language === 'zh';
+  const lengthLabel = lengthTypeLabel(stats.activity, language);
 
   switch (item.category) {
     case 'skis':
       rows.push({
-        label: `Recommended ${specs.length.label.toLowerCase()}`,
+        label: zh ? `推荐${lengthLabel}` : `Recommended ${lengthLabel.toLowerCase()}`,
         value: `${specs.length.value} cm`,
         highlight: true,
       });
       rows.push({
-        label: 'Acceptable window',
+        label: zh ? '推荐适用区间' : 'Acceptable window',
         value: `${specs.length.range.min}–${specs.length.range.max} cm`,
       });
       rows.push({
-        label: stats.activity === 'snowboard' ? 'Board waist' : 'Waist width',
+        label: zh ? '板腰宽度' : stats.activity === 'snowboard' ? 'Board waist' : 'Waist width',
         value: `${item.specs.waistWidth} mm (target ${specs.waistWidth.min}–${specs.waistWidth.max} mm)`,
         highlight: true,
       });
-      rows.push({ label: 'Available lengths', value: String(item.specs.lengths ?? '—') });
+      rows.push({ label: zh ? '可选长度' : 'Available lengths', value: String(item.specs.lengths ?? '—') });
       break;
 
     case 'boots':
       rows.push({
-        label: 'Recommended flex',
+        label: zh ? '推荐硬度' : 'Recommended flex',
         value:
           stats.activity === 'snowboard'
             ? `${specs.bootFlex.min}–${specs.bootFlex.max} / 10`
@@ -636,57 +675,74 @@ const buildCalculatedSpecs = (
         highlight: true,
       });
       rows.push({
-        label: 'This boot',
+        label: zh ? '这款雪鞋' : 'This boot',
         value:
           stats.activity === 'snowboard'
             ? `${item.specs.flex} / 10`
             : `${item.specs.flex} flex index`,
         highlight: true,
       });
-      rows.push({ label: 'Estimated Mondo size', value: `${specs.mondoSize.toFixed(1)}` });
-      if (item.specs.lastWidth) rows.push({ label: 'Last width', value: String(item.specs.lastWidth) });
+      rows.push({ label: zh ? '预估 Mondo 码' : 'Estimated Mondo size', value: `${specs.mondoSize.toFixed(1)}` });
+      if (item.specs.lastWidth)
+        rows.push({ label: zh ? '鞋楦宽度 (mm)' : 'Last width', value: String(item.specs.lastWidth) });
       break;
 
     case 'bindings':
       rows.push({
-        label: stats.activity === 'snowboard' ? 'Flex rating' : 'DIN range',
+        label: zh
+          ? stats.activity === 'snowboard'
+            ? '硬度等级'
+            : 'DIN 释放值范围'
+          : stats.activity === 'snowboard'
+            ? 'Flex rating'
+            : 'DIN range',
         value: String(item.specs.flexRating ?? item.specs.dinRange ?? '—'),
         highlight: true,
       });
-      rows.push({ label: 'Weight', value: String(item.specs.weight ?? '—') });
+      rows.push({ label: zh ? '重量' : 'Weight', value: String(item.specs.weight ?? '—') });
       rows.push({
-        label: stats.activity === 'snowboard' ? 'Mount compatibility' : 'Sole compatibility',
+        label: zh
+          ? stats.activity === 'snowboard'
+            ? '固定器兼容性'
+            : '鞋底兼容性'
+          : stats.activity === 'snowboard'
+            ? 'Mount compatibility'
+            : 'Sole compatibility',
         value: String(item.specs.compatibility ?? item.specs.soleCompatibility ?? '—'),
       });
       break;
 
     case 'helmet':
-      rows.push({ label: 'Recommended size', value: specs.helmetSize, highlight: true });
-      rows.push({ label: 'Head circumference', value: specs.helmetCircumference });
-      rows.push({ label: 'Certification', value: String(item.specs.certification ?? '—') });
-      rows.push({ label: 'Venting', value: String(item.specs.ventControl ?? item.specs.vents ?? '—') });
+      rows.push({ label: zh ? '推荐尺码' : 'Recommended size', value: specs.helmetSize, highlight: true });
+      rows.push({ label: zh ? '头围' : 'Head circumference', value: specs.helmetCircumference });
+      rows.push({ label: zh ? '认证标准' : 'Certification', value: String(item.specs.certification ?? '—') });
+      rows.push({
+        label: zh ? '通风系统' : 'Venting',
+        value: String(item.specs.ventControl ?? item.specs.vents ?? '—'),
+      });
       break;
 
     case 'goggles':
       rows.push({
-        label: 'Target VLT for your conditions',
+        label: zh ? '适合你天气条件的目标 VLT' : 'Target VLT for your conditions',
         value: `${specs.vlt.min}–${specs.vlt.max}%`,
         highlight: true,
       });
-      rows.push({ label: 'This lens', value: `${item.specs.vlt}% VLT`, highlight: true });
-      rows.push({ label: 'Tint', value: String(item.specs.lensTint ?? '—') });
-      if (item.specs.spareLens) rows.push({ label: 'Spare lens', value: String(item.specs.spareLens) });
+      rows.push({ label: zh ? '这款镜片' : 'This lens', value: `${item.specs.vlt}% VLT`, highlight: true });
+      rows.push({ label: zh ? '镜片色调' : 'Tint', value: String(item.specs.lensTint ?? '—') });
+      if (item.specs.spareLens)
+        rows.push({ label: zh ? '备用镜片' : 'Spare lens', value: String(item.specs.spareLens) });
       break;
 
     case 'jacket':
       rows.push({
-        label: 'Target warmth',
+        label: zh ? '目标保暖等级' : 'Target warmth',
         value: `${specs.warmth.min}–${specs.warmth.max} / 5`,
         highlight: true,
       });
-      rows.push({ label: 'This jacket', value: `${item.specs.warmth} / 5`, highlight: true });
-      rows.push({ label: 'Insulation', value: String(item.specs.insulation ?? '—') });
-      rows.push({ label: 'Waterproofing', value: String(item.specs.waterproofing ?? '—') });
+      rows.push({ label: zh ? '这款外套' : 'This jacket', value: `${item.specs.warmth} / 5`, highlight: true });
+      rows.push({ label: zh ? '保暖材质' : 'Insulation', value: String(item.specs.insulation ?? '—') });
+      rows.push({ label: zh ? '防水等级' : 'Waterproofing', value: String(item.specs.waterproofing ?? '—') });
       break;
 
     default:
@@ -848,7 +904,6 @@ export const matchGear = (stats: UserStats, database: GearItem[] = gearDatabase)
       category,
       item: winner.item,
       score: toConfidence(winner.score),
-      calculatedSpecs: buildCalculatedSpecs(winner.item, stats, specs),
       reasoning: buildReasoning(winner.item, stats, specs),
       reasonBullets: buildReasonBullets(winner.item, stats, specs),
       bestPrice: cheapest(winner.item.prices),
