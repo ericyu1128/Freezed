@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { SaveIcon, XIcon } from './Icons';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface SaveConfigurationModalProps {
   open: boolean;
@@ -11,8 +12,6 @@ interface SaveConfigurationModalProps {
   onSave: (name: string) => void;
 }
 
-const SUGGESTIONS = ['Deep Powder Rig', 'Park & Rails', 'Groomer Carver', 'One-Boot Quiver'];
-
 export default function SaveConfigurationModal({
   open,
   itemCount,
@@ -20,6 +19,8 @@ export default function SaveConfigurationModal({
   onClose,
   onSave,
 }: SaveConfigurationModalProps) {
+  const { t } = useLanguage();
+  const suggestions = t.saveModal.suggestions;
   const [name, setName] = useState('');
 
   useEffect(() => {
@@ -54,7 +55,7 @@ export default function SaveConfigurationModal({
         <button
           type="button"
           onClick={onClose}
-          aria-label="Close"
+          aria-label={t.saveModal.close}
           className="focus-ring absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-white/10 hover:text-white"
         >
           <XIcon className="h-4 w-4" />
@@ -65,12 +66,9 @@ export default function SaveConfigurationModal({
         </div>
 
         <h3 id="save-config-title" className="mt-3 font-display text-lg font-bold text-white">
-          Save this configuration
+          {t.saveModal.title}
         </h3>
-        <p className="mt-1 text-sm leading-relaxed text-slate-400">
-          Name your setup so you can reload it later — e.g. &ldquo;Deep Powder Rig&rdquo; or &ldquo;Park &amp;
-          Rails&rdquo;.
-        </p>
+        <p className="mt-1 text-sm leading-relaxed text-slate-400">{t.saveModal.description}</p>
 
         <input
           autoFocus
@@ -80,13 +78,13 @@ export default function SaveConfigurationModal({
           onKeyDown={(event) => {
             if (event.key === 'Enter' && trimmed) onSave(trimmed);
           }}
-          placeholder={SUGGESTIONS[0]}
+          placeholder={suggestions[0]}
           maxLength={60}
           className="focus-ring mt-4 w-full rounded-xl border border-white/12 bg-white/[0.04] px-3.5 py-2.5 text-sm text-white placeholder:text-slate-600"
         />
 
         <div className="mt-2 flex flex-wrap gap-1.5">
-          {SUGGESTIONS.map((suggestion) => (
+          {suggestions.map((suggestion) => (
             <button
               key={suggestion}
               type="button"
@@ -99,12 +97,12 @@ export default function SaveConfigurationModal({
         </div>
 
         <p className="mt-4 text-xs text-slate-500">
-          {itemCount} items · ${totalPrice.toFixed(2)} best-price total
+          {t.saveModal.itemsSummary(itemCount, `$${totalPrice.toFixed(2)}`)}
         </p>
 
         <div className="mt-5 flex justify-end gap-2">
           <button type="button" onClick={onClose} className="btn-ghost !px-4 !py-2.5 text-xs">
-            Cancel
+            {t.saveModal.cancel}
           </button>
           <button
             type="button"
@@ -113,7 +111,7 @@ export default function SaveConfigurationModal({
             className="btn-primary !px-4 !py-2.5 text-xs"
           >
             <SaveIcon className="h-3.5 w-3.5" />
-            Save configuration
+            {t.saveModal.save}
           </button>
         </div>
       </div>

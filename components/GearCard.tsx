@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { Activity, GearCategory, Recommendation } from '@/lib/types';
 import { categoryLabel } from '@/lib/matcherLogic';
 import { getPerformanceAxes } from '@/lib/performanceProfile';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { categoryIcon, CheckIcon, ExternalIcon, SparkIcon } from './Icons';
 import GearImage from './GearImage';
 import PerformanceHexagon from './PerformanceHexagon';
@@ -29,13 +30,14 @@ export default function GearCard({
   onHover,
   onSelect,
 }: GearCardProps) {
+  const { t, language } = useLanguage();
   const [showAllSpecs, setShowAllSpecs] = useState(false);
   const { item, calculatedSpecs, reasoning, reasonBullets, score, bestPrice, alternates } =
     recommendation;
 
   const sortedPrices = [...item.prices].sort((a, b) => a.price - b.price);
   const spread = sortedPrices[sortedPrices.length - 1].price - sortedPrices[0].price;
-  const performanceAxes = getPerformanceAxes(item.category);
+  const performanceAxes = getPerformanceAxes(item.category, language);
 
   return (
     <article
@@ -62,14 +64,14 @@ export default function GearCard({
             <span className="text-frost-300">
               {categoryIcon(recommendation.category, activity, 'h-3.5 w-3.5')}
             </span>
-            {categoryLabel(recommendation.category, activity)}
+            {categoryLabel(recommendation.category, activity, language)}
           </span>
           <span
             className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold capitalize backdrop-blur ${
               TIER_STYLE[item.priceTier]
             }`}
           >
-            {item.priceTier.replace('-', ' ')}
+            {t.form.budget[item.priceTier].label}
           </span>
         </div>
 
@@ -94,7 +96,7 @@ export default function GearCard({
         {/* ---------- performance hexagon ---------- */}
         <section>
           <h4 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-            Performance profile
+            {t.gearCard.performanceProfile}
           </h4>
           <div className="flex flex-col items-center gap-4 rounded-2xl border border-white/8 bg-white/[0.02] p-4 sm:flex-row">
             <PerformanceHexagon
@@ -129,7 +131,7 @@ export default function GearCard({
         {/* ---------- calculated specs ---------- */}
         <section>
           <h4 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-            Calculated for you
+            {t.gearCard.calculatedForYou}
           </h4>
           <dl className="grid gap-2 sm:grid-cols-2">
             {calculatedSpecs.map((row) => (
@@ -166,7 +168,7 @@ export default function GearCard({
             }}
             className="focus-ring flex w-full items-center justify-between rounded-lg py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 transition-colors hover:text-slate-300"
           >
-            Full manufacturer specs
+            {t.gearCard.fullManufacturerSpecs}
             <span
               className={`text-base transition-transform duration-300 ${
                 showAllSpecs ? 'rotate-45' : ''
@@ -199,11 +201,11 @@ export default function GearCard({
         <section>
           <div className="mb-2 flex items-baseline justify-between">
             <h4 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-              Price comparison
+              {t.gearCard.priceComparison}
             </h4>
             {spread > 0 && (
               <span className="text-[11px] font-medium text-emerald-300">
-                Save ${spread.toFixed(2)}
+                {t.gearCard.save(`$${spread.toFixed(2)}`)}
               </span>
             )}
           </div>
@@ -233,7 +235,7 @@ export default function GearCard({
                       </span>
                       {isBest && (
                         <span className="shrink-0 rounded-md bg-emerald-400/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-200">
-                          Best
+                          {t.gearCard.best}
                         </span>
                       )}
                     </span>
@@ -261,7 +263,7 @@ export default function GearCard({
             <div className="mb-2 flex items-center gap-2">
               <SparkIcon className="h-4 w-4 text-frost-300" />
               <h4 className="text-[11px] font-bold uppercase tracking-[0.18em] text-frost-200">
-                Why this matches you
+                {t.gearCard.whyThisMatches}
               </h4>
             </div>
             <p className="text-sm leading-relaxed text-slate-300">{reasoning}</p>
@@ -280,7 +282,7 @@ export default function GearCard({
         {alternates.length > 0 && (
           <section>
             <h4 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-              Also considered
+              {t.gearCard.alsoConsidered}
             </h4>
             <div className="flex flex-wrap gap-2">
               {alternates.map((alternate) => {
@@ -308,11 +310,13 @@ export default function GearCard({
         <div className="flex items-center justify-between gap-3 border-t border-white/8 pt-4">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-              Best price
+              {t.gearCard.bestPrice}
             </p>
             <p className="font-display text-xl font-black tabular-nums text-white">
               ${bestPrice.price.toFixed(2)}
-              <span className="ml-1.5 text-xs font-medium text-slate-500">at {bestPrice.retailer}</span>
+              <span className="ml-1.5 text-xs font-medium text-slate-500">
+                {t.gearCard.at} {bestPrice.retailer}
+              </span>
             </p>
           </div>
           <a
@@ -322,7 +326,7 @@ export default function GearCard({
             onClick={(event) => event.stopPropagation()}
             className="btn-primary !px-4 !py-2.5 text-xs"
           >
-            View deal
+            {t.gearCard.viewDeal}
             <ExternalIcon className="h-3.5 w-3.5" />
           </a>
         </div>

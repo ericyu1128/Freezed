@@ -2,25 +2,20 @@
 
 import { useEffect, useState } from 'react';
 import Logo from './Logo';
-
-const PHASES = [
-  'Reading your body metrics…',
-  'Calculating length, waist width and flex…',
-  'Filtering the catalogue to your budget…',
-  'Scoring 40+ items across 5 categories…',
-  'Comparing retailer prices…',
-];
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 export default function LoadingState() {
+  const { t } = useLanguage();
+  const phases = t.loading.phases;
   const [phase, setPhase] = useState(0);
 
   useEffect(() => {
     const timer = window.setInterval(
-      () => setPhase((current) => (current + 1) % PHASES.length),
+      () => setPhase((current) => (current + 1) % phases.length),
       750,
     );
     return () => window.clearInterval(timer);
-  }, []);
+  }, [phases.length]);
 
   return (
     <div className="space-y-6" aria-live="polite" aria-busy="true">
@@ -31,9 +26,9 @@ export default function LoadingState() {
         </div>
 
         <div>
-          <h3 className="font-display text-xl font-bold text-white">Matching your kit</h3>
+          <h3 className="font-display text-xl font-bold text-white">{t.loading.heading}</h3>
           <p className="mt-1 h-5 text-sm text-frost-200 transition-all duration-300">
-            {PHASES[phase]}
+            {phases[phase]}
           </p>
         </div>
 
@@ -41,7 +36,7 @@ export default function LoadingState() {
           <div className="h-full w-1/3 animate-[shimmer_1.4s_linear_infinite] rounded-full bg-gradient-to-r from-frost-500 via-neon-ice to-neon-violet" />
         </div>
 
-        <span className="sr-only">Loading recommendations</span>
+        <span className="sr-only">{t.loading.srLabel}</span>
       </div>
 
       <div className="grid gap-5 xl:grid-cols-2">

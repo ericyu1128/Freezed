@@ -3,6 +3,7 @@
 import { useId, useMemo } from 'react';
 import type { GearCategory, PerformanceProfile } from '@/lib/types';
 import { getPerformanceAxes } from '@/lib/performanceProfile';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface PerformanceHexagonProps {
   profile: PerformanceProfile;
@@ -32,7 +33,8 @@ export default function PerformanceHexagon({
   showLabels = true,
 }: PerformanceHexagonProps) {
   const gradientId = useId();
-  const axes = useMemo(() => getPerformanceAxes(category), [category]);
+  const { language } = useLanguage();
+  const axes = useMemo(() => getPerformanceAxes(category, language), [category, language]);
   const axisCount = axes.length;
 
   const angleFor = (index: number) => (Math.PI * 2 * index) / axisCount - Math.PI / 2;

@@ -13,6 +13,7 @@
  * fills its slots in the same order its category is defined there.
  */
 
+import type { Language } from './i18n/translations';
 import type {
   Activity,
   BudgetTier,
@@ -28,6 +29,14 @@ import type {
 /*  Category-aware attribute mapping                                   */
 /* ------------------------------------------------------------------ */
 
+interface PerformanceAxisSource {
+  key: PerformanceAxis;
+  label: string;
+  labelZh: string;
+  short: string;
+  shortZh: string;
+}
+
 export interface PerformanceAxisMeta {
   key: PerformanceAxis;
   label: string;
@@ -35,60 +44,67 @@ export interface PerformanceAxisMeta {
 }
 
 /** The six performance attributes plotted on the hexagon, keyed by gear category. */
-export const GEAR_CATEGORY_AXES: Record<GearCategory, PerformanceAxisMeta[]> = {
+export const GEAR_CATEGORY_AXES: Record<GearCategory, PerformanceAxisSource[]> = {
   skis: [
-    { key: 'axisA', label: 'Carving', short: 'Carve' },
-    { key: 'axisB', label: 'Powder Float', short: 'Float' },
-    { key: 'axisC', label: 'Park', short: 'Park' },
-    { key: 'axisD', label: 'Stability', short: 'Stable' },
-    { key: 'axisE', label: 'Versatility', short: 'Range' },
-    { key: 'axisF', label: 'Accessibility', short: 'Ease' },
+    { key: 'axisA', label: 'Carving', labelZh: '刻滑', short: 'Carve', shortZh: '刻滑' },
+    { key: 'axisB', label: 'Powder Float', labelZh: '粉雪浮力', short: 'Float', shortZh: '浮力' },
+    { key: 'axisC', label: 'Park', labelZh: '公园', short: 'Park', shortZh: '公园' },
+    { key: 'axisD', label: 'Stability', labelZh: '稳定性', short: 'Stable', shortZh: '稳定' },
+    { key: 'axisE', label: 'Versatility', labelZh: '全能性', short: 'Range', shortZh: '全能' },
+    { key: 'axisF', label: 'Accessibility', labelZh: '易上手度', short: 'Ease', shortZh: '易上手' },
   ],
   boots: [
-    { key: 'axisA', label: 'Flex', short: 'Flex' },
-    { key: 'axisB', label: 'Comfort', short: 'Comfort' },
-    { key: 'axisC', label: 'Heel Hold', short: 'Heel' },
-    { key: 'axisD', label: 'Walkability / Mobility', short: 'Walk' },
-    { key: 'axisE', label: 'Warmth', short: 'Warmth' },
-    { key: 'axisF', label: 'Response', short: 'Response' },
+    { key: 'axisA', label: 'Flex', labelZh: '硬度/韧性', short: 'Flex', shortZh: '硬度' },
+    { key: 'axisB', label: 'Comfort', labelZh: '舒适度', short: 'Comfort', shortZh: '舒适' },
+    { key: 'axisC', label: 'Heel Hold', labelZh: '锁跟性', short: 'Heel', shortZh: '锁跟' },
+    { key: 'axisD', label: 'Walkability / Mobility', labelZh: '步行灵活性', short: 'Walk', shortZh: '灵活' },
+    { key: 'axisE', label: 'Warmth', labelZh: '保暖性', short: 'Warmth', shortZh: '保暖' },
+    { key: 'axisF', label: 'Response', labelZh: '响应性', short: 'Response', shortZh: '响应' },
   ],
   helmet: [
-    { key: 'axisA', label: 'Ventilation', short: 'Vent' },
-    { key: 'axisB', label: 'Impact Protection', short: 'Impact' },
-    { key: 'axisC', label: 'Weight', short: 'Weight' },
-    { key: 'axisD', label: 'Comfort', short: 'Comfort' },
-    { key: 'axisE', label: 'Fit Adjustment', short: 'Fit' },
-    { key: 'axisF', label: 'Style', short: 'Style' },
+    { key: 'axisA', label: 'Ventilation', labelZh: '透气性', short: 'Vent', shortZh: '透气' },
+    { key: 'axisB', label: 'Impact Protection', labelZh: '抗冲击保护', short: 'Impact', shortZh: '防护' },
+    { key: 'axisC', label: 'Weight', labelZh: '重量', short: 'Weight', shortZh: '重量' },
+    { key: 'axisD', label: 'Comfort', labelZh: '舒适度', short: 'Comfort', shortZh: '舒适' },
+    { key: 'axisE', label: 'Fit Adjustment', labelZh: '贴合调节', short: 'Fit', shortZh: '调节' },
+    { key: 'axisF', label: 'Style', labelZh: '外观风格', short: 'Style', shortZh: '风格' },
   ],
   goggles: [
-    { key: 'axisA', label: 'Field of View', short: 'FOV' },
-    { key: 'axisB', label: 'Anti-Fog', short: 'Anti-Fog' },
-    { key: 'axisC', label: 'Lens Clarity', short: 'Clarity' },
-    { key: 'axisD', label: 'Fit', short: 'Fit' },
-    { key: 'axisE', label: 'Helmet Compatibility', short: 'Helmet' },
-    { key: 'axisF', label: 'Lens Interchangeability', short: 'Lens Swap' },
+    { key: 'axisA', label: 'Field of View', labelZh: '视野范围', short: 'FOV', shortZh: '视野' },
+    { key: 'axisB', label: 'Anti-Fog', labelZh: '防雾性能', short: 'Anti-Fog', shortZh: '防雾' },
+    { key: 'axisC', label: 'Lens Clarity', labelZh: '镜片清晰度', short: 'Clarity', shortZh: '清晰度' },
+    { key: 'axisD', label: 'Fit', labelZh: '贴合度', short: 'Fit', shortZh: '贴合' },
+    { key: 'axisE', label: 'Helmet Compatibility', labelZh: '头盔兼容性', short: 'Helmet', shortZh: '头盔兼容' },
+    { key: 'axisF', label: 'Lens Interchangeability', labelZh: '镜片可更换性', short: 'Lens Swap', shortZh: '换镜' },
   ],
   jacket: [
-    { key: 'axisA', label: 'Waterproofing', short: 'Waterproof' },
-    { key: 'axisB', label: 'Breathability', short: 'Breathe' },
-    { key: 'axisC', label: 'Insulation', short: 'Warmth' },
-    { key: 'axisD', label: 'Durability', short: 'Durable' },
-    { key: 'axisE', label: 'Weight', short: 'Weight' },
-    { key: 'axisF', label: 'Mobility', short: 'Mobility' },
+    { key: 'axisA', label: 'Waterproofing', labelZh: '防水性', short: 'Waterproof', shortZh: '防水' },
+    { key: 'axisB', label: 'Breathability', labelZh: '透气性', short: 'Breathe', shortZh: '透气' },
+    { key: 'axisC', label: 'Insulation', labelZh: '保暖性', short: 'Warmth', shortZh: '保暖' },
+    { key: 'axisD', label: 'Durability', labelZh: '耐用度', short: 'Durable', shortZh: '耐用' },
+    { key: 'axisE', label: 'Weight', labelZh: '重量', short: 'Weight', shortZh: '重量' },
+    { key: 'axisF', label: 'Mobility', labelZh: '活动灵活性', short: 'Mobility', shortZh: '灵活' },
   ],
   bindings: [
-    { key: 'axisA', label: 'Responsiveness', short: 'React' },
-    { key: 'axisB', label: 'Adjustability', short: 'Adjust' },
-    { key: 'axisC', label: 'Retention / Hold', short: 'Hold' },
-    { key: 'axisD', label: 'Comfort', short: 'Comfort' },
-    { key: 'axisE', label: 'Weight', short: 'Weight' },
-    { key: 'axisF', label: 'Durability', short: 'Durable' },
+    { key: 'axisA', label: 'Responsiveness', labelZh: '响应性', short: 'React', shortZh: '响应' },
+    { key: 'axisB', label: 'Adjustability', labelZh: '可调节性', short: 'Adjust', shortZh: '可调' },
+    { key: 'axisC', label: 'Retention / Hold', labelZh: '锁定力', short: 'Hold', shortZh: '锁定' },
+    { key: 'axisD', label: 'Comfort', labelZh: '舒适度', short: 'Comfort', shortZh: '舒适' },
+    { key: 'axisE', label: 'Weight', labelZh: '重量', short: 'Weight', shortZh: '重量' },
+    { key: 'axisF', label: 'Durability', labelZh: '耐用度', short: 'Durable', shortZh: '耐用' },
   ],
 };
 
-/** The ordered axis metadata (key, label, short) for one gear category. */
-export const getPerformanceAxes = (category: GearCategory): PerformanceAxisMeta[] =>
-  GEAR_CATEGORY_AXES[category];
+/** The ordered, localized axis metadata (key, label, short) for one gear category. */
+export const getPerformanceAxes = (
+  category: GearCategory,
+  language: Language = 'en',
+): PerformanceAxisMeta[] =>
+  GEAR_CATEGORY_AXES[category].map(({ key, label, labelZh, short, shortZh }) => ({
+    key,
+    label: language === 'zh' ? labelZh : label,
+    short: language === 'zh' ? shortZh : short,
+  }));
 
 /** Structural subset of `GearItem` needed to derive a performance profile. */
 interface PerformanceInput {

@@ -2,14 +2,9 @@
 
 import { useState } from 'react';
 import type { GearCategory, MatchResult, UserStats } from '@/lib/types';
-import {
-  LEVEL_LABEL,
-  STYLE_LABEL,
-  TEMPERATURE_LABEL,
-  TIER_LABEL,
-  categoryLabel,
-} from '@/lib/matcherLogic';
+import { categoryLabel, levelLabel, styleLabel, temperatureLabel, tierLabel } from '@/lib/matcherLogic';
 import { addSavedSetup } from '@/lib/savedSetups';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 import GearCard from './GearCard';
 import SaveConfigurationModal from './SaveConfigurationModal';
 import SavedVault from './SavedVault';
@@ -32,9 +27,11 @@ export default function Dashboard({
   onReset,
   onLoadSetup,
 }: DashboardProps) {
+  const { t, language } = useLanguage();
   const { stats, specs, recommendations, totalBestPrice } = result;
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [vaultRefreshToken, setVaultRefreshToken] = useState(0);
+  const lengthLabel = stats.activity === 'snowboard' ? t.dashboard.boardLength : t.dashboard.skiLength;
 
   const handleSaveConfiguration = (name: string) => {
     addSavedSetup(name, result);
@@ -43,16 +40,22 @@ export default function Dashboard({
   };
 
   const profilePills: { icon?: React.ReactNode; label: string; accent?: boolean }[] = [
-    { icon: <MountainIcon className="h-3.5 w-3.5" />, label: stats.activity === 'ski' ? 'Ski' : 'Snowboard' },
-    { label: `${stats.height} cm` },
-    { label: `${stats.weight} kg` },
-    { label: stats.gender === 'unisex' ? 'Unisex fit' : stats.gender === 'female' ? "Women's fit" : "Men's fit" },
-    { icon: <SparkIcon className="h-3.5 w-3.5" />, label: LEVEL_LABEL[stats.level] },
-    { label: STYLE_LABEL[stats.style] },
-    { icon: <ThermometerIcon className="h-3.5 w-3.5" />, label: TEMPERATURE_LABEL[stats.temperature] },
+    {
+      icon: <MountainIcon className="h-3.5 w-3.5" />,
+      label: stats.activity === 'ski' ? t.dashboard.skiLabel : t.dashboard.snowboardLabel,
+    },
+    { label: `${stats.height} ${t.form.heightUnit}` },
+    { label: `${stats.weight} ${t.form.weightUnit}` },
+    {
+      label:
+        stats.gender === 'unisex' ? t.dashboard.unisexFit : stats.gender === 'female' ? t.dashboard.womensFit : t.dashboard.mensFit,
+    },
+    { icon: <SparkIcon className="h-3.5 w-3.5" />, label: levelLabel(stats.level, language) },
+    { label: styleLabel(stats.style, language) },
+    { icon: <ThermometerIcon className="h-3.5 w-3.5" />, label: temperatureLabel(stats.temperature, language) },
     {
       icon: <TagIcon className="h-3.5 w-3.5" />,
-      label: `${stats.budgetTier.replace('-', ' ')} — ${TIER_LABEL[stats.budgetTier]}`,
+      label: `${tierLabel(stats.budgetTier, language)}`,
       accent: true,
     },
   ];
@@ -64,21 +67,21 @@ export default function Dashboard({
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-frost-300">
-              Recommendation dashboard
+              {t.dashboard.recommendationDashboard}
             </p>
             <h2 className="mt-1 font-display text-2xl font-black text-white sm:text-3xl">
-              {recommendations.length} pieces matched to your profile
+              {t.dashboard.piecesMatched(recommendations.length)}
             </h2>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <SavedVault onLoad={onLoadSetup} refreshToken={vaultRefreshToken} />
             <button type="button" onClick={() => setSaveModalOpen(true)} className="btn-ghost !py-2.5">
               <SaveIcon className="h-4 w-4" />
-              Save Configuration
+              {t.dashboard.saveConfiguration}
             </button>
             <button type="button" onClick={onReset} className="btn-ghost !py-2.5">
               <RefreshIcon className="h-4 w-4" />
-              Start over
+              {t.dashboard.startOver}
             </button>
           </div>
         </div>
@@ -101,25 +104,25 @@ export default function Dashboard({
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <SummaryTile
-            label={specs.length.label}
+            label={lengthLabel}
             value={`${specs.length.value} cm`}
-            sub={`Window ${specs.length.range.min}–${specs.length.range.max} cm`}
+            sub={t.dashboard.windowRange(specs.length.range.min, specs.length.range.max)}
             accent
           />
           <SummaryTile
-            label="Boot flex target"
+            label={t.dashboard.bootFlexTarget}
             value={`${specs.bootFlex.min}–${specs.bootFlex.max}`}
             sub={specs.bootFlexLabel}
           />
           <SummaryTile
-            label="Goggle VLT target"
+            label={t.dashboard.goggleVltTarget}
             value={`${specs.vlt.min}–${specs.vlt.max}%`}
-            sub={TEMPERATURE_LABEL[stats.temperature]}
+            sub={temperatureLabel(stats.temperature, language)}
           />
           <SummaryTile
-            label="Kit total (best prices)"
+            label={t.dashboard.kitTotal}
             value={`$${totalBestPrice.toFixed(2)}`}
-            sub={`${recommendations.length} items · cheapest retailer each`}
+            sub={t.dashboard.itemsCheapest(recommendations.length)}
           />
         </div>
       </section>
@@ -129,7 +132,7 @@ export default function Dashboard({
         <div className="mb-4 flex items-center gap-2">
           <SparkIcon className="h-4 w-4 text-frost-300" />
           <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-            How we calculated your {specs.length.label.toLowerCase()}
+            {t.dashboard.howWeCalculated(lengthLabel)}
           </h3>
         </div>
 
@@ -164,7 +167,9 @@ export default function Dashboard({
             </li>
           ))}
           <li className="flex items-center justify-between rounded-xl border border-frost-400/35 bg-frost-500/10 px-3 py-3">
-            <span className="text-sm font-bold text-frost-100">Recommended {specs.length.label.toLowerCase()}</span>
+            <span className="text-sm font-bold text-frost-100">
+              {t.dashboard.recommendedLabel(lengthLabel)}
+            </span>
             <span className="font-display text-lg font-black tabular-nums text-white">
               {specs.length.value} cm
             </span>
@@ -173,15 +178,12 @@ export default function Dashboard({
 
         {specs.poleLength && (
           <p className="mt-3 text-xs text-slate-500">
-            Pole length for your height: <span className="font-semibold text-slate-300">{specs.poleLength} cm</span>.
-            Estimated Mondopoint boot size: <span className="font-semibold text-slate-300">{specs.mondoSize.toFixed(1)}</span>.
+            {t.dashboard.poleLengthNote(specs.poleLength, specs.mondoSize.toFixed(1))}
           </p>
         )}
         {!specs.poleLength && (
           <p className="mt-3 text-xs text-slate-500">
-            Estimated Mondopoint boot size:{' '}
-            <span className="font-semibold text-slate-300">{specs.mondoSize.toFixed(1)}</span> ·{' '}
-            {specs.waistWidthLabel}.
+            {t.dashboard.mondoOnlyNote(specs.mondoSize.toFixed(1))} {specs.waistWidthLabel}
           </p>
         )}
       </section>
@@ -201,7 +203,7 @@ export default function Dashboard({
                 : 'border-white/10 bg-white/[0.03] text-slate-400 hover:border-white/25 hover:text-slate-200'
             }`}
           >
-            {categoryLabel(rec.category, stats.activity)}
+            {categoryLabel(rec.category, stats.activity, language)}
           </button>
         ))}
       </div>
@@ -270,21 +272,19 @@ function SummaryTile({
 }
 
 function EmptyState({ onReset }: { onReset: () => void }) {
+  const { t } = useLanguage();
   return (
     <div className="glass flex flex-col items-center gap-4 px-6 py-16 text-center">
       <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
         <MountainIcon className="h-8 w-8 text-slate-500" />
       </div>
       <div>
-        <h3 className="font-display text-lg font-bold text-white">No gear cleared the filters</h3>
-        <p className="mx-auto mt-1 max-w-sm text-sm text-slate-400">
-          Nothing in the catalogue matched that combination of discipline and budget. Widen the
-          budget tier or change the riding style and run it again.
-        </p>
+        <h3 className="font-display text-lg font-bold text-white">{t.dashboard.noGearTitle}</h3>
+        <p className="mx-auto mt-1 max-w-sm text-sm text-slate-400">{t.dashboard.noGearBody}</p>
       </div>
       <button type="button" onClick={onReset} className="btn-ghost">
         <RefreshIcon className="h-4 w-4" />
-        Adjust my profile
+        {t.dashboard.adjustProfile}
       </button>
     </div>
   );

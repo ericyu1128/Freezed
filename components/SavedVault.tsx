@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { SavedSetup, UserStats } from '@/lib/types';
 import { deleteSavedSetup, loadSavedSetups, renameSavedSetup } from '@/lib/savedSetups';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { BookmarkIcon, CheckIcon, PencilIcon, RefreshIcon, TrashIcon, XIcon } from './Icons';
 
 /** Viewport margin the flyout must always keep clear on every side. */
@@ -62,6 +63,7 @@ function formatTimestamp(iso: string): string {
 }
 
 export default function SavedVault({ onLoad, refreshToken }: SavedVaultProps) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [setups, setSetups] = useState<SavedSetup[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -148,7 +150,7 @@ export default function SavedVault({ onLoad, refreshToken }: SavedVaultProps) {
         aria-expanded={open}
       >
         <BookmarkIcon className="h-4 w-4" />
-        Saved Vault
+        {t.savedVault.trigger}
         {setups.length > 0 && (
           <span className="ml-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-frost-400/20 px-1 text-[10px] font-bold text-frost-200">
             {setups.length}
@@ -169,15 +171,13 @@ export default function SavedVault({ onLoad, refreshToken }: SavedVaultProps) {
               style={{ maxHeight: placement.maxHeight }}
             >
               <p className="px-1 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Saved configurations
+                {t.savedVault.heading}
               </p>
 
               {setups.length === 0 ? (
                 <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
                   <BookmarkIcon className="h-6 w-6 text-slate-600" />
-                  <p className="text-xs text-slate-500">
-                    Nothing saved yet. Use &ldquo;Save Configuration&rdquo; to bookmark this loadout.
-                  </p>
+                  <p className="text-xs text-slate-500">{t.savedVault.empty}</p>
                 </div>
               ) : (
                 <ul className="space-y-1.5">
@@ -202,7 +202,7 @@ export default function SavedVault({ onLoad, refreshToken }: SavedVaultProps) {
                           <button
                             type="button"
                             onClick={commitEdit}
-                            aria-label="Confirm rename"
+                            aria-label={t.savedVault.confirmRename}
                             className="focus-ring flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-emerald-300 hover:bg-emerald-400/10"
                           >
                             <CheckIcon className="h-3.5 w-3.5" />
@@ -210,7 +210,7 @@ export default function SavedVault({ onLoad, refreshToken }: SavedVaultProps) {
                           <button
                             type="button"
                             onClick={() => setEditingId(null)}
-                            aria-label="Cancel rename"
+                            aria-label={t.savedVault.cancelRename}
                             className="focus-ring flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 hover:bg-white/10"
                           >
                             <XIcon className="h-3.5 w-3.5" />
@@ -222,15 +222,18 @@ export default function SavedVault({ onLoad, refreshToken }: SavedVaultProps) {
                             <div className="min-w-0">
                               <p className="truncate text-sm font-semibold text-white">{setup.name}</p>
                               <p className="mt-0.5 text-[11px] text-slate-500">
-                                {formatTimestamp(setup.timestamp)} · {setup.recommendations.length} items · $
-                                {setup.totalBestPrice.toFixed(2)}
+                                {formatTimestamp(setup.timestamp)} ·{' '}
+                                {t.savedVault.itemsSummary(
+                                  setup.recommendations.length,
+                                  `$${setup.totalBestPrice.toFixed(2)}`,
+                                )}
                               </p>
                             </div>
                             <div className="flex shrink-0 items-center gap-1">
                               <button
                                 type="button"
                                 onClick={() => startEdit(setup)}
-                                aria-label={`Rename ${setup.name}`}
+                                aria-label={t.savedVault.renameLabel(setup.name)}
                                 className="focus-ring flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
                               >
                                 <PencilIcon className="h-3.5 w-3.5" />
@@ -238,7 +241,7 @@ export default function SavedVault({ onLoad, refreshToken }: SavedVaultProps) {
                               <button
                                 type="button"
                                 onClick={() => setConfirmDeleteId(setup.id)}
-                                aria-label={`Delete ${setup.name}`}
+                                aria-label={t.savedVault.deleteLabel(setup.name)}
                                 className="focus-ring flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-rose-400/15 hover:text-rose-300"
                               >
                                 <TrashIcon className="h-3.5 w-3.5" />
@@ -248,21 +251,21 @@ export default function SavedVault({ onLoad, refreshToken }: SavedVaultProps) {
 
                           {confirmDeleteId === setup.id ? (
                             <div className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-rose-400/25 bg-rose-400/[0.06] px-2.5 py-1.5">
-                              <span className="text-[11px] text-rose-200">Delete this setup?</span>
+                              <span className="text-[11px] text-rose-200">{t.savedVault.deleteConfirm}</span>
                               <span className="flex items-center gap-1.5">
                                 <button
                                   type="button"
                                   onClick={() => handleDelete(setup.id)}
                                   className="rounded-md bg-rose-400/20 px-2 py-1 text-[11px] font-semibold text-rose-100 hover:bg-rose-400/30"
                                 >
-                                  Delete
+                                  {t.savedVault.deleteBtn}
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => setConfirmDeleteId(null)}
                                   className="rounded-md px-2 py-1 text-[11px] font-semibold text-slate-400 hover:text-white"
                                 >
-                                  Cancel
+                                  {t.savedVault.cancelBtn}
                                 </button>
                               </span>
                             </div>
@@ -273,7 +276,7 @@ export default function SavedVault({ onLoad, refreshToken }: SavedVaultProps) {
                               className="focus-ring mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-lg border border-frost-400/25 bg-frost-500/[0.08] py-1.5 text-xs font-semibold text-frost-200 transition-colors hover:border-frost-400/50 hover:bg-frost-500/15"
                             >
                               <RefreshIcon className="h-3.5 w-3.5" />
-                              Reload this setup
+                              {t.savedVault.reload}
                             </button>
                           )}
                         </>

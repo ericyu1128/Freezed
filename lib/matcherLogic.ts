@@ -7,6 +7,7 @@
  */
 
 import gearDatabase from './gearDatabase';
+import type { Language } from './i18n/translations';
 import type {
   BudgetTier,
   CalculatedSpecs,
@@ -67,7 +68,71 @@ export const LEVEL_LABEL: Record<Level, string> = {
   expert: 'Expert',
 };
 
-export const categoryLabel = (category: GearCategory, activity: UserStats['activity']): string => {
+/* ------------------------------------------------------------------ */
+/*  Localized (zh) label variants                                      */
+/*                                                                      */
+/*  These sit alongside the English-only maps above, which stay as the */
+/*  ground truth consumed by the narrative generators further down     */
+/*  this file (buildReasoning, buildReasonBullets, calculateLength …). */
+/*  The `*Label` helpers here are what UI components call at render    */
+/*  time, so switching language re-renders these instantly even for an */
+/*  already-generated result.                                          */
+/* ------------------------------------------------------------------ */
+
+export const TIER_LABEL_ZH: Record<BudgetTier, string> = {
+  budget: '入门 / 高性价比',
+  'mid-range': '性能与价格均衡',
+  premium: '顶级 / 专业级结构',
+};
+
+export const TEMPERATURE_LABEL_ZH: Record<Temperature, string> = {
+  freezing: '严寒 — 零下 15°C 及以下',
+  moderate: '适中 — 零下 5°C 到 0°C',
+  spring: '春季 — 0°C 以上',
+};
+
+export const STYLE_LABEL_ZH: Record<RidingStyle, string> = {
+  piste: '压雪道 / 刻滑',
+  'all-mountain': '全地形',
+  freestyle: '自由式 / 公园',
+  backcountry: '野雪 / 后山穿越',
+};
+
+export const LEVEL_LABEL_ZH: Record<Level, string> = {
+  beginner: '初学者',
+  intermediate: '中级',
+  advanced: '高级',
+  expert: '专家级',
+};
+
+export const tierLabel = (tier: BudgetTier, language: Language): string =>
+  language === 'zh' ? TIER_LABEL_ZH[tier] : TIER_LABEL[tier];
+
+export const temperatureLabel = (temperature: Temperature, language: Language): string =>
+  language === 'zh' ? TEMPERATURE_LABEL_ZH[temperature] : TEMPERATURE_LABEL[temperature];
+
+export const styleLabel = (style: RidingStyle, language: Language): string =>
+  language === 'zh' ? STYLE_LABEL_ZH[style] : STYLE_LABEL[style];
+
+export const levelLabel = (level: Level, language: Language): string =>
+  language === 'zh' ? LEVEL_LABEL_ZH[level] : LEVEL_LABEL[level];
+
+const CATEGORY_LABEL_ZH: Record<GearCategory, { ski: string; snowboard: string }> = {
+  skis: { ski: '雪板', snowboard: '单板' },
+  boots: { ski: '双板雪靴', snowboard: '单板雪靴' },
+  bindings: { ski: '双板固定器', snowboard: '单板固定器' },
+  helmet: { ski: '头盔', snowboard: '头盔' },
+  goggles: { ski: '护目镜', snowboard: '护目镜' },
+  jacket: { ski: '外套', snowboard: '外套' },
+};
+
+export const categoryLabel = (
+  category: GearCategory,
+  activity: UserStats['activity'],
+  language: Language = 'en',
+): string => {
+  if (language === 'zh') return CATEGORY_LABEL_ZH[category][activity === 'snowboard' ? 'snowboard' : 'ski'];
+
   switch (category) {
     case 'skis':
       return activity === 'snowboard' ? 'Snowboard' : 'Skis';

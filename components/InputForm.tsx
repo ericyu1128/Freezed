@@ -11,6 +11,8 @@ import type {
   UserStats,
 } from '@/lib/types';
 import { LAST_STEP_INDEX, STEPS, indexOfStep, transition, type StepId } from '@/lib/stepFlow';
+import { levelLabel, styleLabel, temperatureLabel, tierLabel } from '@/lib/matcherLogic';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
@@ -34,117 +36,9 @@ interface Option<T> {
   icon?: React.ReactNode;
 }
 
-const ACTIVITY_OPTIONS: Option<Activity>[] = [
-  {
-    value: 'ski',
-    label: 'Ski',
-    description: 'Two planks, poles, and a length calculation driven by height and style.',
-    icon: <SkiIcon className="h-6 w-6" />,
-  },
-  {
-    value: 'snowboard',
-    label: 'Snowboard',
-    description: 'One board, sized as a ratio of your height with a waist-width check.',
-    icon: <SnowboardIcon className="h-6 w-6" />,
-  },
-];
-
-const GENDER_OPTIONS: Option<Gender>[] = [
-  { value: 'male', label: "Men's", description: "Men's construction and flex indices." },
-  {
-    value: 'female',
-    label: "Women's",
-    description: "Lighter layups, lower cuff heights, softer flex scale.",
-  },
-  { value: 'unisex', label: 'Unisex', description: 'No gendered filtering — score on fit alone.' },
-];
-
-const LEVEL_OPTIONS: Option<Level>[] = [
-  {
-    value: 'beginner',
-    label: 'Beginner',
-    description: 'Green runs, still working on linked turns. Shorter and softer is easier.',
-  },
-  {
-    value: 'intermediate',
-    label: 'Intermediate',
-    description: 'Confident on blues, starting to carve and explore off the groomers.',
-  },
-  {
-    value: 'advanced',
-    label: 'Advanced',
-    description: 'Comfortable on blacks, bumps and variable snow at speed.',
-  },
-  {
-    value: 'expert',
-    label: 'Expert',
-    description: 'Anything, anywhere. You want stability and edge hold over forgiveness.',
-  },
-];
-
-const STYLE_OPTIONS: Option<RidingStyle>[] = [
-  {
-    value: 'piste',
-    label: 'Piste / Carving',
-    description: 'Groomers and hardpack. Narrow waist, quick edge-to-edge.',
-  },
-  {
-    value: 'all-mountain',
-    label: 'All-Mountain',
-    description: 'A bit of everything — the 85–98 mm sweet spot.',
-  },
-  {
-    value: 'freestyle',
-    label: 'Freestyle / Park',
-    description: 'Jumps, rails and switch riding. Twin tips, shorter lengths.',
-  },
-  {
-    value: 'backcountry',
-    label: 'Backcountry / Powder',
-    description: 'Deep snow and touring. Wide waist, extra length for float.',
-  },
-];
-
-const TEMPERATURE_OPTIONS: Option<Temperature>[] = [
-  {
-    value: 'freezing',
-    label: 'Freezing',
-    description: '-15 °C and below. High-insulation down and high-VLT storm lenses.',
-  },
-  {
-    value: 'moderate',
-    label: 'Moderate',
-    description: '-5 °C to 0 °C. Mid-weight insulation, all-round 18–40% VLT lens.',
-  },
-  {
-    value: 'spring',
-    label: 'Spring',
-    description: 'Above 0 °C. Uninsulated shells and low-VLT polarised sun lenses.',
-  },
-];
-
-const BUDGET_OPTIONS: Option<BudgetTier>[] = [
-  {
-    value: 'budget',
-    label: 'Budget',
-    description: 'Entry-level / Value. Proven basics, no exotic materials.',
-  },
-  {
-    value: 'mid-range',
-    label: 'Mid-Range',
-    description: 'Balanced performance / price. Where most riders should shop.',
-  },
-  {
-    value: 'premium',
-    label: 'Premium',
-    description: 'Top-tier / Pro construction. Titanal, GORE-TEX Pro, magnetic optics.',
-  },
-];
-
-const BUDGET_RANGE: Record<BudgetTier, string> = {
-  budget: '≈ $1,000 – $1,400 full kit',
-  'mid-range': '≈ $1,800 – $2,400 full kit',
-  premium: '≈ $2,800 – $3,600 full kit',
+const ACTIVITY_ICONS: Record<Activity, React.ReactNode> = {
+  ski: <SkiIcon className="h-6 w-6" />,
+  snowboard: <SnowboardIcon className="h-6 w-6" />,
 };
 
 /* ------------------------------------------------------------------ */
@@ -333,10 +227,52 @@ interface InputFormProps {
 }
 
 export default function InputForm({ onSubmit, isLoading = false, initialStats }: InputFormProps) {
+  const { t, language } = useLanguage();
   const [stats, setStats] = useState<UserStats>({ ...DEFAULTS, ...initialStats });
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState<'forward' | 'back'>('forward');
   const [touched, setTouched] = useState(false);
+
+  const ACTIVITY_OPTIONS: Option<Activity>[] = [
+    { value: 'ski', ...t.form.activity.ski, icon: ACTIVITY_ICONS.ski },
+    { value: 'snowboard', ...t.form.activity.snowboard, icon: ACTIVITY_ICONS.snowboard },
+  ];
+  const GENDER_OPTIONS: Option<Gender>[] = [
+    { value: 'male', ...t.form.gender.male },
+    { value: 'female', ...t.form.gender.female },
+    { value: 'unisex', ...t.form.gender.unisex },
+  ];
+  const LEVEL_OPTIONS: Option<Level>[] = [
+    { value: 'beginner', ...t.form.level.beginner },
+    { value: 'intermediate', ...t.form.level.intermediate },
+    { value: 'advanced', ...t.form.level.advanced },
+    { value: 'expert', ...t.form.level.expert },
+  ];
+  const STYLE_OPTIONS: Option<RidingStyle>[] = [
+    { value: 'piste', ...t.form.style.piste },
+    { value: 'all-mountain', ...t.form.style['all-mountain'] },
+    { value: 'freestyle', ...t.form.style.freestyle },
+    { value: 'backcountry', ...t.form.style.backcountry },
+  ];
+  const TEMPERATURE_OPTIONS: Option<Temperature>[] = [
+    { value: 'freezing', ...t.form.temperature.freezing },
+    { value: 'moderate', ...t.form.temperature.moderate },
+    { value: 'spring', ...t.form.temperature.spring },
+  ];
+  const BUDGET_OPTIONS: Option<BudgetTier>[] = [
+    { value: 'budget', label: t.form.budget.budget.label, description: t.form.budget.budget.description },
+    {
+      value: 'mid-range',
+      label: t.form.budget['mid-range'].label,
+      description: t.form.budget['mid-range'].description,
+    },
+    { value: 'premium', label: t.form.budget.premium.label, description: t.form.budget.premium.description },
+  ];
+  const BUDGET_RANGE: Record<BudgetTier, string> = {
+    budget: t.form.budget.budget.range,
+    'mid-range': t.form.budget['mid-range'].range,
+    premium: t.form.budget.premium.range,
+  };
 
   const update = useCallback(
     <K extends keyof UserStats>(key: K, value: UserStats[K]) =>
@@ -345,18 +281,18 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
   );
 
   const heightError = useMemo(() => {
-    if (Number.isNaN(stats.height)) return 'Enter your height in centimetres.';
+    if (Number.isNaN(stats.height)) return t.form.heightErrorRequired;
     if (stats.height < HEIGHT_LIMITS.min || stats.height > HEIGHT_LIMITS.max)
-      return `Height must be between ${HEIGHT_LIMITS.min} and ${HEIGHT_LIMITS.max} cm.`;
+      return t.form.heightErrorRange(HEIGHT_LIMITS.min, HEIGHT_LIMITS.max);
     return undefined;
-  }, [stats.height]);
+  }, [stats.height, t]);
 
   const weightError = useMemo(() => {
-    if (Number.isNaN(stats.weight)) return 'Enter your weight in kilograms.';
+    if (Number.isNaN(stats.weight)) return t.form.weightErrorRequired;
     if (stats.weight < WEIGHT_LIMITS.min || stats.weight > WEIGHT_LIMITS.max)
-      return `Weight must be between ${WEIGHT_LIMITS.min} and ${WEIGHT_LIMITS.max} kg.`;
+      return t.form.weightErrorRange(WEIGHT_LIMITS.min, WEIGHT_LIMITS.max);
     return undefined;
-  }, [stats.weight]);
+  }, [stats.weight, t]);
 
   const currentStep: StepId = STEPS[step].id;
   const isLastStep = step === LAST_STEP_INDEX;
@@ -420,12 +356,12 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
         <div className="mb-3 flex items-center justify-between gap-4">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-frost-300">
-              Step {step + 1} of {STEPS.length}
+              {t.form.stepOf(step + 1, STEPS.length)}
             </p>
             <h2 className="mt-1 font-display text-xl font-bold text-white sm:text-2xl">
-              {STEPS[step].title}
+              {t.form.steps[STEPS[step].id].title}
             </h2>
-            <p className="mt-1 text-sm text-slate-400">{STEPS[step].blurb}</p>
+            <p className="mt-1 text-sm text-slate-400">{t.form.steps[STEPS[step].id].blurb}</p>
           </div>
           <div className="hidden shrink-0 text-right sm:block">
             <p className="font-display text-3xl font-black tabular-nums text-white/90">
@@ -459,7 +395,7 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
                 }`}
               >
                 {state === 'done' && <CheckIcon className="mr-1 inline h-3 w-3 text-neon-mint" />}
-                {definition.title}
+                {t.form.steps[definition.id].title}
               </button>
             );
           })}
@@ -472,18 +408,18 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
           {currentStep === 'discipline' && (
             <div className="space-y-6">
               <section>
-                <SectionLabel icon={<MountainIcon className="h-4 w-4" />} text="Activity" />
+                <SectionLabel icon={<MountainIcon className="h-4 w-4" />} text={t.form.sections.activity} />
                 <OptionGrid
-                  name="Activity"
+                  name={t.form.sections.activity}
                   options={ACTIVITY_OPTIONS}
                   value={stats.activity}
                   onChange={(value) => update('activity', value)}
                 />
               </section>
               <section>
-                <SectionLabel icon={<SparkIcon className="h-4 w-4" />} text="Fit scale" />
+                <SectionLabel icon={<SparkIcon className="h-4 w-4" />} text={t.form.sections.fitScale} />
                 <OptionGrid
-                  name="Gender"
+                  name={t.form.sections.fitScale}
                   columns={3}
                   options={GENDER_OPTIONS}
                   value={stats.gender}
@@ -496,9 +432,9 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
           {currentStep === 'metrics' && (
             <div className="grid gap-4 sm:grid-cols-2">
               <MetricSlider
-                label="Height"
-                unit="cm"
-                hint="Standing height, without boots."
+                label={t.form.heightLabel}
+                unit={t.form.heightUnit}
+                hint={t.form.heightHint}
                 value={stats.height}
                 min={HEIGHT_LIMITS.min}
                 max={HEIGHT_LIMITS.max}
@@ -506,9 +442,9 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
                 error={touched ? heightError : undefined}
               />
               <MetricSlider
-                label="Weight"
-                unit="kg"
-                hint="Body weight — drives the length load modifier."
+                label={t.form.weightLabel}
+                unit={t.form.weightUnit}
+                hint={t.form.weightHint}
                 value={stats.weight}
                 min={WEIGHT_LIMITS.min}
                 max={WEIGHT_LIMITS.max}
@@ -517,11 +453,7 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
               />
               <div className="glass col-span-full flex items-start gap-3 border-frost-400/20 bg-frost-500/[0.06] p-4">
                 <SparkIcon className="mt-0.5 h-5 w-5 shrink-0 text-frost-300" />
-                <p className="text-xs leading-relaxed text-slate-300">
-                  Height sets the base length; weight adjusts it by up to ±5 cm. A rider who is
-                  heavy for their height flexes a ski more deeply, so a little extra length keeps the
-                  shovel from folding at speed.
-                </p>
+                <p className="text-xs leading-relaxed text-slate-300">{t.form.metricsInfo}</p>
               </div>
             </div>
           )}
@@ -529,18 +461,18 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
           {currentStep === 'ability' && (
             <div className="space-y-6">
               <section>
-                <SectionLabel icon={<SparkIcon className="h-4 w-4" />} text="Ability level" />
+                <SectionLabel icon={<SparkIcon className="h-4 w-4" />} text={t.form.sections.abilityLevel} />
                 <OptionGrid
-                  name="Level"
+                  name={t.form.sections.abilityLevel}
                   options={LEVEL_OPTIONS}
                   value={stats.level}
                   onChange={(value) => update('level', value)}
                 />
               </section>
               <section>
-                <SectionLabel icon={<MountainIcon className="h-4 w-4" />} text="Riding style" />
+                <SectionLabel icon={<MountainIcon className="h-4 w-4" />} text={t.form.sections.ridingStyle} />
                 <OptionGrid
-                  name="Style"
+                  name={t.form.sections.ridingStyle}
                   options={STYLE_OPTIONS}
                   value={stats.style}
                   onChange={(value) => update('style', value)}
@@ -554,10 +486,10 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
               <section>
                 <SectionLabel
                   icon={<ThermometerIcon className="h-4 w-4" />}
-                  text="Typical conditions"
+                  text={t.form.sections.typicalConditions}
                 />
                 <OptionGrid
-                  name="Temperature"
+                  name={t.form.sections.typicalConditions}
                   columns={3}
                   options={TEMPERATURE_OPTIONS}
                   value={stats.temperature}
@@ -566,11 +498,7 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
               </section>
               <div className="glass flex items-start gap-3 border-frost-400/20 bg-frost-500/[0.06] p-4">
                 <ThermometerIcon className="mt-0.5 h-5 w-5 shrink-0 text-frost-300" />
-                <p className="text-xs leading-relaxed text-slate-300">
-                  Conditions decide two things outright: goggle VLT (how much light the lens lets
-                  through) and jacket insulation. Freezing days get high-VLT storm lenses and down;
-                  spring days get low-VLT sun lenses and uninsulated shells.
-                </p>
+                <p className="text-xs leading-relaxed text-slate-300">{t.form.conditionsInfo}</p>
               </div>
             </div>
           )}
@@ -578,8 +506,12 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
           {currentStep === 'budget' && (
             <div className="space-y-6">
               <section>
-                <SectionLabel icon={<TagIcon className="h-4 w-4" />} text="Budget tier" />
-                <div role="radiogroup" aria-label="Budget tier" className="grid gap-3 sm:grid-cols-3">
+                <SectionLabel icon={<TagIcon className="h-4 w-4" />} text={t.form.sections.budgetTier} />
+                <div
+                  role="radiogroup"
+                  aria-label={t.form.sections.budgetTier}
+                  className="grid gap-3 sm:grid-cols-3"
+                >
                   {BUDGET_OPTIONS.map((option) => {
                     const active = option.value === stats.budgetTier;
                     return (
@@ -626,16 +558,22 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
 
               <div className="glass p-5">
                 <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-400">
-                  Your profile
+                  {t.form.yourProfile}
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  <span className="pill">{stats.activity === 'ski' ? 'Ski' : 'Snowboard'}</span>
-                  <span className="pill">{stats.height} cm</span>
-                  <span className="pill">{stats.weight} kg</span>
-                  <span className="pill capitalize">{stats.level}</span>
-                  <span className="pill capitalize">{stats.style.replace('-', ' ')}</span>
-                  <span className="pill capitalize">{stats.temperature}</span>
-                  <span className="pill capitalize">{stats.budgetTier.replace('-', ' ')}</span>
+                  <span className="pill">
+                    {stats.activity === 'ski' ? t.form.activity.ski.label : t.form.activity.snowboard.label}
+                  </span>
+                  <span className="pill">
+                    {stats.height} {t.form.heightUnit}
+                  </span>
+                  <span className="pill">
+                    {stats.weight} {t.form.weightUnit}
+                  </span>
+                  <span className="pill">{levelLabel(stats.level, language)}</span>
+                  <span className="pill">{styleLabel(stats.style, language)}</span>
+                  <span className="pill">{temperatureLabel(stats.temperature, language)}</span>
+                  <span className="pill">{tierLabel(stats.budgetTier, language)}</span>
                 </div>
               </div>
             </div>
@@ -647,12 +585,12 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
       <div className="flex items-center justify-between gap-3 border-t border-white/10 bg-white/[0.02] px-5 py-4 sm:px-7">
         <button type="button" onClick={goBack} disabled={step === 0} className="btn-ghost !py-2.5">
           <ArrowLeftIcon className="h-4 w-4" />
-          Back
+          {t.form.back}
         </button>
 
         {!isLastStep ? (
           <button key="continue" type="button" onClick={goNext} className="btn-primary !py-2.5">
-            Continue
+            {t.form.continueBtn}
             <ArrowRightIcon className="h-4 w-4" />
           </button>
         ) : (
@@ -660,12 +598,12 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
             {isLoading ? (
               <>
                 <span className="h-4 w-4 animate-spin-slow rounded-full border-2 border-glacier-1000/30 border-t-glacier-1000" />
-                Matching…
+                {t.form.matching}
               </>
             ) : (
               <>
                 <SparkIcon className="h-4 w-4" />
-                Match my gear
+                {t.form.matchMyGear}
               </>
             )}
           </button>

@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import type { Activity, CalculatedSpecs, GearCategory, Recommendation } from '@/lib/types';
 import { CATEGORY_ORDER, categoryLabel } from '@/lib/matcherLogic';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { categoryIcon } from './Icons';
 
 interface Hotspot {
@@ -23,6 +24,15 @@ const HOTSPOTS: Hotspot[] = [
   { category: 'bindings', bodyPart: 'Bindings', x: 130, y: 400, side: 'left' },
   { category: 'skis', bodyPart: 'Base', x: 130, y: 424, side: 'right' },
 ];
+
+const BODY_PART_ZH: Record<string, string> = {
+  Head: '头部',
+  Face: '面部',
+  Torso: '躯干',
+  Feet: '双脚',
+  Bindings: '固定器',
+  Base: '雪板',
+};
 
 /**
  * One distinct accent per gear category so the figure reads as actually
@@ -131,6 +141,7 @@ export default function StickmanVisualizer({
   onSelect,
   specs,
 }: StickmanVisualizerProps) {
+  const { t, language } = useLanguage();
   const byCategory = useMemo(() => {
     const map = new Map<GearCategory, Recommendation>();
     recommendations.forEach((rec) => map.set(rec.category, rec));
@@ -163,11 +174,9 @@ export default function StickmanVisualizer({
       {/* Panel header */}
       <div className="mb-2 flex items-center justify-between gap-3">
         <div>
-          <h3 className="font-display text-lg font-bold text-white">Your loadout</h3>
+          <h3 className="font-display text-lg font-bold text-white">{t.stickman.title}</h3>
           <p className="text-xs text-slate-400">
-            {recommendations.length > 0
-              ? 'Hover a marker to highlight the matching card'
-              : 'Markers light up once you run the matcher'}
+            {recommendations.length > 0 ? t.stickman.hoverHint : t.stickman.awaitingHint}
           </p>
         </div>
         <span className="pill shrink-0">
@@ -176,7 +185,7 @@ export default function StickmanVisualizer({
               recommendations.length > 0 ? 'bg-neon-mint' : 'bg-slate-600'
             }`}
           />
-          {byCategory.size}/{CATEGORY_ORDER.length} equipped
+          {t.stickman.equipped(byCategory.size, CATEGORY_ORDER.length)}
         </span>
       </div>
 
@@ -189,7 +198,7 @@ export default function StickmanVisualizer({
           viewBox="0 0 260 470"
           className="absolute inset-0 h-full w-full"
           role="img"
-          aria-label="Stickman rider showing recommended gear placement"
+          aria-label={t.stickman.ariaLabel}
         >
           <defs>
             <linearGradient id="jacket-grad" x1="0" y1="0" x2="0" y2="1">
@@ -504,8 +513,8 @@ export default function StickmanVisualizer({
               onFocus={() => onHover(hotspot.category)}
               onBlur={() => onHover(null)}
               onClick={() => onSelect(hotspot.category)}
-              aria-label={`${hotspot.bodyPart}: ${
-                rec ? `${rec.item.brand} ${rec.item.name}` : 'no recommendation yet'
+              aria-label={`${language === 'zh' ? BODY_PART_ZH[hotspot.bodyPart] : hotspot.bodyPart}: ${
+                rec ? `${rec.item.brand} ${rec.item.name}` : t.stickman.awaitingMatch
               }`}
               className="focus-ring group absolute z-20 -translate-x-1/2 -translate-y-1/2"
               style={{
@@ -548,10 +557,10 @@ export default function StickmanVisualizer({
                 }`}
               >
                 <span className="block font-semibold text-white">
-                  {categoryLabel(hotspot.category, activity)}
+                  {categoryLabel(hotspot.category, activity, language)}
                 </span>
                 <span className="block text-slate-400">
-                  {rec ? `${rec.item.brand} ${rec.item.name}` : 'Awaiting match'}
+                  {rec ? `${rec.item.brand} ${rec.item.name}` : t.stickman.awaitingMatch}
                 </span>
               </span>
             </button>
@@ -563,7 +572,7 @@ export default function StickmanVisualizer({
       {recommendations.length > 0 && (
         <div className="mt-4">
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-            Equipped gear
+            {t.stickman.equippedGear}
           </p>
           <div className="flex flex-wrap gap-1.5">
             {recommendations.map((rec) => {
@@ -595,16 +604,16 @@ export default function StickmanVisualizer({
       {specs && (
         <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <MetricChip
-            label={specs.length.label}
+            label={activity === 'snowboard' ? t.dashboard.boardLength : t.dashboard.skiLength}
             value={`${specs.length.value} cm`}
             accent
           />
           <MetricChip
-            label={activity === 'snowboard' ? 'Waist' : 'Waist width'}
+            label={activity === 'snowboard' ? t.stickman.metricWaist : t.stickman.metricWaistWidth}
             value={`${specs.waistWidth.min}–${specs.waistWidth.max}`}
           />
-          <MetricChip label="Boot flex" value={`${specs.bootFlex.min}–${specs.bootFlex.max}`} />
-          <MetricChip label="Lens VLT" value={`${specs.vlt.min}–${specs.vlt.max}%`} />
+          <MetricChip label={t.stickman.metricBootFlex} value={`${specs.bootFlex.min}–${specs.bootFlex.max}`} />
+          <MetricChip label={t.stickman.metricLensVlt} value={`${specs.vlt.min}–${specs.vlt.max}%`} />
         </div>
       )}
     </div>

@@ -1,6 +1,12 @@
+'use client';
+
 import Logo from './Logo';
+import LanguageSwitch from './LanguageSwitch';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 export default function Navbar() {
+  const { t } = useLanguage();
+
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-glacier-1000/70 backdrop-blur-xl">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
@@ -11,15 +17,15 @@ export default function Navbar() {
               <span className="gradient-text">Freezed</span>
             </h1>
             <p className="mt-0.5 text-[11px] font-medium tracking-wide text-slate-400">
-              Made by Eric Yu
+              {t.nav.madeBy}
             </p>
           </div>
         </div>
 
         <nav className="hidden items-center gap-1 md:flex">
           {[
-            { href: '#matcher', label: 'Matcher' },
-            { href: '#how-it-works', label: 'How it works' },
+            { href: '#matcher', label: t.nav.matcherLink },
+            { href: '#how-it-works', label: t.nav.howItWorksLink },
           ].map((link) => (
             <a
               key={link.href}
@@ -34,10 +40,11 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           <span className="pill hidden sm:inline-flex">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-neon-mint" />
-            2025/26 season data
+            {t.nav.seasonBadge}
           </span>
+          <LanguageSwitch />
           <a href="#matcher" className="btn-primary !px-4 !py-2 text-xs sm:text-sm">
-            Start matching
+            {t.nav.startMatching}
           </a>
         </div>
       </div>

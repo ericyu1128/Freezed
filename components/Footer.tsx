@@ -1,6 +1,11 @@
+'use client';
+
 import Logo from './Logo';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 export default function Footer() {
+  const { t } = useLanguage();
+
   return (
     <footer className="mt-24 border-t border-white/10 bg-glacier-1000/60 backdrop-blur-xl">
       <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -12,7 +17,7 @@ export default function Footer() {
                 <span className="gradient-text">Freezed</span>
               </p>
               <p className="text-sm text-slate-400">
-                Made by <span className="font-semibold text-frost-300">Eric Yu</span>
+                {t.footer.madeBy} <span className="font-semibold text-frost-300">Eric Yu</span>
               </p>
             </div>
           </div>
@@ -20,17 +25,17 @@ export default function Footer() {
           <div className="grid grid-cols-2 gap-x-10 gap-y-2 text-sm sm:grid-cols-3">
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
-                Matcher
+                {t.footer.matcherHeading}
               </p>
               <ul className="space-y-1 text-slate-400">
-                <li>Ski &amp; board sizing</li>
-                <li>Boot flex index</li>
-                <li>Lens VLT targeting</li>
+                {t.footer.matcherItems.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
               </ul>
             </div>
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
-                Retailers
+                {t.footer.retailersHeading}
               </p>
               <ul className="space-y-1 text-slate-400">
                 <li>Evo</li>
@@ -40,7 +45,7 @@ export default function Footer() {
             </div>
             <div className="col-span-2 sm:col-span-1">
               <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
-                Brands
+                {t.footer.brandsHeading}
               </p>
               <ul className="space-y-1 text-slate-400">
                 <li>Atomic · Völkl · Salomon</li>
@@ -54,14 +59,8 @@ export default function Footer() {
         <div className="divider my-8" />
 
         <div className="flex flex-col gap-3 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-          <p>
-            © {new Date().getFullYear()} Freezed. Built by Eric Yu. Prices are illustrative demo
-            data; retailer links run a live search on each store.
-          </p>
-          <p className="text-slate-500">
-            Sizing output is guidance, not a fitting. Always shell-fit boots with a qualified
-            bootfitter.
-          </p>
+          <p>{t.footer.copyright(new Date().getFullYear())}</p>
+          <p className="text-slate-500">{t.footer.disclaimer}</p>
         </div>
       </div>
     </footer>
