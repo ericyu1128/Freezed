@@ -59,7 +59,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Script
           id="avantlink-affiliate-confirm"
           strategy="beforeInteractive"
-          src="https://classic.avantlink.com/affiliate_app_confirm.php?mode=js&authResponse=da8bc28e34f9447aba250ea9907e997b6d624f53"
+          src="https://classic.avantlink.com/affiliate_app_confirm.php?mode=js&authResponse=f19be781d46ccda696191f586d0e313d55a54b3c"
         />
       </body>
     </html>
