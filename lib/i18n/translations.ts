@@ -92,6 +92,7 @@ export interface Dictionary {
       ridingStyle: string;
       typicalConditions: string;
       budgetTier: string;
+      unitSystem: string;
     };
     activity: Record<Activity, OptionCopy>;
     gender: Record<Gender, OptionCopy>;
@@ -102,13 +103,17 @@ export interface Dictionary {
     heightLabel: string;
     heightHint: string;
     heightUnit: string;
+    heightUnitImperial: string;
     weightLabel: string;
     weightHint: string;
     weightUnit: string;
+    weightUnitImperial: string;
+    unitSystemMetric: string;
+    unitSystemImperial: string;
     heightErrorRequired: string;
-    heightErrorRange: (min: number, max: number) => string;
+    heightErrorRange: (min: number, max: number, unit: string) => string;
     weightErrorRequired: string;
-    weightErrorRange: (min: number, max: number) => string;
+    weightErrorRange: (min: number, max: number, unit: string) => string;
     metricsInfo: string;
     conditionsInfo: string;
     yourProfile: string;
@@ -309,6 +314,7 @@ export const en: Dictionary = {
       ridingStyle: 'Riding style',
       typicalConditions: 'Typical conditions',
       budgetTier: 'Budget tier',
+      unitSystem: 'Units',
     },
     activity: {
       ski: {
@@ -398,13 +404,17 @@ export const en: Dictionary = {
     heightLabel: 'Height',
     heightHint: 'Standing height, without boots.',
     heightUnit: 'cm',
+    heightUnitImperial: 'in',
     weightLabel: 'Weight',
     weightHint: 'Body weight — drives the length load modifier.',
     weightUnit: 'kg',
-    heightErrorRequired: 'Enter your height in centimetres.',
-    heightErrorRange: (min, max) => `Height must be between ${min} and ${max} cm.`,
-    weightErrorRequired: 'Enter your weight in kilograms.',
-    weightErrorRange: (min, max) => `Weight must be between ${min} and ${max} kg.`,
+    weightUnitImperial: 'lbs',
+    unitSystemMetric: 'Metric',
+    unitSystemImperial: 'Imperial',
+    heightErrorRequired: 'Enter your height.',
+    heightErrorRange: (min, max, unit) => `Height must be between ${min} and ${max} ${unit}.`,
+    weightErrorRequired: 'Enter your weight.',
+    weightErrorRange: (min, max, unit) => `Weight must be between ${min} and ${max} ${unit}.`,
     metricsInfo:
       'Height sets the base length; weight adjusts it by up to ±5 cm. A rider who is heavy for their height flexes a ski more deeply, so a little extra length keeps the shovel from folding at speed.',
     conditionsInfo:
@@ -616,6 +626,7 @@ export const zh: Dictionary = {
       ridingStyle: '骑行风格',
       typicalConditions: '常见天气条件',
       budgetTier: '预算档位',
+      unitSystem: '单位',
     },
     activity: {
       ski: {
@@ -705,13 +716,17 @@ export const zh: Dictionary = {
     heightLabel: '身高',
     heightHint: '站立身高,不含雪靴。',
     heightUnit: '厘米',
+    heightUnitImperial: '英寸',
     weightLabel: '体重',
     weightHint: '体重——决定长度的负重修正值。',
     weightUnit: '公斤',
-    heightErrorRequired: '请输入以厘米为单位的身高。',
-    heightErrorRange: (min, max) => `身高必须介于 ${min} 到 ${max} 厘米之间。`,
-    weightErrorRequired: '请输入以公斤为单位的体重。',
-    weightErrorRange: (min, max) => `体重必须介于 ${min} 到 ${max} 公斤之间。`,
+    weightUnitImperial: '磅',
+    unitSystemMetric: '公制',
+    unitSystemImperial: '英制',
+    heightErrorRequired: '请输入身高。',
+    heightErrorRange: (min, max, unit) => `身高必须介于 ${min} 到 ${max} ${unit}之间。`,
+    weightErrorRequired: '请输入体重。',
+    weightErrorRange: (min, max, unit) => `体重必须介于 ${min} 到 ${max} ${unit}之间。`,
     metricsInfo:
       '身高决定基础长度;体重会调整最多 ±5 厘米。相对身高偏重的骑行者会让雪板弯曲更深,因此稍长的长度能防止板头在高速时过度弯折。',
     conditionsInfo:

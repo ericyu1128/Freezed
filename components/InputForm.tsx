@@ -13,6 +13,7 @@ import type {
 import { LAST_STEP_INDEX, STEPS, indexOfStep, transition, type StepId } from '@/lib/stepFlow';
 import { levelLabel, styleLabel, temperatureLabel, tierLabel } from '@/lib/matcherLogic';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { cmToIn, inToCm, kgToLb, lbToKg, type UnitSystem } from '@/lib/units';
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
@@ -232,6 +233,7 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState<'forward' | 'back'>('forward');
   const [touched, setTouched] = useState(false);
+  const [unitSystem, setUnitSystem] = useState<UnitSystem>('metric');
 
   const ACTIVITY_OPTIONS: Option<Activity>[] = [
     { value: 'ski', ...t.form.activity.ski, icon: ACTIVITY_ICONS.ski },
@@ -273,6 +275,14 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
     'mid-range': t.form.budget['mid-range'].range,
     premium: t.form.budget.premium.range,
   };
+  const UNIT_SYSTEM_OPTIONS: Option<UnitSystem>[] = [
+    { value: 'metric', label: t.form.unitSystemMetric, description: `${t.form.heightUnit} / ${t.form.weightUnit}` },
+    {
+      value: 'imperial',
+      label: t.form.unitSystemImperial,
+      description: `${t.form.heightUnitImperial} / ${t.form.weightUnitImperial}`,
+    },
+  ];
 
   const update = useCallback(
     <K extends keyof UserStats>(key: K, value: UserStats[K]) =>
@@ -280,19 +290,37 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
     [],
   );
 
+  // `stats.height`/`stats.weight` always stay in cm/kg — matcherLogic and the
+  // Compatibility Score are hardcoded to those units (see lib/units.ts). The
+  // toggle only changes what's displayed/typed here; every value is converted
+  // back to cm/kg before it reaches `stats`.
+  const isImperial = unitSystem === 'imperial';
+  const heightUnitLabel = isImperial ? t.form.heightUnitImperial : t.form.heightUnit;
+  const weightUnitLabel = isImperial ? t.form.weightUnitImperial : t.form.weightUnit;
+  const heightLimits = isImperial
+    ? { min: Math.round(cmToIn(HEIGHT_LIMITS.min)), max: Math.round(cmToIn(HEIGHT_LIMITS.max)) }
+    : HEIGHT_LIMITS;
+  const weightLimits = isImperial
+    ? { min: Math.round(kgToLb(WEIGHT_LIMITS.min)), max: Math.round(kgToLb(WEIGHT_LIMITS.max)) }
+    : WEIGHT_LIMITS;
+  const heightDisplayValue = isImperial ? Math.round(cmToIn(stats.height)) : stats.height;
+  const weightDisplayValue = isImperial ? Math.round(kgToLb(stats.weight)) : stats.weight;
+  const handleHeightChange = (value: number) => update('height', isImperial ? Math.round(inToCm(value)) : value);
+  const handleWeightChange = (value: number) => update('weight', isImperial ? Math.round(lbToKg(value)) : value);
+
   const heightError = useMemo(() => {
     if (Number.isNaN(stats.height)) return t.form.heightErrorRequired;
     if (stats.height < HEIGHT_LIMITS.min || stats.height > HEIGHT_LIMITS.max)
-      return t.form.heightErrorRange(HEIGHT_LIMITS.min, HEIGHT_LIMITS.max);
+      return t.form.heightErrorRange(heightLimits.min, heightLimits.max, heightUnitLabel);
     return undefined;
-  }, [stats.height, t]);
+  }, [stats.height, t, heightLimits, heightUnitLabel]);
 
   const weightError = useMemo(() => {
     if (Number.isNaN(stats.weight)) return t.form.weightErrorRequired;
     if (stats.weight < WEIGHT_LIMITS.min || stats.weight > WEIGHT_LIMITS.max)
-      return t.form.weightErrorRange(WEIGHT_LIMITS.min, WEIGHT_LIMITS.max);
+      return t.form.weightErrorRange(weightLimits.min, weightLimits.max, weightUnitLabel);
     return undefined;
-  }, [stats.weight, t]);
+  }, [stats.weight, t, weightLimits, weightUnitLabel]);
 
   const currentStep: StepId = STEPS[step].id;
   const isLastStep = step === LAST_STEP_INDEX;
@@ -431,24 +459,33 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
 
           {currentStep === 'metrics' && (
             <div className="grid gap-4 sm:grid-cols-2">
+              <div className="col-span-full">
+                <SectionLabel icon={<SparkIcon className="h-4 w-4" />} text={t.form.sections.unitSystem} />
+                <OptionGrid
+                  name={t.form.sections.unitSystem}
+                  options={UNIT_SYSTEM_OPTIONS}
+                  value={unitSystem}
+                  onChange={setUnitSystem}
+                />
+              </div>
               <MetricSlider
                 label={t.form.heightLabel}
-                unit={t.form.heightUnit}
+                unit={heightUnitLabel}
                 hint={t.form.heightHint}
-                value={stats.height}
-                min={HEIGHT_LIMITS.min}
-                max={HEIGHT_LIMITS.max}
-                onChange={(value) => update('height', value)}
+                value={heightDisplayValue}
+                min={heightLimits.min}
+                max={heightLimits.max}
+                onChange={handleHeightChange}
                 error={touched ? heightError : undefined}
               />
               <MetricSlider
                 label={t.form.weightLabel}
-                unit={t.form.weightUnit}
+                unit={weightUnitLabel}
                 hint={t.form.weightHint}
-                value={stats.weight}
-                min={WEIGHT_LIMITS.min}
-                max={WEIGHT_LIMITS.max}
-                onChange={(value) => update('weight', value)}
+                value={weightDisplayValue}
+                min={weightLimits.min}
+                max={weightLimits.max}
+                onChange={handleWeightChange}
                 error={touched ? weightError : undefined}
               />
               <div className="glass col-span-full flex items-start gap-3 border-frost-400/20 bg-frost-500/[0.06] p-4">
@@ -565,10 +602,10 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
                     {stats.activity === 'ski' ? t.form.activity.ski.label : t.form.activity.snowboard.label}
                   </span>
                   <span className="pill">
-                    {stats.height} {t.form.heightUnit}
+                    {heightDisplayValue} {heightUnitLabel}
                   </span>
                   <span className="pill">
-                    {stats.weight} {t.form.weightUnit}
+                    {weightDisplayValue} {weightUnitLabel}
                   </span>
                   <span className="pill">{levelLabel(stats.level, language)}</span>
                   <span className="pill">{styleLabel(stats.style, language)}</span>
