@@ -262,7 +262,7 @@ export const en: Dictionary = {
     cards: [
       {
         title: 'Sizing from your metrics',
-        body: 'Height sets the base length, style shifts it 5–15 cm, ability adds or removes up to 6 cm, and body mass fine-tunes by ±5 cm.',
+        body: 'Height sets the base length, style shifts it 3–10 cm, ability adds or removes up to 8 cm, and body mass fine-tunes by ±6 cm.',
       },
       {
         title: 'Waist width & boot flex',
@@ -416,7 +416,7 @@ export const en: Dictionary = {
     weightErrorRequired: 'Enter your weight.',
     weightErrorRange: (min, max, unit) => `Weight must be between ${min} and ${max} ${unit}.`,
     metricsInfo:
-      'Height sets the base length; weight adjusts it by up to ±5 cm. A rider who is heavy for their height flexes a ski more deeply, so a little extra length keeps the shovel from folding at speed.',
+      'Height sets the base length; weight adjusts it by up to ±6 cm. A rider who is heavy for their height flexes a ski more deeply, so a little extra length keeps the shovel from folding at speed.',
     conditionsInfo:
       'Conditions decide two things outright: goggle VLT (how much light the lens lets through) and jacket insulation. Freezing days get high-VLT storm lenses and down; spring days get low-VLT sun lenses and uninsulated shells.',
     yourProfile: 'Your profile',
@@ -574,7 +574,7 @@ export const zh: Dictionary = {
     cards: [
       {
         title: '根据身体数据计算尺寸',
-        body: '身高决定基础长度,骑行风格上下浮动 5–15 厘米,能力等级增减最多 6 厘米,体重再微调 ±5 厘米。',
+        body: '身高决定基础长度,骑行风格上下浮动 3–10 厘米,能力等级增减最多 8 厘米,体重再微调 ±6 厘米。',
       },
       {
         title: '腰宽与靴子硬度',
@@ -728,7 +728,7 @@ export const zh: Dictionary = {
     weightErrorRequired: '请输入体重。',
     weightErrorRange: (min, max, unit) => `体重必须介于 ${min} 到 ${max} ${unit}之间。`,
     metricsInfo:
-      '身高决定基础长度;体重会调整最多 ±5 厘米。相对身高偏重的骑行者会让雪板弯曲更深,因此稍长的长度能防止板头在高速时过度弯折。',
+      '身高决定基础长度;体重会调整最多 ±6 厘米。相对身高偏重的骑行者会让雪板弯曲更深,因此稍长的长度能防止板头在高速时过度弯折。',
     conditionsInfo:
       '天气条件直接决定两件事:护目镜 VLT(镜片透光率)和外套保暖等级。严寒天气搭配高 VLT 暴风雪镜片与羽绒;春季天气搭配低 VLT 墨镜片与无保暖外壳。',
     yourProfile: '你的档案',

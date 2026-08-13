@@ -167,22 +167,26 @@ export const categoryLabel = (
 /* ------------------------------------------------------------------ */
 
 /**
- * Base offset from standing height, in cm, by riding style.
- * Spec: "Height minus 5 cm to 15 cm depending on style."
+ * Base offset from standing height, in cm, by riding style. Modern
+ * all-mountain and powder skis lean heavily on tip/tail rocker, which
+ * shortens effective edge contact — so they're sized much closer to (or
+ * above) standing height than older camber-only norms. Carving and park
+ * skis stay shorter since their sidecut/tricks reward a quicker-turning,
+ * more manageable length.
  */
 const SKI_STYLE_OFFSET: Record<RidingStyle, number> = {
-  piste: -12, // shorter = quicker edge-to-edge on groomers
-  'all-mountain': -9,
-  freestyle: -14, // shortest = spins & switch landings
-  backcountry: -5, // longest = float and stability
+  piste: -8, // shorter = quicker edge-to-edge on groomers
+  'all-mountain': -3, // roughly nose height — modern rockered all-mountain norm
+  freestyle: -10, // shortest = spins & switch landings
+  backcountry: 3, // at or above height = float and stability on rockered pow skis
 };
 
 /** Ability modifier. Beginners go shorter, experts go longer. */
 const SKI_LEVEL_OFFSET: Record<Level, number> = {
-  beginner: -5,
+  beginner: -8,
   intermediate: 0,
-  advanced: 3,
-  expert: 6,
+  advanced: 4,
+  expert: 8,
 };
 
 /** Snowboards are sized as a ratio of height rather than a fixed subtraction. */
@@ -200,6 +204,20 @@ const BOARD_LEVEL_OFFSET: Record<Level, number> = {
   expert: 2,
 };
 
+/**
+ * Powder/backcountry skis carry most of their rocker in the tip and tail,
+ * which shortens effective edge contact — so the whole ski needs to run
+ * longer than an all-mountain camber ski to hold the same edge grip and
+ * float the same rider. Scales with ability because faster, more
+ * aggressive backcountry skiers push that float harder and benefit most.
+ */
+const SKI_BACKCOUNTRY_FLOAT_BONUS: Record<Level, number> = {
+  beginner: 2,
+  intermediate: 4,
+  advanced: 7,
+  expert: 9,
+};
+
 /** Broca-style expected mass for a given height, used for the load modifier. */
 const expectedWeightKg = (heightCm: number, gender: Gender): number => {
   const base = (heightCm - 100) * 0.9;
@@ -209,11 +227,11 @@ const expectedWeightKg = (heightCm: number, gender: Gender): number => {
 
 /**
  * Heavier riders flex a ski more, so they benefit from extra length (and
- * vice-versa). Capped at ±5 cm so it never dominates the calculation.
+ * vice-versa). Capped at ±6 cm so it never dominates the calculation.
  */
 const weightModifier = (stats: UserStats): number => {
   const delta = stats.weight - expectedWeightKg(stats.height, stats.gender);
-  return clamp(Math.round(delta / 6), -5, 5);
+  return clamp(Math.round(delta / 5), -6, 6);
 };
 
 export const calculateLength = (stats: UserStats, language: Language = 'en'): LengthCalculation => {
@@ -270,8 +288,8 @@ export const calculateLength = (stats: UserStats, language: Language = 'en'): Le
     note:
       stats.level === 'beginner'
         ? zh
-          ? '再缩短 5 厘米——更容易入弯和收弯'
-          : 'Extra 5 cm shorter — easier to initiate and finish turns'
+          ? '进一步缩短——更容易入弯和收弯'
+          : 'Shorter — easier to initiate and finish turns'
         : stats.level === 'expert'
           ? zh
             ? '增加长度以提升高速稳定性'
@@ -286,15 +304,23 @@ export const calculateLength = (stats: UserStats, language: Language = 'en'): Le
   });
   value += levelOffset;
 
-  // Freeride / powder bonus for strong riders — the "add 5 to 10 cm" case.
-  if (stats.style === 'backcountry' && (stats.level === 'advanced' || stats.level === 'expert')) {
-    const bonus = isBoard ? 2 : 4;
-    steps.push({
-      label: zh ? '自由滑雪浮力加成' : 'Freeride float bonus',
-      delta: bonus,
-      note: zh ? '增加板面面积以应对深雪高速滑行' : 'Additional surface area for deep snow at speed',
-    });
-    value += bonus;
+  // Freeride / powder bonus. Skis scale this with ability since it's driven
+  // by how much rocker-float the rider actually pushes; boards keep the
+  // simpler flat bonus for advanced/expert riders only.
+  if (stats.style === 'backcountry') {
+    const bonus = isBoard
+      ? stats.level === 'advanced' || stats.level === 'expert'
+        ? 2
+        : 0
+      : SKI_BACKCOUNTRY_FLOAT_BONUS[stats.level];
+    if (bonus !== 0) {
+      steps.push({
+        label: zh ? '自由滑雪浮力加成' : 'Freeride float bonus',
+        delta: bonus,
+        note: zh ? '增加板面面积以应对深雪高速滑行' : 'Additional surface area for deep snow at speed',
+      });
+      value += bonus;
+    }
   }
 
   const wMod = weightModifier(stats);
@@ -325,11 +351,11 @@ export const calculateLength = (stats: UserStats, language: Language = 'en'): Le
     value -= 2;
   }
 
-  const final = clamp(round(value), isBoard ? 128 : 140, isBoard ? 168 : 195);
+  const final = clamp(round(value), isBoard ? 128 : 140, isBoard ? 168 : 200);
 
   return {
     value: final,
-    range: { min: final - 4, max: final + 4 },
+    range: { min: final - 5, max: final + 5 },
     steps,
     label: lengthTypeLabel(stats.activity, language),
   };
