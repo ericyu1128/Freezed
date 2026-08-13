@@ -104,6 +104,7 @@ export interface Dictionary {
     heightHint: string;
     heightUnit: string;
     heightUnitImperial: string;
+    heightUnitFeet: string;
     weightLabel: string;
     weightHint: string;
     weightUnit: string;
@@ -405,6 +406,7 @@ export const en: Dictionary = {
     heightHint: 'Standing height, without boots.',
     heightUnit: 'cm',
     heightUnitImperial: 'in',
+    heightUnitFeet: 'ft',
     weightLabel: 'Weight',
     weightHint: 'Body weight — drives the length load modifier.',
     weightUnit: 'kg',
@@ -717,6 +719,7 @@ export const zh: Dictionary = {
     heightHint: '站立身高,不含雪靴。',
     heightUnit: '厘米',
     heightUnitImperial: '英寸',
+    heightUnitFeet: '英尺',
     weightLabel: '体重',
     weightHint: '体重——决定长度的负重修正值。',
     weightUnit: '公斤',

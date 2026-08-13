@@ -59,6 +59,8 @@ const DEFAULTS: UserStats = {
 
 const HEIGHT_LIMITS = { min: 120, max: 215 };
 const WEIGHT_LIMITS = { min: 30, max: 160 };
+/** HTML input bounds for the feet box in the imperial height split — matches HEIGHT_LIMITS (120–215 cm ≈ 3'11"–7'1"). */
+const HEIGHT_FEET_LIMITS = { min: 3, max: 7 };
 
 /* ------------------------------------------------------------------ */
 /*  Reusable option card grid                                          */
@@ -218,6 +220,82 @@ function MetricSlider({
 }
 
 /* ------------------------------------------------------------------ */
+/*  Height — feet/inches split (imperial only)                         */
+/* ------------------------------------------------------------------ */
+
+function HeightFeetInchesInput({
+  label,
+  feetUnit,
+  inchesUnit,
+  hint,
+  feet,
+  inches,
+  feetLimits,
+  onFeetChange,
+  onInchesChange,
+  error,
+}: {
+  label: string;
+  feetUnit: string;
+  inchesUnit: string;
+  hint: string;
+  feet: number;
+  inches: number;
+  feetLimits: { min: number; max: number };
+  onFeetChange: (value: number) => void;
+  onInchesChange: (value: number) => void;
+  error?: string;
+}) {
+  const inputClassName = `focus-ring w-16 rounded-lg border bg-glacier-900/70 px-3 py-2 text-right font-display text-2xl font-bold tabular-nums text-white transition-colors ${
+    error ? 'border-rose-400/70' : 'border-white/10 focus:border-frost-400/60'
+  }`;
+
+  return (
+    <div className="glass p-5">
+      <div className="mb-4">
+        <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">{label}</p>
+        <p className="mt-1 text-xs text-slate-500">{hint}</p>
+      </div>
+
+      <div className="flex items-baseline gap-4">
+        <div className="flex items-baseline gap-1.5">
+          <input
+            type="number"
+            inputMode="numeric"
+            aria-label={`${label} — ${feetUnit}`}
+            value={Number.isNaN(feet) ? '' : feet}
+            min={feetLimits.min}
+            max={feetLimits.max}
+            onChange={(event) => onFeetChange(Number.parseInt(event.target.value, 10))}
+            className={inputClassName}
+          />
+          <span className="text-sm font-medium text-slate-400">{feetUnit}</span>
+        </div>
+        <div className="flex items-baseline gap-1.5">
+          <input
+            type="number"
+            inputMode="numeric"
+            aria-label={`${label} — ${inchesUnit}`}
+            value={Number.isNaN(inches) ? '' : inches}
+            min={0}
+            max={11}
+            onChange={(event) => onInchesChange(Number.parseInt(event.target.value, 10))}
+            className={inputClassName}
+          />
+          <span className="text-sm font-medium text-slate-400">{inchesUnit}</span>
+        </div>
+      </div>
+
+      {error && (
+        <p role="alert" className="mt-3 text-xs font-medium text-rose-300">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Main form                                                          */
 /* ------------------------------------------------------------------ */
 
@@ -307,6 +385,15 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
   const weightDisplayValue = isImperial ? Math.round(kgToLb(stats.weight)) : stats.weight;
   const handleHeightChange = (value: number) => update('height', isImperial ? Math.round(inToCm(value)) : value);
   const handleWeightChange = (value: number) => update('weight', isImperial ? Math.round(lbToKg(value)) : value);
+
+  // Imperial height splits into feet + inches boxes; both funnel back through
+  // handleHeightChange (which expects a total-inches value) so stats.height
+  // stays the single source of truth in cm.
+  const heightFeet = isImperial ? Math.floor(heightDisplayValue / 12) : 0;
+  const heightInches = isImperial ? heightDisplayValue % 12 : 0;
+  const handleHeightFeetChange = (feet: number) => handleHeightChange(feet * 12 + heightInches);
+  const handleHeightInchesChange = (inches: number) => handleHeightChange(heightFeet * 12 + inches);
+  const formatFeetInches = (totalInches: number) => `${Math.floor(totalInches / 12)}'${totalInches % 12}"`;
 
   const heightError = useMemo(() => {
     if (Number.isNaN(stats.height)) return t.form.heightErrorRequired;
@@ -468,16 +555,31 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
                   onChange={setUnitSystem}
                 />
               </div>
-              <MetricSlider
-                label={t.form.heightLabel}
-                unit={heightUnitLabel}
-                hint={t.form.heightHint}
-                value={heightDisplayValue}
-                min={heightLimits.min}
-                max={heightLimits.max}
-                onChange={handleHeightChange}
-                error={touched ? heightError : undefined}
-              />
+              {isImperial ? (
+                <HeightFeetInchesInput
+                  label={t.form.heightLabel}
+                  feetUnit={t.form.heightUnitFeet}
+                  inchesUnit={t.form.heightUnitImperial}
+                  hint={t.form.heightHint}
+                  feet={heightFeet}
+                  inches={heightInches}
+                  feetLimits={HEIGHT_FEET_LIMITS}
+                  onFeetChange={handleHeightFeetChange}
+                  onInchesChange={handleHeightInchesChange}
+                  error={touched ? heightError : undefined}
+                />
+              ) : (
+                <MetricSlider
+                  label={t.form.heightLabel}
+                  unit={heightUnitLabel}
+                  hint={t.form.heightHint}
+                  value={heightDisplayValue}
+                  min={heightLimits.min}
+                  max={heightLimits.max}
+                  onChange={handleHeightChange}
+                  error={touched ? heightError : undefined}
+                />
+              )}
               <MetricSlider
                 label={t.form.weightLabel}
                 unit={weightUnitLabel}
@@ -602,7 +704,7 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
                     {stats.activity === 'ski' ? t.form.activity.ski.label : t.form.activity.snowboard.label}
                   </span>
                   <span className="pill">
-                    {heightDisplayValue} {heightUnitLabel}
+                    {isImperial ? formatFeetInches(heightDisplayValue) : `${heightDisplayValue} ${heightUnitLabel}`}
                   </span>
                   <span className="pill">
                     {weightDisplayValue} {weightUnitLabel}
