@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type {
   Activity,
   BudgetTier,
@@ -382,17 +382,51 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
     ? { min: Math.round(kgToLb(WEIGHT_LIMITS.min)), max: Math.round(kgToLb(WEIGHT_LIMITS.max)) }
     : WEIGHT_LIMITS;
   const heightDisplayValue = isImperial ? Math.round(cmToIn(stats.height)) : stats.height;
-  const weightDisplayValue = isImperial ? Math.round(kgToLb(stats.weight)) : stats.weight;
   const handleHeightChange = (value: number) => update('height', isImperial ? Math.round(inToCm(value)) : value);
-  const handleWeightChange = (value: number) => update('weight', isImperial ? Math.round(lbToKg(value)) : value);
 
-  // Imperial height splits into feet + inches boxes; both funnel back through
-  // handleHeightChange (which expects a total-inches value) so stats.height
-  // stays the single source of truth in cm.
-  const heightFeet = isImperial ? Math.floor(heightDisplayValue / 12) : 0;
-  const heightInches = isImperial ? heightDisplayValue % 12 : 0;
-  const handleHeightFeetChange = (feet: number) => handleHeightChange(feet * 12 + heightInches);
-  const handleHeightInchesChange = (inches: number) => handleHeightChange(heightFeet * 12 + inches);
+  // Imperial height and weight inputs get their own local, NaN-tolerant state
+  // — NOT derived from stats.height/weight on every render. Two reasons:
+  //  1. Precision: re-deriving lbs from a canonical kg that's rounded to the
+  //     nearest whole kg is lossy at small values (1 lb rounds to 0 kg, which
+  //     converts back to 0 lbs — wiping out the "1" the user just typed on
+  //     every keystroke). A local buffer always echoes back exactly what was
+  //     typed, while stats.weight itself stays a clean whole kg for display
+  //     everywhere else in the app (Dashboard, the generated reasoning text).
+  //  2. Cross-field corruption: height's feet/inches are two boxes sharing
+  //     one derived total. If both were recomputed from stats.height on every
+  //     keystroke, clearing one box (a transient NaN total) would blank the
+  //     other box too. Independent local state means clearing one never
+  //     touches the other's display.
+  const [heightFeetInput, setHeightFeetInput] = useState(() => Math.floor(Math.round(cmToIn(stats.height)) / 12));
+  const [heightInchesInput, setHeightInchesInput] = useState(() => Math.round(cmToIn(stats.height)) % 12);
+  const [weightLbsInput, setWeightLbsInput] = useState(() => Math.round(kgToLb(stats.weight)));
+  const weightDisplayValue = isImperial ? weightLbsInput : stats.weight;
+
+  const handleWeightChange = (value: number) => {
+    if (isImperial) setWeightLbsInput(value);
+    update('weight', isImperial ? Math.round(lbToKg(value)) : value);
+  };
+
+  // Resync the imperial boxes from the canonical cm/kg values whenever the
+  // user switches into imperial, so they reflect whatever was last set in
+  // metric mode. Only resync on the toggle itself, not on every edit.
+  useEffect(() => {
+    if (unitSystem !== 'imperial') return;
+    const totalInches = Math.round(cmToIn(stats.height));
+    setHeightFeetInput(Number.isNaN(totalInches) ? NaN : Math.floor(totalInches / 12));
+    setHeightInchesInput(Number.isNaN(totalInches) ? NaN : totalInches % 12);
+    setWeightLbsInput(Math.round(kgToLb(stats.weight)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [unitSystem]);
+
+  const handleHeightFeetChange = (feet: number) => {
+    setHeightFeetInput(feet);
+    handleHeightChange(feet * 12 + heightInchesInput);
+  };
+  const handleHeightInchesChange = (inches: number) => {
+    setHeightInchesInput(inches);
+    handleHeightChange(heightFeetInput * 12 + inches);
+  };
   const formatFeetInches = (totalInches: number) => `${Math.floor(totalInches / 12)}'${totalInches % 12}"`;
 
   const heightError = useMemo(() => {
@@ -561,8 +595,8 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
                   feetUnit={t.form.heightUnitFeet}
                   inchesUnit={t.form.heightUnitImperial}
                   hint={t.form.heightHint}
-                  feet={heightFeet}
-                  inches={heightInches}
+                  feet={heightFeetInput}
+                  inches={heightInchesInput}
                   feetLimits={HEIGHT_FEET_LIMITS}
                   onFeetChange={handleHeightFeetChange}
                   onInchesChange={handleHeightInchesChange}
