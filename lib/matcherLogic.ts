@@ -671,10 +671,13 @@ export const buildReasonBullets = (
   specs: CalculatedSpecs,
 ): string[] => {
   const bullets: string[] = [];
+  const tierDistance = Math.abs(TIER_INDEX[item.priceTier] - TIER_INDEX[stats.budgetTier]);
   const tierWord =
-    item.priceTier === stats.budgetTier
+    tierDistance === 0
       ? `sits exactly in your ${item.priceTier} bracket`
-      : `is one tier from your ${stats.budgetTier} bracket, and was kept because nothing in-tier scored higher`;
+      : tierDistance === 1
+        ? `is one tier from your ${stats.budgetTier} bracket, so it takes a budget penalty in the score`
+        : `is two tiers from your ${stats.budgetTier} bracket — shown only because nothing within one tier was available, and it takes a larger budget penalty in the score`;
 
   switch (item.category) {
     case 'skis': {

@@ -1,16 +1,18 @@
 /**
- * Freezed — probabilistic compatibility scoring
+ * Freezed — weighted fit scoring
  * Made by Eric Yu
  *
- * Replaces hard pass/fail spec matching with a weighted, continuous fit
- * model. Every numeric spec (waist width, boot flex, DIN, VLT, warmth) is
- * scored against its target as a smooth Gaussian falloff instead of an
- * in-range/out-of-range cliff, so gear that's slightly too long or too stiff
- * loses points proportionally instead of being discarded outright.
- * Categorical preferences (style, level, gender, temperature) contribute as
- * weighted, softly-floored fits — a mismatch is unlikely, not impossible.
+ * Replaces hard pass/fail spec matching with a deterministic weighted fit
+ * model (no probability distribution, random variable or inference is
+ * involved). Each feature produces a fit in [0, 1]. Every numeric spec
+ * (waist width, boot flex, DIN, VLT, warmth) is scored against its target
+ * with a Gaussian-shaped falloff instead of an in-range/out-of-range cliff,
+ * so gear that's slightly too long or too stiff loses points proportionally
+ * instead of being discarded outright. Categorical preferences (style,
+ * level, gender, temperature, budget) contribute floored fits — a mismatch
+ * reduces the score but never zeroes it.
  * The final score is the weight-normalized average of every applicable
- * feature, expressed as a 0-100% Compatibility Score.
+ * feature fit, expressed as a 0-100% Compatibility Score.
  */
 
 import type {

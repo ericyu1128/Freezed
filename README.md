@@ -160,10 +160,10 @@ opens with `target="_blank" rel="noopener noreferrer"`.
 
 ### Scoring
 
-Each candidate accumulates points for activity, budget, style, ability, gendered fit, condition
-tags, and a category-specific numeric fit (waist width, flex, VLT or warmth measured against your
-calculated window). The raw total is normalised to a 0–100 confidence figure shown on each card, and
-the two runners-up are listed as "also considered".
+Each candidate gets a 0–1 fit for budget, style, ability, gendered fit, conditions, and a
+category-specific numeric fit (waist width, flex, VLT or warmth measured against your calculated
+window). The weight-normalised average of those fits is shown on each card as a 0–100 Compatibility
+Score, and the two runners-up are listed as "also considered".
 
 ---
 

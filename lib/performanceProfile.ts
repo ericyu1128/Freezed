@@ -2,10 +2,12 @@
  * Freezed — gear performance profile
  * Made by Eric Yu
  *
- * Derives the six normalized 0–10 hexagon scores straight from an item's real
- * specs, styles, levels and price tier — nothing here is hand-authored, so
- * every axis value traces back to a concrete field already in the database
- * (waist width, boot flex, VLT, warmth, vent count, construction materials…).
+ * Derives the six normalized 0–10 hexagon scores from an item's real specs,
+ * styles, levels and price tier (waist width, boot flex, VLT, warmth, vent
+ * count, construction materials…), with one exception: the helmet "Style"
+ * axis is a deterministic placeholder, not a spec-derived value. It comes
+ * from an FNV-1a hash of the item id, construction and vent count plus a
+ * price-tier bonus, so it is stable per item but does not measure anything.
  *
  * The six axis *slots* (`axisA`…`axisF`) are shared by every category, but
  * what each slot means is category-dependent — `GEAR_CATEGORY_AXES` below is
@@ -292,6 +294,7 @@ function helmetProfile(item: PerformanceInput): PerformanceProfile {
 
   const fitAdjustment = clamp10(4 + (/dial|adjustable|boa|custom/.test(fitText) ? 4 : 0) + (vents > 12 ? 1 : 0));
 
+  // Placeholder, not spec-derived: hash of id/construction/vents + price-tier bonus.
   const style = clamp10(
     hashScore(`${item.id ?? ''}-${construction}-${vents}`) * 0.6 +
       (item.priceTier === 'premium' ? 3 : item.priceTier === 'mid-range' ? 1.5 : 0),
