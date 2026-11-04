@@ -3,6 +3,8 @@
 import { useMemo, useState } from 'react';
 import type { Activity, CalculatedSpecs, GearCategory, Recommendation, UserStats } from '@/lib/types';
 import { buildCalculatedSpecs, buildReasonBullets, buildReasoning, categoryLabel } from '@/lib/matcherLogic';
+import { featureLabel } from '@/lib/compatibilityScore';
+import { itemDescription, specKeyLabel } from '@/lib/i18n/gearCopy';
 import { getPerformanceAxes } from '@/lib/performanceProfile';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { useRegion } from '@/lib/region/RegionContext';
@@ -58,15 +60,14 @@ export default function GearCard({
   const activeRank = candidates.indexOf(activeCandidate) + 1;
   const { item, score, breakdown } = activeCandidate;
 
+  // Generated at render time in the current language, like buildCalculatedSpecs,
+  // so switching language updates a result that is already on screen.
   const { reasoning, reasonBullets } = useMemo(
-    () =>
-      isTopPick
-        ? { reasoning: recommendation.reasoning, reasonBullets: recommendation.reasonBullets }
-        : {
-            reasoning: buildReasoning(item, stats, specs),
-            reasonBullets: buildReasonBullets(item, stats, specs),
-          },
-    [isTopPick, item, recommendation.reasonBullets, recommendation.reasoning, specs, stats],
+    () => ({
+      reasoning: buildReasoning(item, stats, specs, language, activeRank),
+      reasonBullets: buildReasonBullets(item, stats, specs, language),
+    }),
+    [item, stats, specs, language, activeRank],
   );
 
   const calculatedSpecs = buildCalculatedSpecs(item, stats, specs, language);
@@ -131,7 +132,7 @@ export default function GearCard({
       </div>
 
       <div className="space-y-5 p-5">
-        <p className="text-sm leading-relaxed text-slate-400">{item.description}</p>
+        <p className="text-sm leading-relaxed text-slate-400">{itemDescription(item, language)}</p>
 
         {/* ---------- performance hexagon ---------- */}
         <section>
@@ -226,9 +227,7 @@ export default function GearCard({
               <dl className="divide-y divide-white/5 rounded-xl border border-white/8 bg-white/[0.02]">
                 {Object.entries(item.specs).map(([key, value]) => (
                   <div key={key} className="flex items-start justify-between gap-4 px-3 py-2">
-                    <dt className="text-xs capitalize text-slate-500">
-                      {key.replace(/([A-Z])/g, ' $1').trim()}
-                    </dt>
+                    <dt className="text-xs capitalize text-slate-500">{specKeyLabel(key, language)}</dt>
                     <dd className="text-right text-xs font-medium text-slate-300">{String(value)}</dd>
                   </div>
                 ))}
@@ -366,7 +365,9 @@ export default function GearCard({
               <dl className="space-y-1.5">
                 {breakdown.map((feature) => (
                   <div key={feature.key} className="flex items-center gap-2">
-                    <dt className="w-28 shrink-0 truncate text-[11px] text-slate-500">{feature.label}</dt>
+                    <dt className="w-28 shrink-0 truncate text-[11px] text-slate-500">
+                      {featureLabel(feature.key, item.category, language)}
+                    </dt>
                     <dd className="flex flex-1 items-center gap-2">
                       <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
                         <span

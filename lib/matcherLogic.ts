@@ -8,6 +8,7 @@
 
 import { computeCompatibility } from './compatibilityScore';
 import gearDatabase from './gearDatabase';
+import { itemMatchReason } from './i18n/gearCopy';
 import type { Language } from './i18n/translations';
 import type {
   BudgetTier,
@@ -73,12 +74,10 @@ export const LEVEL_LABEL: Record<Level, string> = {
 /* ------------------------------------------------------------------ */
 /*  Localized (zh) label variants                                      */
 /*                                                                      */
-/*  These sit alongside the English-only maps above, which stay as the */
-/*  ground truth consumed by the narrative generators further down     */
-/*  this file (buildReasoning, buildReasonBullets, calculateLength …). */
-/*  The `*Label` helpers here are what UI components call at render    */
-/*  time, so switching language re-renders these instantly even for an */
-/*  already-generated result.                                          */
+/*  The `*Label` helpers here, like every narrative generator in this  */
+/*  file (buildReasoning, buildReasonBullets, buildCalculatedSpecs,    */
+/*  calculateLength …), take a language and are called at render time, */
+/*  so switching language re-renders an already-generated result.      */
 /* ------------------------------------------------------------------ */
 
 export const TIER_LABEL_ZH: Record<BudgetTier, string> = {
@@ -378,19 +377,23 @@ export const estimateMondoSize = (stats: UserStats): number => {
   return Math.round(clamp(raw, 22, 31.5) * 2) / 2;
 };
 
-export const calculateWaistWidth = (stats: UserStats): { range: NumericRange; label: string } => {
-  if (stats.activity === 'snowboard') {
-    const mondo = estimateMondoSize(stats);
-    const wide = mondo >= 27.5;
-    return {
-      range: wide ? { min: 256, max: 265 } : { min: 245, max: 255 },
-      label: wide
-        ? 'Wide board waist (prevents toe/heel drag)'
-        : 'Standard board waist',
-    };
-  }
+const needsWideBoard = (stats: UserStats): boolean => estimateMondoSize(stats) >= 27.5;
 
-  return { range: SKI_WAIST[stats.style], label: `${STYLE_LABEL[stats.style]} waist window` };
+export const calculateWaistWidth = (stats: UserStats): NumericRange => {
+  if (stats.activity === 'snowboard') {
+    return needsWideBoard(stats) ? { min: 256, max: 265 } : { min: 245, max: 255 };
+  }
+  return SKI_WAIST[stats.style];
+};
+
+/** Caption for the waist window, rendered at display time in the current language. */
+export const waistWidthLabel = (stats: UserStats, language: Language = 'en'): string => {
+  const zh = language === 'zh';
+  if (stats.activity === 'snowboard') {
+    if (needsWideBoard(stats)) return zh ? '宽板腰(防止脚尖/脚跟拖雪)' : 'Wide board waist (prevents toe/heel drag)'; // zh: needs review
+    return zh ? '标准板腰' : 'Standard board waist'; // zh: needs review
+  }
+  return zh ? `${styleLabel(stats.style, 'zh')}腰宽区间` : `${STYLE_LABEL[stats.style]} waist window`; // zh: needs review
 };
 
 /* ------------------------------------------------------------------ */
@@ -419,19 +422,21 @@ const BOARD_FLEX: Record<Level, NumericRange> = {
   expert: { min: 7, max: 10 },
 };
 
-export const calculateBootFlex = (stats: UserStats): { range: NumericRange; label: string } => {
-  if (stats.activity === 'snowboard') {
-    return { range: BOARD_FLEX[stats.level], label: 'Flex rating (1–10 scale)' };
-  }
+export const calculateBootFlex = (stats: UserStats): NumericRange => {
+  if (stats.activity === 'snowboard') return BOARD_FLEX[stats.level];
+  return (stats.gender === 'female' ? SKI_FLEX_WOMEN : SKI_FLEX_MEN)[stats.level];
+};
 
-  const table = stats.gender === 'female' ? SKI_FLEX_WOMEN : SKI_FLEX_MEN;
-  const range = table[stats.level];
+/** Caption for the boot flex target, rendered at display time in the current language. */
+export const bootFlexLabel = (stats: UserStats, language: Language = 'en'): string => {
+  const zh = language === 'zh';
+  if (stats.activity === 'snowboard') return zh ? '硬度等级(1–10)' : 'Flex rating (1–10 scale)'; // zh: needs review
   const isTopEnd = stats.level === 'advanced' || stats.level === 'expert';
-
-  return {
-    range,
-    label: `${stats.gender === 'female' ? "Women's" : "Men's / unisex"} flex index${isTopEnd ? ' (140+ for race)' : ''}`,
-  };
+  if (zh) {
+    // zh: needs review
+    return `${stats.gender === 'female' ? '女款' : '男款 / 中性'}硬度指数${isTopEnd ? '(竞技级可达 140+)' : ''}`;
+  }
+  return `${stats.gender === 'female' ? "Women's" : "Men's / unisex"} flex index${isTopEnd ? ' (140+ for race)' : ''}`;
 };
 
 /* ------------------------------------------------------------------ */
@@ -445,14 +450,26 @@ const VLT_TARGET: Record<Temperature, NumericRange> = {
   spring: { min: 5, max: 20 }, // high glare — cut light hard
 };
 
-const LENS_GUIDANCE: Record<Temperature, string> = {
-  freezing:
-    'Deep-cold days usually mean storms and flat light. A high-VLT rose, yellow or amber lens lifts terrain contrast so you can read moguls and rollovers you would otherwise ski straight into.',
-  moderate:
-    'Mixed light calls for a mid-VLT lens in the 18–40% window — usable in sun, still workable when a cloud bank moves over.',
-  spring:
-    'Above 0 °C means wet, highly reflective snow and hard glare. A low-VLT polarised or mirrored lens cuts that reflection and reduces eye fatigue over a long day.',
+const LENS_GUIDANCE: Record<Temperature, Record<Language, string>> = {
+  freezing: {
+    en: 'Deep-cold days usually mean storms and flat light. A high-VLT rose, yellow or amber lens lifts terrain contrast so you can read moguls and rollovers you would otherwise ski straight into.',
+    // zh: needs review
+    zh: '严寒天往往伴随降雪和平光。高透光率的玫瑰色、黄色或琥珀色镜片能拉高地形对比度，让你看清那些本来会一头撞上的雪包和起伏。',
+  },
+  moderate: {
+    en: 'Mixed light calls for a mid-VLT lens in the 18–40% window — usable in sun, still workable when a cloud bank moves over.',
+    // zh: needs review
+    zh: '光线多变时，选 18–40% 透光率的中间档镜片——出太阳能用，云层压过来也还看得清。',
+  },
+  spring: {
+    en: 'Above 0 °C means wet, highly reflective snow and hard glare. A low-VLT polarised or mirrored lens cuts that reflection and reduces eye fatigue over a long day.',
+    // zh: needs review
+    zh: '0°C 以上意味着湿雪、强反光和刺眼的眩光。低透光率的偏光或镀膜镜片能压住反射，滑一整天眼睛也不那么累。',
+  },
 };
+
+export const lensGuidance = (temperature: Temperature, language: Language = 'en'): string =>
+  LENS_GUIDANCE[temperature][language];
 
 /** Target jacket warmth on the 1–5 scale used in the gear database. */
 const WARMTH_TARGET: Record<Temperature, NumericRange> = {
@@ -461,20 +478,32 @@ const WARMTH_TARGET: Record<Temperature, NumericRange> = {
   spring: { min: 1, max: 2 },
 };
 
-const JACKET_GUIDANCE: Record<Temperature, string> = {
-  freezing:
-    'At -15 °C and below, chairlift time is the enemy. You want a high-loft down or hybrid-down jacket with an insulated helmet-compatible hood — loft you cannot add back with a mid-layer.',
-  moderate:
-    'Between -5 °C and 0 °C a moderately insulated 2L or 3L jacket hits the balance: warm on the lift, vented on the way down.',
-  spring:
-    'Above 0 °C, insulation becomes dead weight. An uninsulated 2L/3L shell with real pit zips lets you dump heat and add a mid-layer only if the wind picks up.',
+const JACKET_GUIDANCE: Record<Temperature, Record<Language, string>> = {
+  freezing: {
+    en: 'At -15 °C and below, chairlift time is the enemy. You want a high-loft down or hybrid-down jacket with an insulated helmet-compatible hood — loft you cannot add back with a mid-layer.',
+    // zh: needs review
+    zh: '零下 15°C 及以下，最难熬的是坐缆车的时间。你需要一件高蓬松度的羽绒或混合羽绒外套，再配一个能罩住头盔的保暖帽兜——这种蓬松度是靠加中间层补不回来的。',
+  },
+  moderate: {
+    en: 'Between -5 °C and 0 °C a moderately insulated 2L or 3L jacket hits the balance: warm on the lift, vented on the way down.',
+    // zh: needs review
+    zh: '零下 5°C 到 0°C 之间，一件中等填充的 2L 或 3L 外套最平衡：缆车上够暖，滑下来也能开拉链散热。',
+  },
+  spring: {
+    en: 'Above 0 °C, insulation becomes dead weight. An uninsulated 2L/3L shell with real pit zips lets you dump heat and add a mid-layer only if the wind picks up.',
+    // zh: needs review
+    zh: '0°C 以上，填充就成了累赘。选一件无填充的 2L/3L 硬壳，带真正好用的腋下拉链，热了就散热，风大了再加中间层。',
+  },
 };
+
+export const jacketGuidance = (temperature: Temperature, language: Language = 'en'): string =>
+  JACKET_GUIDANCE[temperature][language];
 
 /* ------------------------------------------------------------------ */
 /*  5. Helmet sizing                                                   */
 /* ------------------------------------------------------------------ */
 
-const helmetSizing = (stats: UserStats): { size: string; circumference: string } => {
+const helmetSizing = (stats: UserStats): { size: string; circumferenceCm: number } => {
   // Head circumference correlates loosely with stature; presented as an estimate.
   const est = 40 + stats.height * 0.098 + (stats.gender === 'female' ? -1.5 : 0);
   const cm = round(clamp(est, 51, 63));
@@ -484,33 +513,36 @@ const helmetSizing = (stats: UserStats): { size: string; circumference: string }
   else if (cm <= 58) size = 'M';
   else if (cm <= 61) size = 'L';
   else size = 'XL';
-  return { size, circumference: `≈ ${cm} cm — measure to confirm` };
+  return { size, circumferenceCm: cm };
 };
+
+export const helmetCircumferenceLabel = (cm: number, language: Language = 'en'): string =>
+  language === 'zh' ? `≈ ${cm} 厘米——请实际测量确认` : `≈ ${cm} cm — measure to confirm`; // zh: needs review
 
 /* ------------------------------------------------------------------ */
 /*  Full spec sheet                                                    */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Language-neutral spec sheet. Every caption and guidance sentence derived
+ * from it (`waistWidthLabel`, `bootFlexLabel`, `lensGuidance`,
+ * `jacketGuidance`, `helmetCircumferenceLabel`) is generated at render time
+ * in the current language, so switching language updates results already on
+ * screen.
+ */
 export const calculateSpecs = (stats: UserStats): CalculatedSpecs => {
-  const length = calculateLength(stats);
-  const waist = calculateWaistWidth(stats);
-  const flex = calculateBootFlex(stats);
   const helmet = helmetSizing(stats);
 
   return {
-    length,
-    waistWidth: waist.range,
-    waistWidthLabel: waist.label,
-    bootFlex: flex.range,
-    bootFlexLabel: flex.label,
+    length: calculateLength(stats),
+    waistWidth: calculateWaistWidth(stats),
+    bootFlex: calculateBootFlex(stats),
     mondoSize: estimateMondoSize(stats),
     poleLength: stats.activity === 'ski' ? round((stats.height * 0.68) / 5) * 5 : null,
     vlt: VLT_TARGET[stats.temperature],
-    lensGuidance: LENS_GUIDANCE[stats.temperature],
     warmth: WARMTH_TARGET[stats.temperature],
-    jacketGuidance: JACKET_GUIDANCE[stats.temperature],
     helmetSize: helmet.size,
-    helmetCircumference: helmet.circumference,
+    helmetCircumferenceCm: helmet.circumferenceCm,
   };
 };
 
@@ -568,7 +600,9 @@ export const buildCalculatedSpecs = (
       });
       rows.push({
         label: zh ? '板腰宽度' : stats.activity === 'snowboard' ? 'Board waist' : 'Waist width',
-        value: `${item.specs.waistWidth} mm (target ${specs.waistWidth.min}–${specs.waistWidth.max} mm)`,
+        value: zh
+          ? `${item.specs.waistWidth} mm(目标 ${specs.waistWidth.min}–${specs.waistWidth.max} mm)`
+          : `${item.specs.waistWidth} mm (target ${specs.waistWidth.min}–${specs.waistWidth.max} mm)`,
         highlight: true,
       });
       rows.push({ label: zh ? '可选长度' : 'Available lengths', value: String(item.specs.lengths ?? '—') });
@@ -588,7 +622,9 @@ export const buildCalculatedSpecs = (
         value:
           stats.activity === 'snowboard'
             ? `${item.specs.flex} / 10`
-            : `${item.specs.flex} flex index`,
+            : zh
+              ? `硬度指数 ${item.specs.flex}`
+              : `${item.specs.flex} flex index`,
         highlight: true,
       });
       rows.push({ label: zh ? '预估 Mondo 码' : 'Estimated Mondo size', value: `${specs.mondoSize.toFixed(1)}` });
@@ -623,7 +659,10 @@ export const buildCalculatedSpecs = (
 
     case 'helmet':
       rows.push({ label: zh ? '推荐尺码' : 'Recommended size', value: specs.helmetSize, highlight: true });
-      rows.push({ label: zh ? '头围' : 'Head circumference', value: specs.helmetCircumference });
+      rows.push({
+        label: zh ? '头围' : 'Head circumference',
+        value: helmetCircumferenceLabel(specs.helmetCircumferenceCm, language),
+      });
       rows.push({ label: zh ? '认证标准' : 'Certification', value: String(item.specs.certification ?? '—') });
       rows.push({
         label: zh ? '通风系统' : 'Venting',
@@ -661,15 +700,36 @@ export const buildCalculatedSpecs = (
   return rows;
 };
 
+/** Short zh names for price tiers, matching the questionnaire's budget option labels. */
+const TIER_NAME_ZH: Record<BudgetTier, string> = { budget: '经济型', 'mid-range': '中端', premium: '高端' };
+
+/**
+ * Short bullet justifications for one item, in the requested language.
+ * Generated at render time (like `buildCalculatedSpecs`) so switching
+ * language updates a result that is already on screen.
+ */
 export const buildReasonBullets = (
   item: GearItem,
   stats: UserStats,
   specs: CalculatedSpecs,
+  language: Language = 'en',
 ): string[] => {
+  const zh = language === 'zh';
   const bullets: string[] = [];
+  const level = levelLabel(stats.level, language);
+  const style = styleLabel(stats.style, language);
+  const temperature = temperatureLabel(stats.temperature, language);
   const tierOffset = TIER_INDEX[item.priceTier] - TIER_INDEX[stats.budgetTier];
-  const tierWord =
-    tierOffset === 0
+  const tierWord = zh
+    ? // zh: needs review
+      tierOffset === 0
+      ? `正好落在你的「${TIER_NAME_ZH[stats.budgetTier]}」预算档位`
+      : tierOffset < 0
+        ? `比你的「${TIER_NAME_ZH[stats.budgetTier]}」预算低${tierOffset === -1 ? '一' : '两'}档——花得比计划少，评分会${tierOffset === -1 ? '略' : '多'}扣一些，但仍参与排序`
+        : tierOffset === 1
+          ? `比你的「${TIER_NAME_ZH[stats.budgetTier]}」预算高一档，评分会因此扣分`
+          : `比你的「${TIER_NAME_ZH[stats.budgetTier]}」预算高两档——只因没有更接近的选择才显示，评分扣分较多`
+    : tierOffset === 0
       ? `sits exactly in your ${item.priceTier} bracket`
       : tierOffset < 0
         ? `is ${tierOffset === -1 ? 'one tier' : 'two tiers'} below your ${stats.budgetTier} bracket — it costs less than you planned, so it takes a ${tierOffset === -1 ? '' : 'larger '}budget penalty in the score but stays in the running`
@@ -681,43 +741,66 @@ export const buildReasonBullets = (
     case 'skis': {
       const waist = numericSpec(item, 'waistWidth');
       if (waist !== null) {
-        const inRange = waist >= specs.waistWidth.min && waist <= specs.waistWidth.max;
+        const { min, max } = specs.waistWidth;
+        const inRange = waist >= min && waist <= max;
+        const wider = waist > max;
         bullets.push(
-          inRange
-            ? `${waist} mm waist lands inside the ${specs.waistWidth.min}–${specs.waistWidth.max} mm window for ${STYLE_LABEL[stats.style].toLowerCase()} riding.`
-            : `${waist} mm waist sits just outside your ${specs.waistWidth.min}–${specs.waistWidth.max} mm target — expect ${waist > specs.waistWidth.max ? 'more float but slower edge-to-edge' : 'quicker edging but less float'}.`,
+          zh
+            ? // zh: needs review
+              inRange
+              ? `${waist} mm 腰宽落在「${style}」所需的 ${min}–${max} mm 区间内。`
+              : `${waist} mm 腰宽略超出你 ${min}–${max} mm 的目标——${wider ? '浮力更好，但换刃会慢一些' : '换刃更快，但浮力会弱一些'}。`
+            : inRange
+              ? `${waist} mm waist lands inside the ${min}–${max} mm window for ${STYLE_LABEL[stats.style].toLowerCase()} riding.`
+              : `${waist} mm waist sits just outside your ${min}–${max} mm target — expect ${wider ? 'more float but slower edge-to-edge' : 'quicker edging but less float'}.`,
         );
       }
       bullets.push(
-        `At ${stats.height} cm and ${stats.weight} kg riding ${LEVEL_LABEL[stats.level].toLowerCase()}, your calculated length is ${specs.length.value} cm.`,
+        zh
+          ? `按你 ${stats.height} 厘米、${stats.weight} 公斤、${level}的水平计算，推荐长度为 ${specs.length.value} 厘米。` // zh: needs review
+          : `At ${stats.height} cm and ${stats.weight} kg riding ${LEVEL_LABEL[stats.level].toLowerCase()}, your calculated length is ${specs.length.value} cm.`,
       );
       break;
     }
     case 'boots': {
       const flex = numericSpec(item, 'flex');
       if (flex !== null) {
-        const inRange = flex >= specs.bootFlex.min && flex <= specs.bootFlex.max;
+        const { min, max } = specs.bootFlex;
+        const inRange = flex >= min && flex <= max;
+        const stiffer = flex > max;
         bullets.push(
-          inRange
-            ? `Flex ${flex} is inside your ${specs.bootFlex.min}–${specs.bootFlex.max} target for a ${LEVEL_LABEL[stats.level].toLowerCase()} ${stats.gender === 'female' ? 'female' : ''} rider.`.replace('  ', ' ')
-            : `Flex ${flex} is ${flex > specs.bootFlex.max ? 'stiffer' : 'softer'} than your ${specs.bootFlex.min}–${specs.bootFlex.max} target — ${flex > specs.bootFlex.max ? 'more power, less forgiveness' : 'more comfort, less drive'}.`,
+          zh
+            ? // zh: needs review
+              inRange
+              ? `硬度 ${flex} 落在${stats.gender === 'female' ? '女性' : ''}${level}玩家 ${min}–${max} 的目标区间内。`
+              : `硬度 ${flex} 比你 ${min}–${max} 的目标${stiffer ? '更硬——支撑和传导更强，但容错更低' : '更软——更舒适，但驱动力弱一些'}。`
+            : inRange
+              ? `Flex ${flex} is inside your ${min}–${max} target for a ${LEVEL_LABEL[stats.level].toLowerCase()} ${stats.gender === 'female' ? 'female' : ''} rider.`.replace('  ', ' ')
+              : `Flex ${flex} is ${stiffer ? 'stiffer' : 'softer'} than your ${min}–${max} target — ${stiffer ? 'more power, less forgiveness' : 'more comfort, less drive'}.`,
         );
       }
-      bullets.push(`Your estimated Mondopoint size is ${specs.mondoSize.toFixed(1)} — get shell-fitted to confirm.`);
+      bullets.push(
+        zh
+          ? `你的预估 Mondopoint 尺码是 ${specs.mondoSize.toFixed(1)}——请到雪具店做一次壳测确认。` // zh: needs review
+          : `Your estimated Mondopoint size is ${specs.mondoSize.toFixed(1)} — get shell-fitted to confirm.`,
+      );
       break;
     }
     case 'bindings': {
+      const easy = stats.level === 'beginner' || stats.level === 'intermediate';
       if (stats.activity === 'snowboard') {
         bullets.push(
-          `Flex rating ${item.specs.flexRating} suits ${LEVEL_LABEL[stats.level].toLowerCase()} riders who want ${
-            stats.level === 'beginner' || stats.level === 'intermediate'
-              ? 'a forgiving, easy-to-load response'
-              : 'a stiffer, more direct power transfer'
-          }.`,
+          zh
+            ? `硬度等级 ${item.specs.flexRating}，适合想要${easy ? '柔和、好上手的反馈' : '更硬、更直接的力量传导'}的${level}玩家。` // zh: needs review
+            : `Flex rating ${item.specs.flexRating} suits ${LEVEL_LABEL[stats.level].toLowerCase()} riders who want ${
+                easy ? 'a forgiving, easy-to-load response' : 'a stiffer, more direct power transfer'
+              }.`,
         );
       } else {
         bullets.push(
-          `A ${item.specs.dinRange} DIN range gives a ${LEVEL_LABEL[stats.level].toLowerCase()} skier a release setting with real headroom either side.`,
+          zh
+            ? `${item.specs.dinRange} 的 DIN 范围让${level}双板玩家的脱离值上下都留有余量。` // zh: needs review
+            : `A ${item.specs.dinRange} DIN range gives a ${LEVEL_LABEL[stats.level].toLowerCase()} skier a release setting with real headroom either side.`,
         );
       }
       break;
@@ -726,7 +809,9 @@ export const buildReasonBullets = (
       const vlt = numericSpec(item, 'vlt');
       if (vlt !== null) {
         bullets.push(
-          `${vlt}% VLT against a ${specs.vlt.min}–${specs.vlt.max}% target for ${TEMPERATURE_LABEL[stats.temperature].toLowerCase()} conditions.`,
+          zh
+            ? `${vlt}% 透光率，对应「${temperature}」条件下 ${specs.vlt.min}–${specs.vlt.max}% 的目标。` // zh: needs review
+            : `${vlt}% VLT against a ${specs.vlt.min}–${specs.vlt.max}% target for ${TEMPERATURE_LABEL[stats.temperature].toLowerCase()} conditions.`,
         );
       }
       break;
@@ -735,13 +820,20 @@ export const buildReasonBullets = (
       const warmth = numericSpec(item, 'warmth');
       if (warmth !== null) {
         bullets.push(
-          `Warmth ${warmth}/5 against a ${specs.warmth.min}–${specs.warmth.max}/5 target for ${TEMPERATURE_LABEL[stats.temperature].toLowerCase()}.`,
+          zh
+            ? `保暖等级 ${warmth}/5，对应「${temperature}」的 ${specs.warmth.min}–${specs.warmth.max}/5 目标。` // zh: needs review
+            : `Warmth ${warmth}/5 against a ${specs.warmth.min}–${specs.warmth.max}/5 target for ${TEMPERATURE_LABEL[stats.temperature].toLowerCase()}.`,
         );
       }
       break;
     }
     case 'helmet': {
-      bullets.push(`Sized ${specs.helmetSize} (${specs.helmetCircumference}) with ${item.specs.certification} certification.`);
+      const circumference = helmetCircumferenceLabel(specs.helmetCircumferenceCm, language);
+      bullets.push(
+        zh
+          ? `建议尺码 ${specs.helmetSize}(${circumference})，通过 ${item.specs.certification} 认证。` // zh: needs review
+          : `Sized ${specs.helmetSize} (${circumference}) with ${item.specs.certification} certification.`,
+      );
       break;
     }
     default:
@@ -749,42 +841,97 @@ export const buildReasonBullets = (
   }
 
   if (item.styles?.includes(stats.style)) {
-    bullets.push(`Designed around ${STYLE_LABEL[stats.style].toLowerCase()} riding.`);
+    bullets.push(zh ? `专为「${style}」设计。` : `Designed around ${STYLE_LABEL[stats.style].toLowerCase()} riding.`); // zh: needs review
   }
   if (item.levels?.includes(stats.level)) {
-    bullets.push(`Tuned for ${LEVEL_LABEL[stats.level].toLowerCase()} riders.`);
+    bullets.push(zh ? `为${level}玩家调校。` : `Tuned for ${LEVEL_LABEL[stats.level].toLowerCase()} riders.`); // zh: needs review
   }
   // Prices are region-specific and shown in the card's own price block; this
   // bullet only explains how the price *tier* affected the score.
-  bullets.push(`Price tier: ${tierWord}.`);
+  bullets.push(zh ? `价格档位:${tierWord}。` : `Price tier: ${tierWord}.`); // zh: needs review
 
   return bullets;
 };
 
-export const buildReasoning = (item: GearItem, stats: UserStats, specs: CalculatedSpecs): string => {
-  const rider = `a ${stats.height} cm / ${stats.weight} kg ${LEVEL_LABEL[stats.level].toLowerCase()} ${
-    stats.activity === 'ski' ? 'skier' : 'snowboarder'
-  }`;
+/**
+ * The "why this matches you" paragraph for one item, in the requested
+ * language. `rank` is the item's 1-based position in its category, so only
+ * the top pick is described as the strongest match.
+ */
+export const buildReasoning = (
+  item: GearItem,
+  stats: UserStats,
+  specs: CalculatedSpecs,
+  language: Language = 'en',
+  rank = 1,
+): string => {
+  const zh = language === 'zh';
+  const matchReason = itemMatchReason(item, language);
+  const isBoard = stats.activity === 'snowboard';
+  const level = levelLabel(stats.level, language);
+  const product = `${item.brand} ${item.name}`;
 
+  if (zh) {
+    // zh: needs review
+    const rider = `身高 ${stats.height} 厘米、体重 ${stats.weight} 公斤的${level}${isBoard ? '单板' : '双板'}玩家`;
+    const vlt = numericSpec(item, 'vlt');
+    switch (item.category) {
+      case 'skis':
+        return `对于主要在「${styleLabel(stats.style, 'zh')}」地形滑行的${rider}，${product} 推荐长度 ${specs.length.value} 厘米，腰宽 ${item.specs.waistWidth} mm。${matchReason}${
+          rank === 1
+            ? `在你的「${tierLabel(stats.budgetTier, 'zh')}」预算范围内，它是目录里和你最匹配的${isBoard ? '单板' : '雪板'}。`
+            : `在你的「${tierLabel(stats.budgetTier, 'zh')}」预算范围内，它在这一类里排第 ${rank}。`
+        }`;
+      case 'boots':
+        return `雪靴是整套装备里最关键的一件。按你的档案，硬度应在 ${specs.bootFlex.min}–${specs.bootFlex.max}${isBoard ? '/10' : ''}，${product} 为 ${item.specs.flex}。${matchReason}下单前先去雪具店做个壳测——预估的 Mondo ${specs.mondoSize.toFixed(1)} 只是起点，不是定论。`;
+      case 'bindings':
+        return `${product} 以${isBoard ? `${item.specs.flexRating} 的硬度` : `${item.specs.dinRange} 的 DIN 范围`}为${rider}而设定。${matchReason}第一趟滑行前，仍应请雪具店技师根据你的雪靴${isBoard ? '调好绑带' : '设定并检查 DIN 脱离值'}。`;
+      case 'helmet':
+        return `${product}，尺码 ${specs.helmetSize}。${matchReason}它和下面推荐的护目镜也能严丝合缝地贴合——这比大多数人想的更重要：帽檐和雪镜之间一留缝，额头最先冻僵。`;
+      case 'goggles': {
+        const inRange = vlt !== null && vlt >= specs.vlt.min && vlt <= specs.vlt.max;
+        const position = inRange
+          ? `落在你 ${specs.vlt.min}–${specs.vlt.max}% 的目标区间内`
+          : `略超出你 ${specs.vlt.min}–${specs.vlt.max}% 的目标区间(偏${vlt !== null && vlt < specs.vlt.min ? '暗' : '亮'}一点)`;
+        return `${lensGuidance(stats.temperature, 'zh')}${product} 透光率 ${item.specs.vlt}%，${position}。${matchReason}`;
+      }
+      case 'jacket':
+        return `${jacketGuidance(stats.temperature, 'zh')}${product} 保暖等级 ${item.specs.warmth}/5，防水规格为 ${item.specs.waterproofing}。${matchReason}`;
+      default:
+        return matchReason;
+    }
+  }
+
+  const rider = `a ${stats.height} cm / ${stats.weight} kg ${LEVEL_LABEL[stats.level].toLowerCase()} ${isBoard ? 'snowboarder' : 'skier'}`;
+  const vlt = numericSpec(item, 'vlt');
   switch (item.category) {
     case 'skis':
-      return `For ${rider} riding mostly ${STYLE_LABEL[stats.style].toLowerCase()} terrain, the ${item.brand} ${item.name} is sized to ${specs.length.value} cm with a ${item.specs.waistWidth} mm waist. ${item.matchReason} Filtered to your ${TIER_LABEL[stats.budgetTier].toLowerCase()} budget, it was the strongest hardgood match in the database.`;
+      return `For ${rider} riding mostly ${STYLE_LABEL[stats.style].toLowerCase()} terrain, the ${product} is sized to ${specs.length.value} cm with a ${item.specs.waistWidth} mm waist. ${matchReason} ${
+        rank === 1
+          ? `Filtered to your ${TIER_LABEL[stats.budgetTier].toLowerCase()} budget, it was the strongest hardgood match in the database.`
+          : `Filtered to your ${TIER_LABEL[stats.budgetTier].toLowerCase()} budget, it ranks #${rank} for you in this category.`
+      }`;
     case 'boots':
-      return `Boots are the highest-leverage purchase in the kit. Your profile calls for a ${specs.bootFlex.min}–${specs.bootFlex.max} flex${stats.activity === 'snowboard' ? '/10' : ''}, and the ${item.brand} ${item.name} sits at ${item.specs.flex}. ${item.matchReason} Get a shell fit at a shop before you commit — the estimated Mondo ${specs.mondoSize.toFixed(1)} is a starting point, not a verdict.`;
+      return `Boots are the highest-leverage purchase in the kit. Your profile calls for a ${specs.bootFlex.min}–${specs.bootFlex.max} flex${isBoard ? '/10' : ''}, and the ${product} sits at ${item.specs.flex}. ${matchReason} Get a shell fit at a shop before you commit — the estimated Mondo ${specs.mondoSize.toFixed(1)} is a starting point, not a verdict.`;
     case 'bindings':
-      return `The ${item.brand} ${item.name} is set up around ${
-        stats.activity === 'snowboard' ? `a ${item.specs.flexRating} flex rating` : `a ${item.specs.dinRange} DIN range`
-      } for ${rider}. ${item.matchReason} A shop tech should still set and check the ${
-        stats.activity === 'snowboard' ? 'strap tension' : 'release DIN'
+      return `The ${product} is set up around ${
+        isBoard ? `a ${item.specs.flexRating} flex rating` : `a ${item.specs.dinRange} DIN range`
+      } for ${rider}. ${matchReason} A shop tech should still set and check the ${
+        isBoard ? 'strap tension' : 'release DIN'
       } against your boot before the first run.`;
     case 'helmet':
-      return `${item.brand} ${item.name} in size ${specs.helmetSize}. ${item.matchReason} It also pairs cleanly with the goggle recommendation below, which matters more than most riders expect — a gap between brim and goggle is the fastest way to a cold forehead.`;
-    case 'goggles':
-      return `${specs.lensGuidance} The ${item.brand} ${item.name} runs ${item.specs.vlt}% VLT, inside your ${specs.vlt.min}–${specs.vlt.max}% target. ${item.matchReason}`;
+      return `${product} in size ${specs.helmetSize}. ${matchReason} It also pairs cleanly with the goggle recommendation below, which matters more than most riders expect — a gap between brim and goggle is the fastest way to a cold forehead.`;
+    case 'goggles': {
+      const inRange = vlt !== null && vlt >= specs.vlt.min && vlt <= specs.vlt.max;
+      const position = inRange
+        ? `inside your ${specs.vlt.min}–${specs.vlt.max}% target`
+        : `just outside your ${specs.vlt.min}–${specs.vlt.max}% target (a touch ${vlt !== null && vlt < specs.vlt.min ? 'darker' : 'brighter'})`;
+      return `${lensGuidance(stats.temperature, 'en')} The ${product} runs ${item.specs.vlt}% VLT, ${position}. ${matchReason}`;
+    }
     case 'jacket':
-      return `${specs.jacketGuidance} The ${item.brand} ${item.name} rates ${item.specs.warmth}/5 for warmth with ${item.specs.waterproofing} protection. ${item.matchReason}`;
+      return `${jacketGuidance(stats.temperature, 'en')} The ${product} rates ${item.specs.warmth}/5 for warmth with ${item.specs.waterproofing} protection. ${matchReason}`;
     default:
-      return item.matchReason;
+      return matchReason;
   }
 };
 
@@ -822,12 +969,12 @@ export const matchGear = (stats: UserStats, database: GearItem[] = gearDatabase)
 
     const winner = ranked[0];
 
+    // Narrative copy is not baked in here: GearCard builds it at render time
+    // with the current language (buildReasoning / buildReasonBullets).
     return {
       category,
       item: winner.item,
       score: winner.score,
-      reasoning: buildReasoning(winner.item, stats, specs),
-      reasonBullets: buildReasonBullets(winner.item, stats, specs),
       candidates: ranked,
     } satisfies Recommendation;
   }).filter((entry): entry is Recommendation => entry !== null);

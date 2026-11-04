@@ -74,6 +74,12 @@ const listings: GearListing[] = [
       'A forgiving, groomer-focused carver with a soft flex pattern that rewards clean technique without punishing mistakes. The narrow 78 mm waist snaps edge-to-edge with very little input.',
     matchReason:
       'Built for riders learning to carve on hardpack who want a stable, confidence-inspiring ski at a value price.',
+    // zh: needs review
+    descriptionZh:
+      '一支好驾驭、专注压雪道的刻滑板，软中带韧的硬度分布会奖励干净的技术动作，又不会因为一点失误就惩罚你。78 mm 的窄腰换刃非常轻快，稍一用力就能从一侧刃切到另一侧。',
+    // zh: needs review
+    matchReasonZh:
+      '适合在硬雪道上学刻滑、想要一支稳定又给信心、价格还亲民的雪板的人。',
   },
   {
     id: 'ski-salomon-stance-84',
@@ -98,6 +104,12 @@ const listings: GearListing[] = [
       'The frontside member of the Stance family: one sheet of Titanal keeps it quiet at speed while the 84 mm platform still handles a lap through soft snow.',
     matchReason:
       'A do-most-things frontside ski for riders who spend 80% of the day on groomers but want a little margin off-piste.',
+    // zh: needs review
+    descriptionZh:
+      'Stance 家族里偏压雪道的一支：一层钛合金让它在高速下依然安静，84 mm 的板面遇到软雪也能应付一趟。',
+    // zh: needs review
+    matchReasonZh:
+      '八成时间在压雪道、但想留点余量偶尔下道钻野雪的人，用它基本什么都能干。',
   },
   {
     id: 'ski-salomon-qst-92',
@@ -122,6 +134,12 @@ const listings: GearListing[] = [
       'The benchmark 90-something all-mountain ski. Light enough to throw around in trees, damp enough to hold a line on refrozen morning corduroy.',
     matchReason:
       'Ideal for the rider whose day is genuinely mixed — groomers to the lift line, then side-country and chopped-up snow after lunch.',
+    // zh: needs review
+    descriptionZh:
+      '90 出头腰宽全山板的标杆。轻到在树林里能随手甩，又稳到能在早上冻硬的灯芯绒雪面上咬住线路。',
+    // zh: needs review
+    matchReasonZh:
+      '适合一天真的什么都滑的人——上午压雪道刷到缆车口，下午去道边野雪和被铲碎的雪里玩。',
   },
   {
     id: 'ski-k2-mindbender-89ti',
@@ -146,6 +164,12 @@ const listings: GearListing[] = [
       'Titanal Y-beam gives torsional bite where it matters and tapers out toward the tip so the ski still releases in soft snow. A hard-charging daily driver.',
     matchReason:
       'For strong skiers who want metal underfoot and a narrow enough waist to still carve a proper arc on firm snow.',
+    // zh: needs review
+    descriptionZh:
+      '钛合金 Y 形梁在最需要的地方提供抗扭咬雪力，往板头逐渐收窄，在软雪里依然容易松刃。一支能狠冲的日常主力板。',
+    // zh: needs review
+    matchReasonZh:
+      '适合技术扎实、想要脚下有金属、腰宽又够窄、能在硬雪上切出漂亮弧线的人。',
   },
   {
     id: 'ski-atomic-bent-100',
@@ -170,6 +194,12 @@ const listings: GearListing[] = [
       'Chris Benchetler’s playful twin-tip: surfy, buttery and switch-friendly, but with enough width to float through a storm day.',
     matchReason:
       'The pick for park-and-powder riders who ride switch, hit side hits and want one ski for the whole mountain.',
+    // zh: needs review
+    descriptionZh:
+      'Chris Benchetler 风格的好玩双翘板：像冲浪一样灵活、好做平花、反脚也顺，宽度又足以在暴雪天浮起来。',
+    // zh: needs review
+    matchReasonZh:
+      '公园加粉雪两手抓的首选——喜欢反脚、喜欢道边飞小包、想一支板滑全山的人。',
   },
   {
     id: 'ski-k2-poacher',
@@ -194,6 +224,12 @@ const listings: GearListing[] = [
       'A durable, impact-tolerant park twin with reinforced edges and a symmetrical flex that lands switch as happily as forward.',
     matchReason:
       'Value-focused freestyle ski for riders learning rails and jumps who do not want to babysit an expensive topsheet.',
+    // zh: needs review
+    descriptionZh:
+      '耐砸耐撞的公园双翘板，边刃加强，前后对称的硬度让反脚落地和正脚一样踏实。',
+    // zh: needs review
+    matchReasonZh:
+      '主打性价比的自由式板，适合刚开始练道具和跳台、不想心疼昂贵板面的人。',
   },
   {
     id: 'ski-volkl-mantra-m7',
@@ -218,6 +254,12 @@ const listings: GearListing[] = [
       'The reference hard-charging all-mountain ski. Titanal thickness is tuned per length so a 170 and a 191 ride with the same intent.',
     matchReason:
       'For powerful, aggressive skiers who want maximum damping and edge hold and are willing to work for it.',
+    // zh: needs review
+    descriptionZh:
+      '能狠冲的全山板标杆。钛合金厚度按长度单独调校，170 和 191 滑起来是同一个性格。',
+    // zh: needs review
+    matchReasonZh:
+      '适合力量大、滑得凶、想要最强减震和抓雪力，也愿意为此多出点力的人。',
   },
   {
     id: 'ski-atomic-redster-x9',
@@ -242,6 +284,12 @@ const listings: GearListing[] = [
       'A race-room carver detuned just enough for the public. Revoshock damping keeps the edge glued through rutted, icy turns.',
     matchReason:
       'Built for advanced piste specialists who measure a good day in clean, high-angle arcs on firm snow.',
+    // zh: needs review
+    descriptionZh:
+      '从赛道车间走出来、只为大众稍稍调软了一点的刻滑板。Revoshock 减震让边刃在坑洼结冰的弯里依然死死咬住雪面。',
+    // zh: needs review
+    matchReasonZh:
+      '为高级压雪道玩家打造——好的一天就是在硬雪上切出一道道干净的大倾角弧线。',
   },
   {
     id: 'ski-black-crows-camox',
@@ -266,6 +314,12 @@ const listings: GearListing[] = [
       'Chamonix-bred freeride all-rounder. Light, lively and quick to pivot in tight terrain without feeling nervous at speed.',
     matchReason:
       'A great match for playful all-mountain skiers who ride trees, chutes and side hits more than they ride the fall line.',
+    // zh: needs review
+    descriptionZh:
+      '出生在霞慕尼的自由滑全能板。轻巧、灵动，在狭窄地形里转向很快，高速下也不发飘。',
+    // zh: needs review
+    matchReasonZh:
+      '非常适合喜欢玩的全山玩家——钻树林、下沟槽、飞道边小包，比单纯顺着滚落线冲更多。',
   },
   {
     id: 'ski-black-crows-corvus',
@@ -290,6 +344,12 @@ const listings: GearListing[] = [
       'A big-mountain plank with a stiff shovel that punches through crud and stays composed at genuinely high speed in open terrain.',
     matchReason:
       'For expert freeriders hunting deep days and committed lines who need float first and groomer manners second.',
+    // zh: needs review
+    descriptionZh:
+      '一支大山野雪板，板头硬朗，能劈开烂雪，在开阔地形里真正高速时依然沉稳。',
+    // zh: needs review
+    matchReasonZh:
+      '适合追粉雪日、敢下硬核线路的专家级野滑玩家——浮力第一，压雪道表现其次。',
   },
   {
     id: 'ski-atomic-backland-107',
@@ -314,6 +374,12 @@ const listings: GearListing[] = [
       'A touring-first powder ski: under 1,600 g per ski at 182 cm, yet the carbon backbone keeps it honest on the descent.',
     matchReason:
       'The pick for riders earning turns — light enough for long skin tracks, wide enough to float on the way back down.',
+    // zh: needs review
+    descriptionZh:
+      '以登山为先的粉雪板：182 cm 每支不到 1,600 g，碳纤维脊梁又让它下坡时依然靠谱。',
+    // zh: needs review
+    matchReasonZh:
+      '刷坡党首选——轻到能走长长的上山路线，宽到下山时能浮在粉雪上。',
   },
   {
     id: 'ski-volkl-blaze-114',
@@ -338,6 +404,12 @@ const listings: GearListing[] = [
       'A genuinely light 114 that still tolerates a resort day. The suspension tip cuts chatter without adding swing weight.',
     matchReason:
       'For riders splitting time between lift-served powder laps and short tours who do not want two separate setups.',
+    // zh: needs review
+    descriptionZh:
+      '一支真正轻量、却还扛得住一天雪场滑行的 114。悬挂式板头减少抖动，又不增加挥重。',
+    // zh: needs review
+    matchReasonZh:
+      '适合一半时间坐缆车刷粉、一半时间做短途登山，不想准备两套装备的人。',
   },
 
   /* ================================================================ */
@@ -366,6 +438,12 @@ const listings: GearListing[] = [
       'A forgiving flat-to-rocker directional twin that is famously easy to learn on but still holds together at intermediate speeds.',
     matchReason:
       'One of the best value first boards — catch-free feel, but with enough camber-free stability to progress on.',
+    // zh: needs review
+    descriptionZh:
+      '一块宽容的平板转反翘定向双翘单板，以好学出名，到中级速度时依然稳得住。',
+    // zh: needs review
+    matchReasonZh:
+      '最值的入门单板之一——不容易卡刃，又有足够的稳定性让你继续进步。',
   },
   {
     id: 'board-salomon-assassin',
@@ -390,6 +468,12 @@ const listings: GearListing[] = [
       'The quiver-killer twin: camber between the feet for pop, rocker at the contact points so it never hooks up unexpectedly.',
     matchReason:
       'Perfect for riders who lap the park in the morning and chase side hits and soft snow in the afternoon.',
+    // zh: needs review
+    descriptionZh:
+      '一块顶一个板库的双翘板：两脚之间是正弧带来弹性，接触点是反翘，不会突然卡刃。',
+    // zh: needs review
+    matchReasonZh:
+      '完美适合上午刷公园、下午去追道边小包和软雪的人。',
   },
   {
     id: 'board-burton-custom',
@@ -414,6 +498,12 @@ const listings: GearListing[] = [
       'Thirty-plus seasons of refinement. Traditional camber, carbon Squeezebox and a fast sintered base — precise, poppy and unforgiving of laziness.',
     matchReason:
       'For confident riders who load the board hard through turns and want maximum edge hold and rebound.',
+    // zh: needs review
+    descriptionZh:
+      '三十多个雪季的打磨。传统正弧、碳纤维 Squeezebox 加上高速烧结板底——精准、弹性十足，但对偷懒的动作毫不宽容。',
+    // zh: needs review
+    matchReasonZh:
+      '适合自信的玩家：转弯时会狠狠压板，想要最强的立刃抓雪和回弹。',
   },
   {
     id: 'board-burton-process',
@@ -438,6 +528,12 @@ const listings: GearListing[] = [
       'A true twin with a loose, playful rocker-dominant profile that presses easily and stays catch-free on rails.',
     matchReason:
       'A forgiving freestyle platform for riders drilling butters, boxes and switch riding in the park.',
+    // zh: needs review
+    descriptionZh:
+      '一块真双翘板，以反翘为主的板型松快好玩，压板很轻松，上道具也不容易卡刃。',
+    // zh: needs review
+    matchReasonZh:
+      '一块宽容的自由式平台，适合在公园里练平花、箱子和反脚的人。',
   },
   {
     id: 'board-k2-party-platter',
@@ -462,6 +558,12 @@ const listings: GearListing[] = [
       'A short, fat, volume-shifted powder toy. Ride it 8–10 cm shorter than your usual length and let the surface area do the work.',
     matchReason:
       'For surfy riders on storm days who want a playful powder board rather than a straight-lining big-mountain deck.',
+    // zh: needs review
+    descriptionZh:
+      '一块短、胖、体积前移的粉雪玩具。比你平时的长度短 8–10 cm，剩下的交给板面面积。',
+    // zh: needs review
+    matchReasonZh:
+      '适合暴雪天想像冲浪一样玩粉雪的人，而不是要一块直线狂冲的大山板。',
   },
   {
     id: 'board-burton-hometown-hero',
@@ -486,6 +588,12 @@ const listings: GearListing[] = [
       'A directional freeride weapon with a tapered tail that sinks on demand and a stiff nose that stays afloat in deep snow.',
     matchReason:
       'For expert riders charging big backcountry lines who still want the board to carve on the traverse out.',
+    // zh: needs review
+    descriptionZh:
+      '一把定向自由滑利器：收窄的板尾想沉就沉，硬朗的板头在深粉里稳稳浮着。',
+    // zh: needs review
+    matchReasonZh:
+      '适合在野雪大线路上猛冲的专家级玩家，横切出山时还想让板子能刻滑。',
   },
   {
     id: 'board-salomon-huck-knife',
@@ -510,6 +618,12 @@ const listings: GearListing[] = [
       'A stiff-ish true twin built for jump lines and hard-charging park riding, with Popster milling that stores and releases energy off the lip.',
     matchReason:
       'For strong freestyle riders sending medium-to-large jumps who need a board that stays stable on landings.',
+    // zh: needs review
+    descriptionZh:
+      '一块偏硬的真双翘板，为跳台线路和狠冲公园而生，Popster 铣槽在起跳台边缘储存并释放能量。',
+    // zh: needs review
+    matchReasonZh:
+      '适合能飞中大型跳台、需要落地稳的自由式玩家。',
   },
 
   /* ================================================================ */
@@ -537,6 +651,12 @@ const listings: GearListing[] = [
       'A heat-mouldable 100 mm-last boot with a friendly 90 flex — enough support to drive a ski, soft enough to flex forward comfortably all day.',
     matchReason:
       'The classic first "real" boot: shop-customisable shell, medium volume fit and a flex that will not overpower a developing skier.',
+    // zh: needs review
+    descriptionZh:
+      '可热塑的 100 mm 鞋楦雪靴，硬度 90 很友好——足以驱动雪板，又软到能舒服地前倾一整天。',
+    // zh: needs review
+    matchReasonZh:
+      '经典的第一双"正经"雪靴：可到店定制的外壳、中等容积，硬度也不会压垮正在进步的双板玩家。',
   },
   {
     id: 'boot-k2-anthem-85',
@@ -560,6 +680,12 @@ const listings: GearListing[] = [
       'Women’s-specific shell with a lower cuff height, warmer liner and a BOA forefoot dial that wraps the foot evenly instead of clamping it.',
     matchReason:
       'A warm, easy-entry women’s boot for progressing skiers who want precision without a punishing flex.',
+    // zh: needs review
+    descriptionZh:
+      '女款专属外壳，靴筒更低、内胆更暖，前掌 BOA 旋钮均匀包裹脚面，而不是死死夹住。',
+    // zh: needs review
+    matchReasonZh:
+      '一双温暖、好穿脱的女款雪靴，适合想要精准操控、又不想被硬度折磨的进阶玩家。',
   },
   {
     id: 'boot-salomon-shift-pro-110w',
@@ -583,6 +709,12 @@ const listings: GearListing[] = [
       'A freeride-leaning women’s boot with a real walk mode and a fully mouldable shell, tuned stiffer for skiers who drive the tongue.',
     matchReason:
       'For advancing women skiers who ride aggressively inbounds but want hike mode for boot-packs and short tours.',
+    // zh: needs review
+    descriptionZh:
+      '一双偏自由滑的女款雪靴，有真正能用的行走模式和可全热塑外壳，硬度调得更高，适合习惯压鞋舌的人。',
+    // zh: needs review
+    matchReasonZh:
+      '适合在雪场内滑得很凶、又想为徒步爬坡和短途登山留个行走模式的进阶女性玩家。',
   },
   {
     id: 'boot-k2-method-100',
@@ -606,6 +738,12 @@ const listings: GearListing[] = [
       'Intuition liner, medium-volume shell and a progressive flex pattern that absorbs landings instead of spiking through them.',
     matchReason:
       'A freestyle-friendly 100 flex for park skiers who need shock absorption and a liner that packs out to their foot.',
+    // zh: needs review
+    descriptionZh:
+      'Intuition 内胆、中等容积外壳，渐进式硬度分布能吸收落地冲击，而不是硬生生顶回来。',
+    // zh: needs review
+    matchReasonZh:
+      '对公园玩家友好的 100 硬度，适合需要缓冲、想要一双会贴合脚型的内胆的人。',
   },
   {
     id: 'boot-salomon-spro-supra-120',
@@ -629,6 +767,12 @@ const listings: GearListing[] = [
       'BOA forefoot closure removes shell distortion and delivers noticeably more even wrap and power transfer than a conventional buckle.',
     matchReason:
       'For advanced skiers who want race-adjacent response and a precise, dialled fit without a 130-flex punishment.',
+    // zh: needs review
+    descriptionZh:
+      '前掌 BOA 闭合避免外壳变形，包裹和力量传导明显比传统卡扣更均匀。',
+    // zh: needs review
+    matchReasonZh:
+      '适合想要接近竞技的反馈、精准贴合，又不想受 130 硬度折磨的高级玩家。',
   },
   {
     id: 'boot-atomic-hawx-ultra-130',
@@ -652,6 +796,12 @@ const listings: GearListing[] = [
       'A 130-flex hybrid: low-volume performance last, tech fittings for touring, and a walk mode that actually walks.',
     matchReason:
       'The one-boot answer for expert skiers who ride hard inbounds and occasionally clip into a touring binding.',
+    // zh: needs review
+    descriptionZh:
+      '一双 130 硬度的混合型雪靴：低容积性能鞋楦、带登山用的 tech 插孔，行走模式也是真的能走。',
+    // zh: needs review
+    matchReasonZh:
+      '专家级玩家的一靴通吃方案——在雪场里狠滑，偶尔也会卡进登山固定器。',
   },
   {
     id: 'boot-volkl-secret-105',
@@ -675,6 +825,12 @@ const listings: GearListing[] = [
       'A women’s performance shell with a genuinely low-volume last and a stiff, supportive cuff for skiers who ski at the front of the boot.',
     matchReason:
       'For expert women skiers who have outgrown 90-flex boots and need real lateral support at speed.',
+    // zh: needs review
+    descriptionZh:
+      '女款性能外壳，鞋楦真正低容积，靴筒硬朗有支撑，适合重心压在雪靴前部滑的人。',
+    // zh: needs review
+    matchReasonZh:
+      '适合已经驾驭不了 90 硬度、高速时需要真正侧向支撑的专家级女性玩家。',
   },
 
   /* ================================================================ */
@@ -702,6 +858,12 @@ const listings: GearListing[] = [
       'Dual-zone BOA gives independent upper/lower tension so the ankle stays locked while the toes stay comfortable. Soft, tourable flex.',
     matchReason:
       'A comfortable, low-effort entry boot for riders still building ankle strength and board feel.',
+    // zh: needs review
+    descriptionZh:
+      '双区 BOA 可以分别调节上下松紧，脚踝锁得住，脚趾又不难受。硬度偏软，走路也轻松。',
+    // zh: needs review
+    matchReasonZh:
+      '一双舒服、省力的入门单板鞋，适合脚踝力量和板感还在建立中的人。',
   },
   {
     id: 'boot-burton-ruler',
@@ -725,6 +887,12 @@ const listings: GearListing[] = [
       'The default all-mountain snowboard boot: medium flex, heat-mouldable liner and a shock-absorbing DynoLITE outsole.',
     matchReason:
       'Balanced support for riders who mix park laps with all-mountain riding and want one boot for everything.',
+    // zh: needs review
+    descriptionZh:
+      '全山单板鞋的默认选择：中等硬度、可热塑内胆，还有减震的 DynoLITE 外底。',
+    // zh: needs review
+    matchReasonZh:
+      '支撑平衡，适合公园和全山混着滑、想一双鞋搞定一切的人。',
   },
   {
     id: 'boot-k2-maysis',
@@ -748,6 +916,12 @@ const listings: GearListing[] = [
       'The Conda BOA zone wraps the ankle independently and eliminates heel lift — the reason this boot has a cult following.',
     matchReason:
       'For riders whose heels lift in standard boots and who want stiffer support for bigger terrain.',
+    // zh: needs review
+    descriptionZh:
+      'Conda BOA 区独立包裹脚踝，彻底消除脚跟上浮——这正是这双鞋拥有一群铁粉的原因。',
+    // zh: needs review
+    matchReasonZh:
+      '适合穿普通单板鞋会脚跟上浮、想在更大地形里获得更硬支撑的人。',
   },
   {
     id: 'boot-burton-photon-step-on',
@@ -771,6 +945,12 @@ const listings: GearListing[] = [
       'A stiff, responsive boot that clicks straight into Step On bindings — no strapping in, and a very direct power transfer to the edge.',
     matchReason:
       'For advanced riders who charge hard and value response and fast entry over a soft, playful feel.',
+    // zh: needs review
+    descriptionZh:
+      '一双硬朗、反应直接的雪鞋，直接踩进 Step On 固定器——不用绑绑带，力量传到板刃非常直接。',
+    // zh: needs review
+    matchReasonZh:
+      '适合狠冲的高级玩家，比起软而好玩的脚感，更看重反馈和快速穿脱。',
   },
 
   /* ================================================================ */
@@ -800,6 +980,12 @@ const listings: GearListing[] = [
       'A warm, durable ABS hardshell with adjustable venting and a plush liner — the practical value pick for cold resort days.',
     matchReason:
       'Reliable certified protection and real warmth without paying for rotational-impact tech.',
+    // zh: needs review
+    descriptionZh:
+      '保暖耐用的 ABS 硬壳头盔，通风可调、内衬柔软——寒冷雪场日的实用性价比之选。',
+    // zh: needs review
+    matchReasonZh:
+      '可靠的认证防护和实打实的保暖，不必为防旋转冲击技术多花钱。',
   },
   {
     id: 'helmet-salomon-pioneer-lt',
@@ -825,6 +1011,12 @@ const listings: GearListing[] = [
       'Lightweight in-mould shell with a warm fleece liner and a simple dial fit system. Straightforward and comfortable.',
     matchReason:
       'A well-priced, warm helmet for riders who mostly stay on-piste in cold conditions.',
+    // zh: needs review
+    descriptionZh:
+      '轻量一体成型外壳，配保暖抓绒内衬和简单的旋钮调节。简单直接，戴着舒服。',
+    // zh: needs review
+    matchReasonZh:
+      '一顶价格实在又保暖的头盔，适合天冷时主要在压雪道上滑的人。',
   },
   {
     id: 'helmet-smith-mission-mips',
@@ -850,6 +1042,12 @@ const listings: GearListing[] = [
       'MIPS rotational protection, AirEvac ventilation that pulls fog out of your goggles, and a low-profile in-mould shell.',
     matchReason:
       'The sweet spot for value and safety tech — MIPS plus proper goggle integration at a mid-tier price.',
+    // zh: needs review
+    descriptionZh:
+      'MIPS 防旋转保护，AirEvac 通风能把雪镜里的雾气抽走，外壳是低调的一体成型。',
+    // zh: needs review
+    matchReasonZh:
+      '性价比和安全科技的甜蜜点——中端价位就有 MIPS 和真正好用的雪镜整合。',
   },
   {
     id: 'helmet-oakley-mod3',
@@ -875,6 +1073,12 @@ const listings: GearListing[] = [
       'A light in-mould lid with a Modular Brim System that seals to Oakley goggles and adjustable vents for warm spring laps.',
     matchReason:
       'Best for riders who run hot or ride spring conditions and want big adjustable airflow.',
+    // zh: needs review
+    descriptionZh:
+      '轻量一体成型头盔，模块化帽檐系统能和 Oakley 雪镜贴合，通风可调，适合暖和的春季。',
+    // zh: needs review
+    matchReasonZh:
+      '最适合容易出汗、或常在春雪季滑、想要大流量可调通风的人。',
   },
   {
     id: 'helmet-smith-vantage-mips',
@@ -900,6 +1104,12 @@ const listings: GearListing[] = [
       'Koroyd honeycomb absorbs energy and ventilates at the same time; 21 adjustable vents let you dump or trap heat mid-run.',
     matchReason:
       'Top-tier impact protection with the widest temperature range of any helmet here — the buy-once option.',
+    // zh: needs review
+    descriptionZh:
+      'Koroyd 蜂窝结构同时吸收冲击和通风；21 个可调通风孔让你滑到一半也能随时散热或保温。',
+    // zh: needs review
+    matchReasonZh:
+      '顶级的冲击防护，加上这里所有头盔中最宽的适用温度范围——买一次用很久的选择。',
   },
   {
     id: 'helmet-oakley-mod5',
@@ -925,6 +1135,12 @@ const listings: GearListing[] = [
       'A BOA dial fit system, MIPS and a three-position Modular Brim that lets you dial the goggle gap out completely.',
     matchReason:
       'For riders who want a precise micro-adjustable fit and a seamless goggle seal across changing conditions.',
+    // zh: needs review
+    descriptionZh:
+      'BOA 旋钮调节、MIPS，再加上三档可调的模块化帽檐，能把头盔和雪镜之间的缝完全消除。',
+    // zh: needs review
+    matchReasonZh:
+      '适合想要可微调的精准贴合、在多变天气里也想让头盔和雪镜无缝衔接的人。',
   },
 
   /* ================================================================ */
@@ -954,6 +1170,12 @@ const listings: GearListing[] = [
       'A high-VLT low-light lens that lifts contrast in flat light and falling snow, with a bonus clear lens for night laps.',
     matchReason:
       'Maximum light transmission for storm days and dusk — the right lens when the light goes flat.',
+    // zh: needs review
+    descriptionZh:
+      '高透光率的弱光镜片，在平光和下雪时拉高对比度，还附送一片夜滑用的透明镜片。',
+    // zh: needs review
+    matchReasonZh:
+      '透光最大化，专为暴雪天和黄昏准备——光线一变平，就该换上它。',
   },
   {
     id: 'goggle-salomon-radium-pro',
@@ -979,6 +1201,12 @@ const listings: GearListing[] = [
       'A do-everything mid-VLT toric lens with genuinely wide peripheral vision and a magnetic-free but very quick lens swap.',
     matchReason:
       'The most versatile VLT window there is — usable in bright sun and passable when clouds roll in.',
+    // zh: needs review
+    descriptionZh:
+      '一款全能型中等透光率的环面镜片，周边视野真的宽，不用磁吸但换镜片也很快。',
+    // zh: needs review
+    matchReasonZh:
+      '最百搭的透光率区间——大太阳下能用，云层飘过来也还过得去。',
   },
   {
     id: 'goggle-oakley-line-miner',
@@ -1004,6 +1232,12 @@ const listings: GearListing[] = [
       'The cult cylindrical frame with a low-VLT Prizm mirror that cuts glare on bluebird days without flattening terrain detail.',
     matchReason:
       'A bright-light lens for sunny, high-albedo days — spring corn and mid-winter bluebird.',
+    // zh: needs review
+    descriptionZh:
+      '圈粉无数的柱面镜框，配低透光率的 Prizm 镀膜镜片，蓝鸟天能压住眩光，又不会把地形细节抹平。',
+    // zh: needs review
+    matchReasonZh:
+      '强光天专用镜片——春天的玉米雪和隆冬的蓝鸟天都合适。',
   },
   {
     id: 'goggle-burton-anon-m4',
@@ -1030,6 +1264,12 @@ const listings: GearListing[] = [
       'Magnetic lens changes in under five seconds, plus a magnetic facemask that seals to the frame and stops fogging at the chin.',
     matchReason:
       'A high-VLT storm lens for flat light, with a bonus lens and a fog-stopping facemask in the box.',
+    // zh: needs review
+    descriptionZh:
+      '磁吸镜片五秒内就能换好，再加一个磁吸面罩贴紧镜框，下巴处不再起雾。',
+    // zh: needs review
+    matchReasonZh:
+      '一片应对平光的高透光率暴雪镜片，盒里还附送备用镜片和防雾面罩。',
   },
   {
     id: 'goggle-smith-io-mag-storm',
@@ -1055,6 +1295,12 @@ const listings: GearListing[] = [
       'Spherical ChromaPop optics with a magnetic lens system; the Storm Rose lens is the reference low-light tint for grey days.',
     matchReason:
       'Storm-day clarity with a low-VLT spare included, so one goggle covers freezing overcast and bright sun.',
+    // zh: needs review
+    descriptionZh:
+      '球面 ChromaPop 光学镜片配磁吸换片系统；Storm Rose 是阴天弱光时的标杆色调。',
+    // zh: needs review
+    matchReasonZh:
+      '暴雪天也看得清，还附送一片低透光率的备用镜片，一副雪镜就能兼顾阴冷天和大晴天。',
   },
   {
     id: 'goggle-smith-4d-mag-sun',
@@ -1080,6 +1326,12 @@ const listings: GearListing[] = [
       'The BirdsEye lens curve extends your downward field of view so you can see your feet without dropping your chin. Very dark sun tint.',
     matchReason:
       'Built for high-glare spring sun and reflective snowpack where standard tints let too much light through.',
+    // zh: needs review
+    descriptionZh:
+      'BirdsEye 镜片曲面向下延伸视野，不用低头就能看见自己的雪板。墨镜色调非常深。',
+    // zh: needs review
+    matchReasonZh:
+      '为春季强烈阳光和高反光雪面而生，普通色调在这种环境下透光太多。',
   },
   {
     id: 'goggle-oakley-flight-deck-torch',
@@ -1105,6 +1357,12 @@ const listings: GearListing[] = [
       'Rimless spherical design borrowed from fighter-pilot helmet optics — the widest unobstructed field of view Oakley makes.',
     matchReason:
       'A mid-low VLT all-rounder for variable light, with peripheral vision that genuinely helps in trees and traffic.',
+    // zh: needs review
+    descriptionZh:
+      '无框球面设计，灵感来自战斗机飞行员头盔光学——Oakley 视野最开阔、遮挡最少的一款。',
+    // zh: needs review
+    matchReasonZh:
+      '适合多变光线的中低透光率全能款，周边视野在树林和人多时真的有帮助。',
   },
 
   /* ================================================================ */
@@ -1134,6 +1392,12 @@ const listings: GearListing[] = [
       'A 2-layer GORE-TEX jacket with mid-weight synthetic insulation — 80 g through the body, 60 g in the sleeves — so it stays warm on the lift without bulk.',
     matchReason:
       'A waterproof, moderately insulated resort jacket for typical winter days, with room for a mid-layer when it gets colder.',
+    // zh: needs review
+    descriptionZh:
+      '一件 2 层 GORE-TEX 外套，配中等重量的合成填充——身体 80 g、袖子 60 g，坐缆车够暖又不臃肿。',
+    // zh: needs review
+    matchReasonZh:
+      '一件防水、中等保暖的雪场外套，适合大多数冬日，天更冷时里面还能加中间层。',
   },
   {
     id: 'jacket-salomon-brilliant',
@@ -1159,6 +1423,12 @@ const listings: GearListing[] = [
       'A warm, fully-featured resort jacket with synthetic loft that keeps insulating even when it gets damp.',
     matchReason:
       'Reliable warmth at an entry price for cold lift-served days — synthetic fill handles moisture better than down.',
+    // zh: needs review
+    descriptionZh:
+      '一件保暖、功能齐全的雪场外套，合成填充即使受潮也能继续保暖。',
+    // zh: needs review
+    matchReasonZh:
+      '入门价位的可靠保暖，适合寒冷的缆车日——合成填充比羽绒更不怕潮。',
   },
   {
     id: 'jacket-burton-covert',
@@ -1184,6 +1454,12 @@ const listings: GearListing[] = [
       'The everyday resort jacket: relaxed fit, moderate insulation and every pocket you actually use, at a sane price.',
     matchReason:
       'A balanced mid-weight for typical -5 °C to 0 °C days, cut loose enough for a mid-layer when it gets colder.',
+    // zh: needs review
+    descriptionZh:
+      '日常雪场外套：宽松版型、适中保暖，你真正会用到的口袋一个不少，价格也合理。',
+    // zh: needs review
+    matchReasonZh:
+      '适合零下 5°C 到 0°C 这类常见天气的平衡款，版型够宽松，天冷时里面能加中间层。',
   },
   {
     id: 'jacket-burton-frostner-down',
@@ -1209,6 +1485,12 @@ const listings: GearListing[] = [
       'High-loft 800-fill down under a waterproof DRYRIDE 2-layer shell, for the most warmth for the least weight.',
     matchReason:
       'Purpose-built for deep-cold days, when long chairlift rides matter more than breathability.',
+    // zh: needs review
+    descriptionZh:
+      '高蓬松度的 800 蓬羽绒，外面是防水的 DRYRIDE 2 层面料，用最轻的重量换最多的保暖。',
+    // zh: needs review
+    matchReasonZh:
+      '专为极寒天打造——缆车坐得久的日子，保暖比透气更重要。',
   },
   {
     id: 'jacket-salomon-stance-3l',
@@ -1234,6 +1516,12 @@ const listings: GearListing[] = [
       'A light, highly breathable 3-layer touring shell with full-length vents and a beacon pocket. Built to move.',
     matchReason:
       'For riders generating their own heat on the skin track who need breathability over insulation.',
+    // zh: needs review
+    descriptionZh:
+      '一件轻量、透气性极好的 3 层登山硬壳，全长腋下拉链，还有雪崩信标口袋。为运动而生。',
+    // zh: needs review
+    matchReasonZh:
+      '适合在上山路线上自己发热、比起保暖更需要透气的人。',
   },
   {
     id: 'jacket-arcteryx-macai',
@@ -1259,6 +1547,12 @@ const listings: GearListing[] = [
       "Arc'teryx's warmest resort piece: down-filled baffles under a GORE-TEX shell, so the loft never gets wet.",
     matchReason:
       'The definitive deep-cold jacket — for chairlift days at -15 °C and below where nothing else is warm enough.',
+    // zh: needs review
+    descriptionZh:
+      '始祖鸟最保暖的雪场单品：羽绒填充的绗缝格，外面罩着 GORE-TEX，蓬松层永远不会被打湿。',
+    // zh: needs review
+    matchReasonZh:
+      '极寒天的终极外套——零下 15°C 以下坐缆车、别的都不够暖的时候就靠它。',
   },
   {
     id: 'jacket-arcteryx-sabre',
@@ -1284,6 +1578,12 @@ const listings: GearListing[] = [
       'The reference all-mountain 3L shell — burly enough for tree runs, breathable enough to hike in, with a relaxed freeride cut.',
     matchReason:
       'For riders who want one shell for everything and layer underneath to match the day’s temperature.',
+    // zh: needs review
+    descriptionZh:
+      '全山 3L 硬壳的标杆——够耐磨钻树林，够透气能徒步，版型是宽松的自由滑剪裁。',
+    // zh: needs review
+    matchReasonZh:
+      '适合想要一件硬壳打天下、按当天气温在里面加减层的人。',
   },
   {
     id: 'jacket-arcteryx-rush',
@@ -1309,6 +1609,12 @@ const listings: GearListing[] = [
       'GORE-TEX Pro in its most breathable configuration, cut for movement and sized to fit over a light insulator on the descent.',
     matchReason:
       'For committed ski tourers and splitboarders where sweat management matters more than raw warmth.',
+    // zh: needs review
+    descriptionZh:
+      '最透气配置的 GORE-TEX Pro，剪裁利于活动，下坡时尺寸也够套一件薄保暖层。',
+    // zh: needs review
+    matchReasonZh:
+      '适合认真的双板登山和分体板玩家——排汗管理比单纯的保暖更重要。',
   },
   {
     id: 'jacket-burton-ak-cyclic',
@@ -1334,6 +1640,12 @@ const listings: GearListing[] = [
       'Burton’s backcountry-focused stretch shell with articulated sleeves that stay put through a full grab.',
     matchReason:
       'A snowboard-specific freeride shell built for movement, hiking and layering across changing conditions.',
+    // zh: needs review
+    descriptionZh:
+      'Burton 主打野雪的弹力硬壳，立体剪裁的袖子做完整的抓板动作也不会往上跑。',
+    // zh: needs review
+    matchReasonZh:
+      '一件专为单板设计的自由滑硬壳，为活动、徒步和多变天气下的叠穿而生。',
   },
 
   /* ================================================================ */
@@ -1362,6 +1674,12 @@ const listings: GearListing[] = [
       'A light, forgiving release binding built around a low DIN range so a developing skier releases when they should.',
     matchReason:
       'The right release range for beginners and early intermediates — protective without being twitchy.',
+    // zh: needs review
+    descriptionZh:
+      '一副轻量、宽容的固定器，围绕较低的 DIN 范围设计，让进步中的双板玩家在该脱离时就脱离。',
+    // zh: needs review
+    matchReasonZh:
+      '适合初学者和刚入门中级的脱离范围——保护到位，又不会动不动就脱板。',
   },
   {
     id: 'binding-atomic-warden-13',
@@ -1386,6 +1704,12 @@ const listings: GearListing[] = [
       'A wide-range Multi-Norm binding that mounts almost anything in a boot rack, with enough elasticity to shrug off park landings.',
     matchReason:
       'A do-everything all-mountain binding for intermediate-to-advanced skiers who want one setup for groomers and park laps.',
+    // zh: needs review
+    descriptionZh:
+      '一副兼容范围很广的 Multi-Norm 固定器，鞋架上几乎任何雪靴都能装，弹性行程也足以扛住公园落地。',
+    // zh: needs review
+    matchReasonZh:
+      '全能型全山固定器，适合想一套装备同时滑压雪道和公园的中高级双板玩家。',
   },
   {
     id: 'binding-marker-jester-16',
@@ -1410,6 +1734,12 @@ const listings: GearListing[] = [
       'A freeride workhorse: a high-DIN Triple Pivot toe that holds through chattery snow and hucked landings without pre-releasing.',
     matchReason:
       'Built for expert skiers who ski aggressively across variable terrain and need retention that will not back off under load.',
+    // zh: needs review
+    descriptionZh:
+      '一副自由滑主力固定器：高 DIN 的 Triple Pivot 前端在烂雪抖动和大落地时都能锁住，不会提前脱板。',
+    // zh: needs review
+    matchReasonZh:
+      '为在多变地形里滑得很凶的专家级玩家打造，受力再大也不会松。',
   },
 
   /* ================================================================ */
@@ -1438,6 +1768,12 @@ const listings: GearListing[] = [
       'A soft, forgiving binding with a cushioned baseplate that takes the edge off flat-landing park laps.',
     matchReason:
       'Easy to strap in and forgiving underfoot — a comfortable first binding for riders still building confidence.',
+    // zh: needs review
+    descriptionZh:
+      '一副柔软、宽容的固定器，底板带缓冲，在公园里平落地时能卸掉不少冲击。',
+    // zh: needs review
+    matchReasonZh:
+      '好穿好绑、脚下宽容——还在建立信心的玩家的舒适第一副固定器。',
   },
   {
     id: 'binding-union-force',
@@ -1462,6 +1798,12 @@ const listings: GearListing[] = [
       'The reference all-mountain binding: a canted highback and dual ratchet straps that lock the boot down without dead spots.',
     matchReason:
       'Medium-stiff response for riders who charge all-mountain terrain and still want to press a jib on the way down.',
+    // zh: needs review
+    descriptionZh:
+      '全山固定器的标杆：带倾角的高背和双棘轮绑带把雪鞋锁得很牢，没有虚位。',
+    // zh: needs review
+    matchReasonZh:
+      '中偏硬的反馈，适合在全山狠冲、下山路上还想顺手压个道具的人。',
   },
   {
     id: 'binding-burton-genesis-x',
@@ -1486,6 +1828,12 @@ const listings: GearListing[] = [
       'Burton’s flagship binding: a carbon highback and Hammockstrap suspension that wrap the boot instead of clamping it, at a genuinely light weight.',
     matchReason:
       'Stiff, precise and light enough to disappear underfoot — for expert riders who feel every dead spot in a lesser binding.',
+    // zh: needs review
+    descriptionZh:
+      'Burton 的旗舰固定器：碳纤维高背和 Hammockstrap 悬挂系统是包裹雪鞋而不是夹住它，重量也真的轻。',
+    // zh: needs review
+    matchReasonZh:
+      '硬朗、精准、轻到脚下几乎感觉不到——适合能感觉到普通固定器每一处虚位的专家级玩家。',
   },
 ];
 

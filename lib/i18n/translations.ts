@@ -9,12 +9,12 @@
  * Scope note: this dictionary covers the app's static UI chrome plus the
  * enum-driven labels that change live with user selections (activity,
  * level, style, temperature, budget tier, gear category, performance axes).
- * It does not cover the long-form narrative strings the matching engine
- * bakes into a result at compute time (the "why this matches you" reasoning,
- * bullet points, sizing-derivation notes, lens/jacket guidance) — those are
- * assembled once per submission by `lib/matcherLogic.ts` and stay in
- * English; translating that generator is a separate effort from this UI
- * localization pass.
+ * Result narrative — the "why this matches you" paragraph and bullets,
+ * sizing-derivation notes, lens/jacket guidance and spec captions — is
+ * generated in `lib/matcherLogic.ts` at render time with the current
+ * language, and per-item copy comes from `descriptionZh` / `matchReasonZh`
+ * via `lib/i18n/gearCopy.ts` (English fallback). Drafted Chinese copy is
+ * marked `// zh: needs review`.
  */
 
 import type {

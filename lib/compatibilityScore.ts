@@ -17,6 +17,7 @@
  * feature fit, expressed as a 0-100% Compatibility Score.
  */
 
+import type { Language } from './i18n/translations';
 import type {
   BudgetTier,
   CalculatedSpecs,
@@ -154,6 +155,29 @@ const SIZING_LABEL: Record<GearCategory, string> = {
   helmet: 'Warmth fit',
 };
 
+const SIZING_LABEL_ZH: Record<GearCategory, string> = {
+  skis: '腰宽匹配',
+  boots: '硬度匹配',
+  bindings: '脱离值 / 硬度匹配',
+  goggles: '镜片透光率匹配',
+  jacket: '保暖匹配',
+  helmet: '保暖匹配',
+}; // zh: needs review
+
+const FEATURE_LABEL: Record<string, { en: string; zh: string }> = {
+  style: { en: 'Riding style match', zh: '滑行风格匹配' },
+  level: { en: 'Ability level match', zh: '水平匹配' },
+  gender: { en: 'Gendered fit', zh: '性别版型' },
+  temps: { en: 'Condition match', zh: '天气条件匹配' },
+  budget: { en: 'Budget alignment', zh: '预算匹配' },
+}; // zh: needs review
+
+/** Display label for a score-breakdown row, in the current language. */
+export const featureLabel = (key: string, category: GearCategory, language: Language): string => {
+  if (key === 'sizing') return language === 'zh' ? SIZING_LABEL_ZH[category] : SIZING_LABEL[category];
+  return FEATURE_LABEL[key]?.[language] ?? key;
+};
+
 interface FeatureWeights {
   sizing: number;
   style: number;
@@ -224,7 +248,7 @@ export const computeCompatibility = (
   if (item.styles) {
     raw.push({
       key: 'style',
-      label: 'Riding style match',
+      label: FEATURE_LABEL.style.en,
       weight: weights.style,
       fit: inclusionFit(item.styles.includes(stats.style)),
     });
@@ -232,7 +256,7 @@ export const computeCompatibility = (
   if (item.levels) {
     raw.push({
       key: 'level',
-      label: 'Ability level match',
+      label: FEATURE_LABEL.level.en,
       weight: weights.level,
       fit: levelFit(item.levels, stats.level),
     });
@@ -240,7 +264,7 @@ export const computeCompatibility = (
   if (item.genders) {
     raw.push({
       key: 'gender',
-      label: 'Gendered fit',
+      label: FEATURE_LABEL.gender.en,
       weight: weights.gender,
       fit: genderFit(item.genders, stats.gender),
     });
@@ -248,12 +272,12 @@ export const computeCompatibility = (
   if (item.temps) {
     raw.push({
       key: 'temps',
-      label: 'Condition match',
+      label: FEATURE_LABEL.temps.en,
       weight: weights.temps,
       fit: inclusionFit(item.temps.includes(stats.temperature), 0.2),
     });
   }
-  raw.push({ key: 'budget', label: 'Budget alignment', weight: weights.budget, fit: budgetFit(item, stats.budgetTier) });
+  raw.push({ key: 'budget', label: FEATURE_LABEL.budget.en, weight: weights.budget, fit: budgetFit(item, stats.budgetTier) });
 
   const totalWeight = raw.reduce((sum, c) => sum + c.weight, 0) || 1;
   const contributions = raw

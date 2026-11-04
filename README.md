@@ -318,6 +318,11 @@ angled board based on the selected discipline.
 English and Simplified Chinese (`lib/i18n/translations.ts`). Both locales are typed against one
 `Dictionary`, so a missing or misshapen key fails the build. The choice is saved in `localStorage`.
 
+Results are fully bilingual. The reasoning paragraph, bullets, lens/jacket guidance, spec captions and
+score-breakdown labels are generated at render time in the current language, so switching language
+updates a result already on screen. Each catalogue item has `descriptionZh` / `matchReasonZh` (English
+is the fallback). Drafted Chinese strings are marked `// zh: needs review`.
+
 ---
 
 ## Catalogue

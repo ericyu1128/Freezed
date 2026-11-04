@@ -2,7 +2,16 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { GearCategory, MatchResult, UserStats } from '@/lib/types';
-import { calculateLength, categoryLabel, levelLabel, styleLabel, temperatureLabel, tierLabel } from '@/lib/matcherLogic';
+import {
+  bootFlexLabel,
+  calculateLength,
+  categoryLabel,
+  levelLabel,
+  styleLabel,
+  temperatureLabel,
+  tierLabel,
+  waistWidthLabel,
+} from '@/lib/matcherLogic';
 import { addSavedSetup } from '@/lib/savedSetups';
 import { formatAmount, formatPrice, kitTotal } from '@/lib/pricing';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
@@ -134,7 +143,7 @@ export default function Dashboard({
           <SummaryTile
             label={t.dashboard.bootFlexTarget}
             value={`${specs.bootFlex.min}–${specs.bootFlex.max}`}
-            sub={specs.bootFlexLabel}
+            sub={bootFlexLabel(stats, language)}
           />
           <SummaryTile
             label={t.dashboard.goggleVltTarget}
@@ -218,7 +227,7 @@ export default function Dashboard({
         )}
         {!specs.poleLength && (
           <p className="mt-3 text-xs text-slate-500">
-            {t.dashboard.mondoOnlyNote(specs.mondoSize.toFixed(1))} {specs.waistWidthLabel}
+            {t.dashboard.mondoOnlyNote(specs.mondoSize.toFixed(1))} {waistWidthLabel(stats, language)}
           </p>
         )}
       </section>

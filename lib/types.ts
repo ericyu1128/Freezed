@@ -87,6 +87,10 @@ export interface GearItem {
   description: string;
   /** Static, editorial "who is this for" blurb. */
   matchReason: string;
+  /** Simplified Chinese `description`. Falls back to English when missing. */
+  descriptionZh?: string;
+  /** Simplified Chinese `matchReason`. Falls back to English when missing. */
+  matchReasonZh?: string;
   prices: RetailerPrice[];
   /** Normalized 0–10 scores across the six hexagon axes, derived from this item's specs. */
   performance: PerformanceProfile;
@@ -145,24 +149,26 @@ export interface LengthCalculation {
   label: string;
 }
 
+/**
+ * Language-neutral spec sheet. Captions and guidance text derived from it are
+ * generated at render time in the current language (see `waistWidthLabel`,
+ * `bootFlexLabel`, `lensGuidance`, `jacketGuidance` in `matcherLogic.ts`).
+ */
 export interface CalculatedSpecs {
   length: LengthCalculation;
   waistWidth: NumericRange;
-  waistWidthLabel: string;
   bootFlex: NumericRange;
-  bootFlexLabel: string;
   /** Estimated Mondopoint boot size, derived from height. */
   mondoSize: number;
   /** Recommended pole length in cm (skiers only). */
   poleLength: number | null;
   /** Target goggle Visible Light Transmission window, as a percentage. */
   vlt: NumericRange;
-  lensGuidance: string;
   /** Target jacket warmth on a 1–5 scale. */
   warmth: NumericRange;
-  jacketGuidance: string;
   helmetSize: string;
-  helmetCircumference: string;
+  /** Estimated head circumference in cm (an estimate from height — always measure). */
+  helmetCircumferenceCm: number;
 }
 
 /** One row of the "calculated for you" spec block on a gear card. */
@@ -197,10 +203,6 @@ export interface Recommendation {
   item: GearItem;
   /** 0–100% Compatibility Score for `item`. */
   score: number;
-  /** Generated "why this matches you" narrative for `item`. */
-  reasoning: string;
-  /** Short bullet justifications for `item`. */
-  reasonBullets: string[];
   /** Every item in this category that survived hard filtering, sorted by Compatibility Score descending. */
   candidates: RankedCandidate[];
 }
