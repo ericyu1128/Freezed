@@ -41,9 +41,8 @@ const priceTable = pricesJson as PriceTable;
 /** Database rows are authored without prices, links or performance scores; all three are derived on export. */
 type GearListing = Omit<GearItem, 'prices' | 'image' | 'performance'> & {
   /**
-   * Optional override for the retailer search string. Use when the brand field
-   * and the shelf name disagree — e.g. Anon is a Burton company but retailers
-   * index it under `Anon`.
+   * Optional override for the retailer search string, for when the brand +
+   * name the catalogue shows differ from how retailers index the product.
    */
   searchTerm?: string;
 };
@@ -231,7 +230,7 @@ const listings: GearListing[] = [
     levels: ['advanced', 'expert'],
     genders: ['male', 'female', 'unisex'],
     specs: {
-      waistWidth: 72,
+      waistWidth: 65,
       lengths: '160 / 165 / 170 / 175 / 180',
       turnRadius: '14.9 m @ 175',
       profile: 'Full camber',
@@ -279,7 +278,7 @@ const listings: GearListing[] = [
     levels: ['advanced', 'expert'],
     genders: ['male', 'unisex'],
     specs: {
-      waistWidth: 109,
+      waistWidth: 110,
       lengths: '175.4 / 183.3 / 188.4',
       turnRadius: '21 m @ 183',
       profile: 'Double rocker, directional',
@@ -407,7 +406,7 @@ const listings: GearListing[] = [
       lengths: '150 / 154 / 156W / 158 / 162 / 162W',
       profile: 'Full camber',
       core: 'Dragonfly 600G + Squeezebox High',
-      flexRating: '7 / 10',
+      flexRating: '6 / 10',
       shape: 'Directional twin',
       base: 'Sintered WFO',
     },
@@ -918,12 +917,12 @@ const listings: GearListing[] = [
       construction: 'Hybrid ABS / in-mould',
       certification: 'ASTM F2040 / CE EN1077 Class B',
       vents: 16,
-      ventControl: 'BOA 360 fit + adjustable vents',
+      ventControl: 'BOA 270 fit + adjustable vents',
       rotational: 'MIPS',
       weight: '460 g (M)',
     },
     description:
-      'BOA 360 fit system, MIPS and a three-position Modular Brim that lets you dial the goggle gap out completely.',
+      'A BOA dial fit system, MIPS and a three-position Modular Brim that lets you dial the goggle gap out completely.',
     matchReason:
       'For riders who want a precise micro-adjustable fit and a seamless goggle seal across changing conditions.',
   },
@@ -960,7 +959,7 @@ const listings: GearListing[] = [
     id: 'goggle-salomon-radium-pro',
     category: 'goggles',
     brand: 'Salomon',
-    name: 'Radium Pro Sigma',
+    name: 'Radium Pro S Sigma',
     priceTier: 'mid-range',
     activity: 'both',
     styles: ['all-mountain', 'piste', 'backcountry'],
@@ -968,12 +967,12 @@ const listings: GearListing[] = [
     genders: ['male', 'female', 'unisex'],
     temps: ['moderate'],
     specs: {
-      vlt: 28,
-      lensTint: 'Sigma Sky Blue',
+      vlt: 35,
+      lensTint: 'Sigma Silver Pink',
       lensShape: 'Toric',
       lensTech: 'Sigma contrast-boost coating',
       antiFog: 'Double lens + anti-fog treatment',
-      spareLens: 'Included (Low light, 62% VLT)',
+      spareLens: 'Included (Sigma Light Blue, 52% VLT)',
       fit: 'Medium / large',
     },
     description:
@@ -1008,10 +1007,9 @@ const listings: GearListing[] = [
   },
   {
     id: 'goggle-burton-anon-m4',
-    searchTerm: 'Anon M4 Toric',
     category: 'goggles',
-    brand: 'Burton',
-    name: 'Anon M4 Toric — Perceive Cloudy Pink',
+    brand: 'Anon',
+    name: 'M4 Toric — Perceive Cloudy Pink',
     priceTier: 'premium',
     activity: 'both',
     styles: ['freestyle', 'all-mountain', 'backcountry'],
@@ -1019,19 +1017,19 @@ const listings: GearListing[] = [
     genders: ['male', 'female', 'unisex'],
     temps: ['freezing'],
     specs: {
-      vlt: 46,
+      vlt: 53,
       lensTint: 'Perceive Cloudy Pink',
       lensShape: 'Toric',
       lensTech: 'Perceive contrast + Magna-Tech magnetic swap',
       antiFog: 'Integral Clarity Technology',
-      spareLens: 'Included (Sunny Onyx, 6% VLT)',
+      spareLens: 'Bonus lens included (tint varies by colourway)',
       faceMask: 'MFI magnetic facemask included',
       fit: 'Large',
     },
     description:
       'Magnetic lens changes in under five seconds, plus a magnetic facemask that seals to the frame and stops fogging at the chin.',
     matchReason:
-      'A high-VLT storm lens with a bright spare in the box — one purchase that covers the entire light spectrum.',
+      'A high-VLT storm lens for flat light, with a bonus lens and a fog-stopping facemask in the box.',
   },
   {
     id: 'goggle-smith-io-mag-storm',
@@ -1050,7 +1048,7 @@ const listings: GearListing[] = [
       lensShape: 'Spherical',
       lensTech: 'ChromaPop + MAG magnetic lens system',
       antiFog: '5X anti-fog inner lens',
-      spareLens: 'Included (ChromaPop Sun Platinum, 15% VLT)',
+      spareLens: 'Included (ChromaPop Sun Platinum, 13% VLT)',
       fit: 'Medium / large',
     },
     description:
@@ -1075,7 +1073,7 @@ const listings: GearListing[] = [
       lensShape: 'BirdsEye Vision spherical',
       lensTech: 'ChromaPop + 25% more field of view downward',
       antiFog: '5X anti-fog inner lens',
-      spareLens: 'Included (Storm Rose Flash, 50% VLT)',
+      spareLens: 'Included (ChromaPop Storm Blue Sensor Mirror)',
       fit: 'Large',
     },
     description:
@@ -1095,7 +1093,7 @@ const listings: GearListing[] = [
     genders: ['male', 'female', 'unisex'],
     temps: ['moderate'],
     specs: {
-      vlt: 19,
+      vlt: 17,
       lensTint: 'Prizm Snow Torch Iridium',
       lensShape: 'Rimless spherical',
       lensTech: 'Prizm contrast tuning',
@@ -1116,32 +1114,32 @@ const listings: GearListing[] = [
     id: 'jacket-oakley-sub-temp-rc',
     category: 'jacket',
     brand: 'Oakley',
-    name: 'Sub Temp RC GORE-TEX Shell',
+    name: 'Sub Temp RC GORE-TEX Jacket',
     priceTier: 'budget',
     activity: 'both',
     styles: ['all-mountain', 'freestyle', 'piste'],
     levels: ['beginner', 'intermediate', 'advanced'],
     genders: ['male', 'unisex'],
-    temps: ['spring', 'moderate'],
+    temps: ['moderate', 'freezing'],
     specs: {
-      warmth: 1,
-      insulation: 'Uninsulated shell',
-      waterproofing: 'GORE-TEX 2L, 28k/25k',
+      warmth: 3,
+      insulation: '80 g body / 60 g sleeves synthetic',
+      waterproofing: 'GORE-TEX 2L',
       seams: 'Fully taped',
       pitZips: 'Yes — mesh-lined underarm vents',
       powderSkirt: 'Removable',
       weight: '620 g (M)',
     },
     description:
-      'A clean 2-layer GORE-TEX shell with big pit zips. No insulation — you control warmth entirely through your mid-layer.',
+      'A 2-layer GORE-TEX jacket with mid-weight synthetic insulation — 80 g through the body, 60 g in the sleeves — so it stays warm on the lift without bulk.',
     matchReason:
-      'The right call for warm, wet spring days and for anyone who runs hot and prefers layering to built-in loft.',
+      'A waterproof, moderately insulated resort jacket for typical winter days, with room for a mid-layer when it gets colder.',
   },
   {
     id: 'jacket-salomon-brilliant',
     category: 'jacket',
     brand: 'Salomon',
-    name: 'Brilliant Insulated Jacket',
+    name: 'Brilliant 2.0 Jacket',
     priceTier: 'budget',
     activity: 'both',
     styles: ['piste', 'all-mountain'],
@@ -1150,8 +1148,8 @@ const listings: GearListing[] = [
     temps: ['freezing', 'moderate'],
     specs: {
       warmth: 4,
-      insulation: '80 g Advanced Skin Warm synthetic',
-      waterproofing: 'AdvancedSkin Dry 10k/10k',
+      insulation: 'PrimaLoft Black Eco synthetic',
+      waterproofing: 'AdvancedSkin Dry 20K/20K',
       seams: 'Critically taped',
       pitZips: 'Yes',
       powderSkirt: 'Attached',
@@ -1175,8 +1173,8 @@ const listings: GearListing[] = [
     temps: ['moderate', 'freezing'],
     specs: {
       warmth: 3,
-      insulation: '40 g Thermolite / 60 g body',
-      waterproofing: 'DRYRIDE 2L 10k/10k',
+      insulation: '80 g ThermacoreECO synthetic',
+      waterproofing: 'DRYRIDE 2L 10K/5K',
       seams: 'Critically taped',
       pitZips: 'Mesh-lined pit zips',
       powderSkirt: 'Removable',
@@ -1191,7 +1189,7 @@ const listings: GearListing[] = [
     id: 'jacket-burton-frostner-down',
     category: 'jacket',
     brand: 'Burton',
-    name: 'Frostner 2L Down Jacket',
+    name: 'Frostner Down Jacket',
     priceTier: 'mid-range',
     activity: 'both',
     styles: ['piste', 'all-mountain'],
@@ -1200,17 +1198,17 @@ const listings: GearListing[] = [
     temps: ['freezing'],
     specs: {
       warmth: 5,
-      insulation: '650 fill-power responsible down + Thermolite in wet zones',
-      waterproofing: 'DRYRIDE 2L 10k/10k',
+      insulation: '800-fill RDS down',
+      waterproofing: 'DRYRIDE 2L, 15,000 mm',
       seams: 'Critically taped',
       pitZips: 'Yes',
       hood: 'Insulated, helmet compatible',
       weight: '950 g (M)',
     },
     description:
-      'Down through the core for maximum warmth-to-weight, synthetic in the shoulders and cuffs where moisture collects.',
+      'High-loft 800-fill down under a waterproof DRYRIDE 2-layer shell, for the most warmth for the least weight.',
     matchReason:
-      'Purpose-built for deep-cold days — the hybrid fill avoids down’s classic failure mode in wet weather.',
+      'Purpose-built for deep-cold days, when long chairlift rides matter more than breathability.',
   },
   {
     id: 'jacket-salomon-stance-3l',
@@ -1251,14 +1249,14 @@ const listings: GearListing[] = [
     specs: {
       warmth: 5,
       insulation: '750 fill-power European grey goose down + Coreloft in wet zones',
-      waterproofing: 'GORE-TEX 3L with N80p face fabric',
+      waterproofing: 'GORE-TEX 2L ePE, 100D face fabric',
       seams: 'Fully taped',
       pitZips: 'Yes',
       hood: 'StormHood, helmet compatible',
       weight: '1,020 g (M)',
     },
     description:
-      "Arc'teryx's warmest resort piece: down-filled baffles under a full 3L GORE-TEX shell, so the loft never gets wet.",
+      "Arc'teryx's warmest resort piece: down-filled baffles under a GORE-TEX shell, so the loft never gets wet.",
     matchReason:
       'The definitive deep-cold jacket — for chairlift days at -15 °C and below where nothing else is warm enough.',
   },
@@ -1345,20 +1343,20 @@ const listings: GearListing[] = [
     id: 'binding-salomon-strive-10',
     category: 'bindings',
     brand: 'Salomon',
-    name: 'Strive 10',
+    name: 'Strive 10 GW',
     priceTier: 'budget',
     activity: 'ski',
     styles: ['piste', 'all-mountain'],
     levels: ['beginner', 'intermediate'],
     genders: ['male', 'female', 'unisex'],
     specs: {
-      dinRange: '3.5–10',
-      weight: '780 g (pair)',
+      dinRange: '3–10',
+      weight: '920 g (per binding)',
       brakeWidth: '90–120 mm (adjustable)',
       elasticity: 'Standard (8mm toe / 9mm heel travel)',
       material: 'Composite chassis, steel pins',
       certification: 'ISO 9462 certified',
-      soleCompatibility: 'Alpine (adjustable AFD)',
+      soleCompatibility: 'Alpine (ISO 5355) / GripWalk (ISO 23223)',
     },
     description:
       'A light, forgiving release binding built around a low DIN range so a developing skier releases when they should.',
