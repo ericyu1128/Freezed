@@ -5,6 +5,7 @@ import type { Activity, CalculatedSpecs, GearCategory, Recommendation, UserStats
 import { buildCalculatedSpecs, buildReasonBullets, buildReasoning, categoryLabel } from '@/lib/matcherLogic';
 import { getPerformanceAxes } from '@/lib/performanceProfile';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { capturePostHogEvent } from '@/lib/posthog';
 import { categoryIcon, CheckIcon, SparkIcon } from './Icons';
 import GearImage from './GearImage';
 import PerformanceHexagon from './PerformanceHexagon';
@@ -337,6 +338,12 @@ export default function GearCard({
                       onClick={(event) => {
                         event.stopPropagation();
                         setSelectedId(candidate.item.id);
+                        if (candidate.item.id !== recommendation.item.id) {
+                          capturePostHogEvent('alternative_gear_selected', {
+                            category: recommendation.category,
+                            candidate_rank: candidates.findIndex((option) => option.item.id === candidate.item.id) + 1,
+                          });
+                        }
                       }}
                       className={`focus-ring flex w-full items-center justify-between gap-3 rounded-xl border px-3 py-2 text-left transition-all duration-200 ${
                         isSelected

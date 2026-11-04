@@ -4,6 +4,7 @@ import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Snowfall from '@/components/Snowfall';
+import PostHogInit from '@/components/PostHogInit';
 import { LanguageProvider } from '@/lib/i18n/LanguageContext';
 
 export const metadata: Metadata = {
@@ -41,6 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script type="text/javascript" src="http://classic.avantlink.com/affiliate_app_confirm.php?mode=js&authResponse=7b7eb792d04f7d28e4ad2b9685e9142acfcb4544"></script>
       </head>
       <body className="min-h-screen">
+        <PostHogInit />
         <LanguageProvider>
           <Snowfall />
           <div className="relative z-10 flex min-h-screen flex-col">

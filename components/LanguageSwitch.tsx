@@ -1,9 +1,16 @@
 'use client';
 
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { capturePostHogEvent } from '@/lib/posthog';
 
 export default function LanguageSwitch() {
   const { language, setLanguage, t } = useLanguage();
+
+  const handleLanguageChange = (nextLanguage: 'en' | 'zh') => {
+    if (nextLanguage === language) return;
+    capturePostHogEvent('language_changed', { language: nextLanguage });
+    setLanguage(nextLanguage);
+  };
 
   return (
     <div
@@ -13,7 +20,7 @@ export default function LanguageSwitch() {
     >
       <button
         type="button"
-        onClick={() => setLanguage('en')}
+        onClick={() => handleLanguageChange('en')}
         aria-pressed={language === 'en'}
         className={`focus-ring rounded-full px-2.5 py-1 transition-colors ${
           language === 'en' ? 'bg-frost-400/20 text-frost-200' : 'text-slate-400 hover:text-slate-200'
@@ -23,7 +30,7 @@ export default function LanguageSwitch() {
       </button>
       <button
         type="button"
-        onClick={() => setLanguage('zh')}
+        onClick={() => handleLanguageChange('zh')}
         aria-pressed={language === 'zh'}
         className={`focus-ring rounded-full px-2.5 py-1 transition-colors ${
           language === 'zh' ? 'bg-frost-400/20 text-frost-200' : 'text-slate-400 hover:text-slate-200'
