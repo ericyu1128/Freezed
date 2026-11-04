@@ -334,6 +334,9 @@ export default function GearCard({
               );
             })}
           </ul>
+          {SHOW_RETAILER_LINKS && (
+            <p className="mt-2 text-[11px] leading-relaxed text-slate-500">{t.gearCard.affiliateDisclosure}</p>
+          )}
         </section>
 
         {/* ---------- explanation ---------- */}

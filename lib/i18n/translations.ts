@@ -180,6 +180,7 @@ export interface Dictionary {
     noPriceYet: string;
     checkedOn: (date: string) => string;
     viewAtRetailer: (product: string, retailer: string) => string;
+    affiliateDisclosure: string;
   };
 
   saveModal: {
@@ -512,6 +513,7 @@ export const en: Dictionary = {
     noPriceYet: 'No price yet',
     checkedOn: (date) => `checked ${date}`,
     viewAtRetailer: (product, retailer) => `View ${product} at ${retailer} (opens in a new tab)`,
+    affiliateDisclosure: 'Some links may be affiliate links — Freezed may earn a commission at no extra cost to you.',
   },
 
   saveModal: {
@@ -849,6 +851,7 @@ export const zh: Dictionary = {
     noPriceYet: '暂无价格',
     checkedOn: (date) => `核价于 ${date}`,
     viewAtRetailer: (product, retailer) => `在 ${retailer} 查看 ${product}(在新标签页打开)`,
+    affiliateDisclosure: '部分链接可能是联盟推广链接——你通过它购买时，Freezed 可能获得佣金，你无需额外付费。',
   },
 
   saveModal: {
