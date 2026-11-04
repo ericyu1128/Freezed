@@ -65,6 +65,7 @@ export default function Footer() {
           <nav className="flex gap-4">
             <Link href="/about" className="hover:text-frost-300">{t.footer.aboutLink}</Link>
             <Link href="/privacy" className="hover:text-frost-300">{t.footer.privacyLink}</Link>
+            <Link href="/contact" className="hover:text-frost-300">{t.footer.contactLink}</Link>
           </nav>
         </div>
       </div>

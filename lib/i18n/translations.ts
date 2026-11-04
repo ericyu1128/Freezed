@@ -222,6 +222,7 @@ export interface Dictionary {
     disclaimer: string;
     aboutLink: string;
     privacyLink: string;
+    contactLink: string;
   };
 }
 
@@ -538,6 +539,7 @@ export const en: Dictionary = {
     disclaimer: 'Sizing output is guidance, not a fitting. Always shell-fit boots with a qualified bootfitter.',
     aboutLink: 'About',
     privacyLink: 'Privacy',
+    contactLink: 'Contact',
   },
 };
 
@@ -851,6 +853,7 @@ export const zh: Dictionary = {
     disclaimer: '尺寸结果仅供参考,并非最终试穿结论。请务必请专业雪靴技师为你进行内壳试穿。',
     aboutLink: '关于',
     privacyLink: '隐私',
+    contactLink: '联系',
   },
 };
 
