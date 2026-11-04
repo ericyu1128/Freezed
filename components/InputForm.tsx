@@ -14,6 +14,7 @@ import { LAST_STEP_INDEX, STEPS, indexOfStep, transition, type StepId } from '@/
 import { levelLabel, styleLabel, temperatureLabel, tierLabel } from '@/lib/matcherLogic';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { cmToIn, inToCm, kgToLb, lbToKg, type UnitSystem } from '@/lib/units';
+import { capturePostHogEvent } from '@/lib/posthog';
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
@@ -492,7 +493,16 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
     // step but the last, which is what stops an early submit from skipping the
     // budget step and generating results.
     const next = move('submit');
-    if (next.complete) onSubmit(stats);
+    if (next.complete) {
+      capturePostHogEvent('gear_match_requested', {
+        activity: stats.activity,
+        budget_tier: stats.budgetTier,
+        experience_level: stats.level,
+        riding_style: stats.style,
+        temperature_preference: stats.temperature,
+      });
+      onSubmit(stats);
+    }
   };
 
   const progress = ((step + 1) / STEPS.length) * 100;

@@ -10,6 +10,7 @@ import Dashboard from '@/components/Dashboard';
 import LoadingState from '@/components/LoadingState';
 import { ArrowRightIcon, MountainIcon, SparkIcon, TagIcon, ThermometerIcon } from '@/components/Icons';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { capturePostHogEvent, logPostHogInfo } from '@/lib/posthog';
 
 type Phase = 'form' | 'loading' | 'results';
 
@@ -41,7 +42,18 @@ export default function HomePage() {
     // Simulated compute window so the loading state is visible and the
     // transition into the dashboard feels deliberate rather than abrupt.
     window.setTimeout(() => {
-      setResult(matchGear(stats, gearDatabase));
+      const matchResult = matchGear(stats, gearDatabase);
+      setResult(matchResult);
+      capturePostHogEvent('recommendations_generated', {
+        activity: stats.activity,
+        budget_tier: stats.budgetTier,
+        recommendation_count: matchResult.recommendations.length,
+      });
+      logPostHogInfo('gear recommendations generated', {
+        activity: stats.activity,
+        budget_tier: stats.budgetTier,
+        recommendation_count: matchResult.recommendations.length,
+      });
       setPhase('results');
       window.requestAnimationFrame(() => {
         resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });

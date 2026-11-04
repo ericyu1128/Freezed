@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import type { SavedSetup, UserStats } from '@/lib/types';
 import { deleteSavedSetup, loadSavedSetups, renameSavedSetup } from '@/lib/savedSetups';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { capturePostHogEvent } from '@/lib/posthog';
 import { BookmarkIcon, CheckIcon, PencilIcon, RefreshIcon, TrashIcon, XIcon } from './Icons';
 
 /** Viewport margin the flyout must always keep clear on every side. */
@@ -126,16 +127,28 @@ export default function SavedVault({ onLoad, refreshToken }: SavedVaultProps) {
 
   const commitEdit = () => {
     if (!editingId) return;
+    const setup = setups.find((candidate) => candidate.id === editingId);
     setSetups(renameSavedSetup(editingId, editValue));
+    capturePostHogEvent('saved_setup_renamed', {
+      item_count: setup?.recommendations.length ?? 0,
+    });
     setEditingId(null);
   };
 
   const handleDelete = (id: string) => {
+    const setup = setups.find((candidate) => candidate.id === id);
     setSetups(deleteSavedSetup(id));
+    capturePostHogEvent('saved_setup_deleted', {
+      item_count: setup?.recommendations.length ?? 0,
+    });
     setConfirmDeleteId(null);
   };
 
   const handleLoad = (setup: SavedSetup) => {
+    capturePostHogEvent('saved_setup_loaded', {
+      activity: setup.stats.activity,
+      item_count: setup.recommendations.length,
+    });
     onLoad(setup.stats);
     setOpen(false);
   };

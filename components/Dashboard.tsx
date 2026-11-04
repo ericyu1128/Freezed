@@ -5,6 +5,7 @@ import type { GearCategory, MatchResult, UserStats } from '@/lib/types';
 import { calculateLength, categoryLabel, levelLabel, styleLabel, temperatureLabel, tierLabel } from '@/lib/matcherLogic';
 import { addSavedSetup } from '@/lib/savedSetups';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { capturePostHogEvent, logPostHogInfo } from '@/lib/posthog';
 import GearCard from './GearCard';
 import SaveConfigurationModal from './SaveConfigurationModal';
 import SavedVault from './SavedVault';
@@ -36,8 +37,30 @@ export default function Dashboard({
 
   const handleSaveConfiguration = (name: string) => {
     addSavedSetup(name, result);
+    capturePostHogEvent('configuration_saved', {
+      activity: stats.activity,
+      recommendation_count: recommendations.length,
+      total_best_price: totalBestPrice,
+    });
+    logPostHogInfo('gear configuration saved', {
+      activity: stats.activity,
+      recommendation_count: recommendations.length,
+      total_best_price: totalBestPrice,
+    });
     setVaultRefreshToken((token) => token + 1);
     setSaveModalOpen(false);
+  };
+
+  const handleSaveStarted = () => {
+    capturePostHogEvent('configuration_save_started', {
+      recommendation_count: recommendations.length,
+    });
+    setSaveModalOpen(true);
+  };
+
+  const handleReset = () => {
+    capturePostHogEvent('matcher_reset');
+    onReset();
   };
 
   const profilePills: { icon?: React.ReactNode; label: string; accent?: boolean }[] = [
@@ -76,11 +99,11 @@ export default function Dashboard({
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <SavedVault onLoad={onLoadSetup} refreshToken={vaultRefreshToken} />
-            <button type="button" onClick={() => setSaveModalOpen(true)} className="btn-ghost !py-2.5">
+            <button type="button" onClick={handleSaveStarted} className="btn-ghost !py-2.5">
               <SaveIcon className="h-4 w-4" />
               {t.dashboard.saveConfiguration}
             </button>
-            <button type="button" onClick={onReset} className="btn-ghost !py-2.5">
+            <button type="button" onClick={handleReset} className="btn-ghost !py-2.5">
               <RefreshIcon className="h-4 w-4" />
               {t.dashboard.startOver}
             </button>
@@ -211,7 +234,7 @@ export default function Dashboard({
 
       {/* ---------- gear grid ---------- */}
       {recommendations.length === 0 ? (
-        <EmptyState onReset={onReset} />
+        <EmptyState onReset={handleReset} />
       ) : (
         <div className="stagger grid gap-5 xl:grid-cols-2">
           {recommendations.map((rec) => (
