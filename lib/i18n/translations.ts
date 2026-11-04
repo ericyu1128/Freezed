@@ -302,7 +302,7 @@ export const en: Dictionary = {
       },
       {
         title: 'Budget-aware ranking',
-        body: 'Your tier is a hard filter — items more than one tier away are dropped, and exact-tier matches are weighted heavily in the score.',
+        body: 'Gear more than one tier above your budget is dropped. Cheaper gear stays in the running with a score penalty, and exact-tier matches score highest.',
       },
     ],
     caveatTitle: 'One caveat worth repeating',
@@ -641,7 +641,7 @@ export const zh: Dictionary = {
       },
       {
         title: '预算感知排序',
-        body: '你的预算档位是硬性筛选条件——超出一档以上的商品会被剔除,精确匹配档位的商品在评分中权重更高。',
+        body: '比你的预算高出一档以上的装备会被剔除；更便宜的装备仍会参与排序，只是评分略有扣减，精确匹配档位的装备得分最高。',
       },
     ],
     caveatTitle: '一个值得重复提醒的注意事项',

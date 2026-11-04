@@ -519,16 +519,16 @@ export const calculateSpecs = (stats: UserStats): CalculatedSpecs => {
 /* ------------------------------------------------------------------ */
 
 /**
- * Items that survive the hard budget filter (never more than one tier
- * away). This is the one hard constraint left in the pipeline — category
- * and price tier decide what's even in the running; everything else is
- * scored continuously by `computeCompatibility` (see `compatibilityScore.ts`).
+ * The one hard constraint left in the pipeline, and it is deliberately
+ * asymmetric: spending less than planned is rarely a fit problem, spending
+ * more is. Items cheaper than the rider's tier always stay in the pool (they
+ * still take the budget penalty in `computeCompatibility`); only items more
+ * than one tier MORE expensive are removed. Everything else is scored
+ * continuously (see `compatibilityScore.ts`).
  */
 export const filterByBudget = (items: GearItem[], budgetTier: BudgetTier): GearItem[] => {
-  const withinOneTier = items.filter(
-    (item) => Math.abs(TIER_INDEX[item.priceTier] - TIER_INDEX[budgetTier]) <= 1,
-  );
-  return withinOneTier.length > 0 ? withinOneTier : items;
+  const affordable = items.filter((item) => TIER_INDEX[item.priceTier] - TIER_INDEX[budgetTier] <= 1);
+  return affordable.length > 0 ? affordable : items;
 };
 
 const numericSpec = (item: GearItem, key: string): number | null => {
@@ -667,13 +667,15 @@ export const buildReasonBullets = (
   specs: CalculatedSpecs,
 ): string[] => {
   const bullets: string[] = [];
-  const tierDistance = Math.abs(TIER_INDEX[item.priceTier] - TIER_INDEX[stats.budgetTier]);
+  const tierOffset = TIER_INDEX[item.priceTier] - TIER_INDEX[stats.budgetTier];
   const tierWord =
-    tierDistance === 0
+    tierOffset === 0
       ? `sits exactly in your ${item.priceTier} bracket`
-      : tierDistance === 1
-        ? `is one tier from your ${stats.budgetTier} bracket, so it takes a budget penalty in the score`
-        : `is two tiers from your ${stats.budgetTier} bracket — shown only because nothing within one tier was available, and it takes a larger budget penalty in the score`;
+      : tierOffset < 0
+        ? `is ${tierOffset === -1 ? 'one tier' : 'two tiers'} below your ${stats.budgetTier} bracket — it costs less than you planned, so it takes a ${tierOffset === -1 ? '' : 'larger '}budget penalty in the score but stays in the running`
+        : tierOffset === 1
+          ? `is one tier above your ${stats.budgetTier} bracket, so it takes a budget penalty in the score`
+          : `is two tiers above your ${stats.budgetTier} bracket — shown only because nothing closer was available, and it takes a larger budget penalty in the score`;
 
   switch (item.category) {
     case 'skis': {

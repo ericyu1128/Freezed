@@ -25,6 +25,7 @@ npm run start      # serve the production build
 npm run typecheck  # tsc --noEmit
 npm run prices:template  # write data/prices-template.csv (one row per item × retailer)
 npm run prices:import    # validate the filled CSV and write data/prices.json
+npm test                 # vitest: level-fit property test, top-pick snapshots, scoring unit tests
 ```
 
 ---
@@ -111,9 +112,11 @@ Snowboards switch to a board-waist check (standard vs. wide) driven by estimated
 
 ### Budget filtering
 
-`budgetTier` is a **hard filter**: anything more than one tier away is removed from the pool before
-scoring. Exact-tier matches then score +60, one tier away +22. Every card shows a full retailer
-price comparison with the cheapest option flagged, and the dashboard totals the kit at best price.
+`filterByBudget` is the one hard filter, and it is **asymmetric**: items more than one tier *more
+expensive* than your budget are removed before scoring; anything cheaper stays in the pool. Spending
+less is rarely a fit problem, spending more is. Inside the score, `budgetFit` is 1.0 for your exact
+tier, 0.5 one tier away and 0.08 two tiers away. Budget fit reads each item's `priceTier`, never a
+price, so ranking is identical whatever is in `data/prices.json` (there is a test for that).
 
 ### Product images
 

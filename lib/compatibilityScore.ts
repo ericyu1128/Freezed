@@ -8,9 +8,11 @@
  * (waist width, boot flex, DIN, VLT, warmth) is scored against its target
  * with a Gaussian-shaped falloff instead of an in-range/out-of-range cliff,
  * so gear that's slightly too long or too stiff loses points proportionally
- * instead of being discarded outright. Categorical preferences (style,
- * level, gender, temperature, budget) contribute floored fits — a mismatch
- * reduces the score but never zeroes it.
+ * instead of being discarded outright. Ability level is ordinal: the fit
+ * falls with the distance between the rider's level and the nearest level
+ * the item is rated for. Categorical preferences (style, gender,
+ * temperature, budget) contribute floored fits — a mismatch reduces the
+ * score but never zeroes it.
  * The final score is the weight-normalized average of every applicable
  * feature fit, expressed as a 0-100% Compatibility Score.
  */
@@ -28,6 +30,8 @@ import type {
 } from './types';
 
 const TIER_INDEX: Record<BudgetTier, number> = { budget: 0, 'mid-range': 1, premium: 2 };
+
+const LEVEL_INDEX: Record<Level, number> = { beginner: 0, intermediate: 1, advanced: 2, expert: 3 };
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
@@ -77,6 +81,20 @@ const budgetFit = (item: GearItem, budgetTier: BudgetTier): number => {
 
 /** Binary preference match, softly floored so a non-match dents the score rather than zeroing it. */
 const inclusionFit = (matches: boolean, floor = 0.15): number => (matches ? 1 : floor);
+
+/**
+ * Ordinal level fit. Distance is measured to the nearest level the item is
+ * rated for: 0 steps → 1.0 (made for you), 1 step → 0.5 (a stretch or a
+ * little conservative, still sensible), 2+ steps → 0.05 (a race ski for a
+ * beginner, a soft rental boot for an expert — effectively disqualifying).
+ */
+const LEVEL_DISTANCE_FIT = [1, 0.5, 0.05] as const;
+
+export const levelFit = (levels: Level[], level: Level): number => {
+  if (levels.length === 0) return 1;
+  const distance = Math.min(...levels.map((candidate) => Math.abs(LEVEL_INDEX[candidate] - LEVEL_INDEX[level])));
+  return LEVEL_DISTANCE_FIT[Math.min(distance, LEVEL_DISTANCE_FIT.length - 1)];
+};
 
 const genderFit = (genders: Gender[], gender: Gender): number => {
   if (genders.includes(gender)) return 1;
@@ -151,11 +169,25 @@ interface FeatureWeights {
  * feature is dropped and the remaining weights are renormalized so they
  * still sum to 100% of the score, rather than penalizing items for
  * undocumented metadata.
+ *
+ * Why level is weighted so heavily for skis, boots and bindings: these are
+ * the pieces where ability mismatch is a safety and progression problem, not
+ * a taste one. The binding constraint is "an item two levels off must lose to
+ * one that is one level off, even when the closer item is a tier off budget
+ * and the far one is otherwise perfect":
+ *
+ *     0.95 · level  >  0.5 · level + 0.5 · budget   ⇒   level > 1.11 × budget
+ *
+ * (0.95 = 1 − levelFit at 2+ steps, 0.5 = 1 − levelFit at 1 step and
+ * 1 − budgetFit at one tier.) Each row keeps level at ≥ 1.3× budget for
+ * margin. The weight comes mostly out of `sizing` and `style`: flex, DIN and
+ * waist width already track ability, so they were partly double-counting it.
+ * Verified by the property test in `lib/__tests__/levelFit.test.ts`.
  */
-const CATEGORY_WEIGHTS: Record<GearCategory, FeatureWeights> = {
-  skis: { sizing: 0.38, style: 0.2, level: 0.16, gender: 0.08, temps: 0.0, budget: 0.18 },
-  boots: { sizing: 0.36, style: 0.08, level: 0.22, gender: 0.12, temps: 0.0, budget: 0.22 },
-  bindings: { sizing: 0.34, style: 0.06, level: 0.24, gender: 0.08, temps: 0.0, budget: 0.28 },
+export const CATEGORY_WEIGHTS: Record<GearCategory, FeatureWeights> = {
+  skis: { sizing: 0.3, style: 0.16, level: 0.28, gender: 0.08, temps: 0.0, budget: 0.18 },
+  boots: { sizing: 0.3, style: 0.06, level: 0.3, gender: 0.12, temps: 0.0, budget: 0.22 },
+  bindings: { sizing: 0.28, style: 0.04, level: 0.34, gender: 0.08, temps: 0.0, budget: 0.26 },
   goggles: { sizing: 0.34, style: 0.04, level: 0.04, gender: 0.06, temps: 0.22, budget: 0.3 },
   jacket: { sizing: 0.3, style: 0.06, level: 0.04, gender: 0.1, temps: 0.18, budget: 0.32 },
   helmet: { sizing: 0.26, style: 0.02, level: 0.02, gender: 0.1, temps: 0.1, budget: 0.5 },
@@ -202,7 +234,7 @@ export const computeCompatibility = (
       key: 'level',
       label: 'Ability level match',
       weight: weights.level,
-      fit: inclusionFit(item.levels.includes(stats.level)),
+      fit: levelFit(item.levels, stats.level),
     });
   }
   if (item.genders) {

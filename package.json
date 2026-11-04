@@ -10,7 +10,8 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "prices:template": "tsx scripts/prices-template.ts",
-    "prices:import": "tsx scripts/prices-import.ts"
+    "prices:import": "tsx scripts/prices-import.ts",
+    "test": "vitest run"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
@@ -27,6 +28,7 @@
     "postcss": "^8.4.39",
     "tailwindcss": "^3.4.7",
     "tsx": "^4.23.15",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "vitest": "^4.1.12"
   }
 }
