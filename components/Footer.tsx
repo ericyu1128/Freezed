@@ -70,7 +70,7 @@ export default function Footer() {
         </div>
 
         <p className="mt-4 text-[10px] text-slate-600">
-          Impact-Site-Verification: 0c14bc08-f1e0-4f85-90e7-569d6402108d
+          Impact-Site-Verification: 70349472-9343-4ac3-a3d4-cc21ef2f609a
         </p>
       </div>
     </footer>
