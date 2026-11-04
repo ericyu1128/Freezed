@@ -6,6 +6,7 @@ import { buildCalculatedSpecs, buildReasonBullets, buildReasoning, categoryLabel
 import { getPerformanceAxes } from '@/lib/performanceProfile';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { useRegion } from '@/lib/region/RegionContext';
+import { track } from '@/lib/analytics';
 import { getRetailer, SHOW_RETAILER_LINKS } from '@/lib/retailers';
 import {
   bestPriceFor,
@@ -54,6 +55,7 @@ export default function GearCard({
 
   const activeCandidate = candidates.find((candidate) => candidate.item.id === selectedId) ?? candidates[0];
   const isTopPick = activeCandidate.item.id === recommendation.item.id;
+  const activeRank = candidates.indexOf(activeCandidate) + 1;
   const { item, score, breakdown } = activeCandidate;
 
   const { reasoning, reasonBullets } = useMemo(
@@ -300,6 +302,15 @@ export default function GearCard({
                     <RetailerLink
                       href={price.link}
                       ariaLabel={t.gearCard.viewAtRetailer(`${item.brand} ${item.name}`, retailerName)}
+                      tracking={{
+                        retailer_id: price.retailerId,
+                        region,
+                        item_id: item.id,
+                        category: recommendation.category,
+                        rank: activeRank,
+                        is_top_pick: isTopPick,
+                        has_price: price.price !== null,
+                      }}
                       className={`focus-ring flex items-center justify-between gap-3 rounded-xl border px-3 py-2 transition-all duration-200 ${
                         isBest
                           ? 'border-emerald-400/35 bg-emerald-400/[0.08] hover:border-emerald-300/60'
@@ -381,7 +392,7 @@ export default function GearCard({
               <span className="text-[11px] font-medium text-slate-500">{t.gearCard.sortedByMatch}</span>
             </div>
             <ul className="space-y-1.5">
-              {candidates.map((candidate) => {
+              {candidates.map((candidate, index) => {
                 const isSelected = candidate.item.id === activeCandidate.item.id;
                 const candidateName = `${candidate.item.brand} ${candidate.item.name}`;
                 const candidateBest = bestPriceFor(candidate.item, region);
@@ -393,6 +404,11 @@ export default function GearCard({
                       onClick={(event) => {
                         event.stopPropagation();
                         setSelectedId(candidate.item.id);
+                        track('candidate_selected', {
+                          category: recommendation.category,
+                          item_id: candidate.item.id,
+                          rank: index + 1,
+                        });
                       }}
                       className={`focus-ring flex min-w-0 flex-1 items-center justify-between gap-3 rounded-xl border px-3 py-2 text-left transition-all duration-200 ${
                         isSelected
@@ -427,6 +443,15 @@ export default function GearCard({
                           candidateName,
                           getRetailer(candidateLink.retailerId).name,
                         )}
+                        tracking={{
+                          retailer_id: candidateLink.retailerId,
+                          region,
+                          item_id: candidate.item.id,
+                          category: recommendation.category,
+                          rank: index + 1,
+                          is_top_pick: index === 0,
+                          has_price: candidateBest !== null,
+                        }}
                         className="focus-ring flex w-9 shrink-0 items-center justify-center rounded-xl border border-white/8 bg-white/[0.02] text-slate-400 transition-all duration-200 hover:border-white/20 hover:bg-white/[0.05] hover:text-frost-200"
                       >
                         <ExternalIcon className="h-3.5 w-3.5" />
@@ -459,6 +484,15 @@ export default function GearCard({
             <RetailerLink
               href={primaryLink.link}
               ariaLabel={t.gearCard.viewAtRetailer(`${item.brand} ${item.name}`, getRetailer(primaryLink.retailerId).name)}
+              tracking={{
+                retailer_id: primaryLink.retailerId,
+                region,
+                item_id: item.id,
+                category: recommendation.category,
+                rank: activeRank,
+                is_top_pick: isTopPick,
+                has_price: bestPrice !== null,
+              }}
               className="btn-primary shrink-0 !px-4 !py-2.5 text-xs"
             >
               {bestPrice ? t.gearCard.viewDeal : t.gearCard.checkPrice}

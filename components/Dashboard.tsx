@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { GearCategory, MatchResult, UserStats } from '@/lib/types';
 import { calculateLength, categoryLabel, levelLabel, styleLabel, temperatureLabel, tierLabel } from '@/lib/matcherLogic';
 import { addSavedSetup } from '@/lib/savedSetups';
 import { formatAmount, formatPrice, kitTotal } from '@/lib/pricing';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { useRegion } from '@/lib/region/RegionContext';
+import { track } from '@/lib/analytics';
 import GearCard from './GearCard';
 import SaveConfigurationModal from './SaveConfigurationModal';
 import SavedVault from './SavedVault';
@@ -38,6 +39,17 @@ export default function Dashboard({
     region,
   );
   const kitTotalLabel = kit.priced > 0 ? formatPrice(kit.total, kit.currency) : null;
+
+  // Once per generated result (the ref also absorbs StrictMode's double effect in dev).
+  const shownFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (shownFor.current === result.generatedAt) return;
+    shownFor.current = result.generatedAt;
+    track('recommendations_shown', {
+      categories: result.recommendations.map((rec) => rec.category),
+      top_item_ids: result.recommendations.map((rec) => rec.item.id),
+    });
+  }, [result]);
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [vaultRefreshToken, setVaultRefreshToken] = useState(0);
   const lengthLabel = stats.activity === 'snowboard' ? t.dashboard.boardLength : t.dashboard.skiLength;

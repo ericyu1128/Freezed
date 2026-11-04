@@ -17,7 +17,16 @@ export default function PrivacyPage() {
           personal data is stored by Freezed.
         </p>
         <p>
-          Those inputs are used only to generate your gear recommendation during that session.
+          Those inputs are used to generate your gear recommendation in your browser. Your height
+          and weight are never sent anywhere.
+        </p>
+        <p>
+          Freezed collects anonymous usage analytics with PostHog, to learn which parts of the site
+          are used: page views, which questionnaire steps are reached, your answers to the
+          non-body questions (activity, fit, ability, riding style, conditions and budget tier,
+          plus your language and region), which gear is recommended and which retailer links are
+          clicked. Height and weight are not sent. There are no accounts, no session recordings and
+          no automatic click tracking, and nothing is linked to your name or email.
         </p>
         <p>
           Freezed participates in affiliate programs. Some links on the site are affiliate links,

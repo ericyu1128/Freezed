@@ -206,6 +206,34 @@ Score, and the two runners-up are listed as "also considered".
 
 ---
 
+## Analytics
+
+Anonymous product analytics via [PostHog](https://posthog.com), set up in `lib/analytics.ts` and started by
+`components/AnalyticsProvider.tsx` in the root layout.
+
+| Variable | Default | Effect |
+| --- | --- | --- |
+| `NEXT_PUBLIC_POSTHOG_KEY` | unset | Project API key. Unset = analytics off, `track()` is a silent no-op. |
+| `NEXT_PUBLIC_POSTHOG_HOST` | `https://us.i.posthog.com` | Ingestion host (use the EU host for an EU project). |
+
+Settings: autocapture off, session recording off, pageviews on (including client-side navigations), no person
+profiles. Every event name and its property type lives in `AnalyticsEvents`, and every call goes through one
+typed `track()` helper:
+
+| Event | Properties |
+| --- | --- |
+| `quiz_start` | — (first interaction with step 1) |
+| `quiz_step` | `step_id`, `step_index`, `direction` |
+| `quiz_complete` | `activity`, `gender`, `level`, `style`, `temperature`, `budgetTier`, `language`, `region` |
+| `recommendations_shown` | `categories`, `top_item_ids` |
+| `candidate_selected` | `category`, `item_id`, `rank` |
+| `outbound_click` | `retailer_id`, `region`, `item_id`, `category`, `rank`, `is_top_pick`, `has_price` |
+
+**Height and weight are never sent** — no event type has a field for them. Vercel Analytics (page views) also
+runs, via `@vercel/analytics`.
+
+---
+
 ## The visualizer
 
 `StickmanVisualizer.tsx` renders an SVG rider whose zones map to gear categories:

@@ -4,6 +4,7 @@ import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Snowfall from '@/components/Snowfall';
+import AnalyticsProvider from '@/components/AnalyticsProvider';
 import { LanguageProvider } from '@/lib/i18n/LanguageContext';
 import { RegionProvider } from '@/lib/region/RegionContext';
 
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script type="text/javascript" src="https://classic.avantlink.com/affiliate_app_confirm.php?mode=js&authResponse=7b7eb792d04f7d28e4ad2b9685e9142acfcb4544"></script>
       </head>
       <body className="min-h-screen">
+        <AnalyticsProvider />
         <LanguageProvider>
           <RegionProvider>
             <Snowfall />

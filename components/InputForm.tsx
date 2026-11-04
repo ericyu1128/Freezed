@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
   Activity,
   BudgetTier,
@@ -14,6 +14,7 @@ import { LAST_STEP_INDEX, STEPS, indexOfStep, transition, type StepId } from '@/
 import { levelLabel, styleLabel, temperatureLabel, tierLabel } from '@/lib/matcherLogic';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { useRegion } from '@/lib/region/RegionContext';
+import { track } from '@/lib/analytics';
 import { cmToIn, inToCm, kgToLb, lbToKg, type UnitSystem } from '@/lib/units';
 import {
   ArrowLeftIcon,
@@ -308,7 +309,7 @@ interface InputFormProps {
 
 export default function InputForm({ onSubmit, isLoading = false, initialStats }: InputFormProps) {
   const { t, language } = useLanguage();
-  const { currency } = useRegion();
+  const { currency, region } = useRegion();
   const [stats, setStats] = useState<UserStats>({ ...DEFAULTS, ...initialStats });
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState<'forward' | 'back'>('forward');
@@ -364,10 +365,21 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
     },
   ];
 
+  // The form always opens on step 1, so the first interaction of any kind
+  // (a field change or a navigation) is the first interaction with step 1.
+  const quizStarted = useRef(false);
+  const markQuizStarted = useCallback(() => {
+    if (quizStarted.current) return;
+    quizStarted.current = true;
+    track('quiz_start', {});
+  }, []);
+
   const update = useCallback(
-    <K extends keyof UserStats>(key: K, value: UserStats[K]) =>
-      setStats((previous) => ({ ...previous, [key]: value })),
-    [],
+    <K extends keyof UserStats>(key: K, value: UserStats[K]) => {
+      markQuizStarted();
+      setStats((previous) => ({ ...previous, [key]: value }));
+    },
+    [markQuizStarted],
   );
 
   // `stats.height`/`stats.weight` always stay in cm/kg — matcherLogic and the
@@ -455,6 +467,7 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
 
   /** Single funnel for every navigation intent — see lib/stepFlow.ts. */
   const move = (intent: 'next' | 'back' | 'jump' | 'submit', target?: number) => {
+    markQuizStarted();
     const next = transition({ from: step, intent, stepIsValid: stepValid, target });
 
     if (next.blocked) {
@@ -466,6 +479,7 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
     if (next.to !== step) {
       setTouched(false);
       setStep(next.to);
+      track('quiz_step', { step_id: STEPS[next.to].id, step_index: next.to, direction: next.direction });
     }
     return next;
   };
@@ -486,6 +500,9 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
     if (heightError || weightError) {
       setDirection('back');
       setStep(indexOfStep('metrics'));
+      if (step !== indexOfStep('metrics')) {
+        track('quiz_step', { step_id: 'metrics', step_index: indexOfStep('metrics'), direction: 'back' });
+      }
       return;
     }
 
@@ -494,7 +511,20 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
     // step but the last, which is what stops an early submit from skipping the
     // budget step and generating results.
     const next = move('submit');
-    if (next.complete) onSubmit(stats);
+    if (next.complete) {
+      // Fields copied one by one: height and weight must never reach analytics.
+      track('quiz_complete', {
+        activity: stats.activity,
+        gender: stats.gender,
+        level: stats.level,
+        style: stats.style,
+        temperature: stats.temperature,
+        budgetTier: stats.budgetTier,
+        language,
+        region,
+      });
+      onSubmit(stats);
+    }
   };
 
   const progress = ((step + 1) / STEPS.length) * 100;
