@@ -68,6 +68,10 @@ export default function Footer() {
             <Link href="/contact" className="hover:text-frost-300">{t.footer.contactLink}</Link>
           </nav>
         </div>
+
+        <p className="mt-4 text-[10px] text-slate-600">
+          Impact-Site-Verification: 0c14bc08-f1e0-4f85-90e7-569d6402108d
+        </p>
       </div>
     </footer>
   );
