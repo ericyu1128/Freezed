@@ -5,7 +5,7 @@ Made by **Eric Yu**.
 
 Freezed takes your body metrics, ability, riding style, expected temperature and budget, calculates
 a real spec sheet (length, waist width, boot flex, lens VLT, jacket warmth), then scores a catalogue
-of 40+ items from Atomic, Völkl, Salomon, K2, Black Crows, Burton, Arc'teryx, Smith and Oakley
+of 58 items from Atomic, Völkl, Salomon, K2, Black Crows, Burton, Arc'teryx, Smith and Oakley
 against it.
 
 ---
@@ -23,6 +23,8 @@ Other scripts:
 npm run build      # production build
 npm run start      # serve the production build
 npm run typecheck  # tsc --noEmit
+npm run prices:template  # write data/prices-template.csv (one row per item × retailer)
+npm run prices:import    # validate the filled CSV and write data/prices.json
 ```
 
 ---
@@ -166,6 +168,26 @@ shelf name disagree.
 Every outbound link — each price row, the "View deal" button and the link icon beside each ranked
 candidate — renders through `components/RetailerLink.tsx` with
 `target="_blank" rel="noopener noreferrer sponsored"`, and stops the click from also selecting the card.
+
+### Prices and region
+
+Prices are entered by hand and never invented or converted.
+
+- **Data:** `data/prices.json`, keyed by item id then retailer id: `{ "price": number | null, "checkedAt": "YYYY-MM-DD" | null }`.
+  Everything starts as `null` (unchecked).
+- **Workflow:** `npm run prices:template` writes `data/prices-template.csv`
+  (`itemId,brand,name,retailerId,region,currency,price,checkedAt,url`) with each row's search URL prefilled, so
+  you can click through and check. Fill in `price` and `checkedAt`, then `npm run prices:import` validates it
+  (numbers, real ISO dates not in the future, known ids, region/currency matching the retailer) and writes the
+  JSON. It prints how many rows are priced, missing, and older than 14 days. Nothing is written if any row fails.
+  Pass `-- --dry-run` to validate only, or a path to import a different CSV. The template refuses to overwrite an
+  existing CSV unless you pass `-- --force`.
+- **Region toggle:** 🇨🇦 CAD / 🇺🇸 USD next to the language switch (default CA, saved in `localStorage`, exposed
+  by `lib/region/RegionContext.tsx`). A region shows only its own retailers, in their native currency, always
+  labelled (`$549.99 CAD`), with "checked {date}" under each price. An unchecked price shows "Check price →".
+- **Totals:** `lib/pricing.ts` counts only items priced in the selected region and reports "(x of y priced)"
+  when some are missing. Saved setups are totalled live from current data, never from a snapshot.
+- **Ranking never reads prices** — budget fit uses each item's `priceTier`.
 
 #### Feature flag
 

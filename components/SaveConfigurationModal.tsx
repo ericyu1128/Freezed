@@ -7,7 +7,8 @@ import { useLanguage } from '@/lib/i18n/LanguageContext';
 interface SaveConfigurationModalProps {
   open: boolean;
   itemCount: number;
-  totalPrice: number;
+  /** Formatted best-price total for the selected region, or `null` when nothing is priced. */
+  totalLabel: string | null;
   onClose: () => void;
   onSave: (name: string) => void;
 }
@@ -15,7 +16,7 @@ interface SaveConfigurationModalProps {
 export default function SaveConfigurationModal({
   open,
   itemCount,
-  totalPrice,
+  totalLabel,
   onClose,
   onSave,
 }: SaveConfigurationModalProps) {
@@ -97,7 +98,7 @@ export default function SaveConfigurationModal({
         </div>
 
         <p className="mt-4 text-xs text-slate-500">
-          {t.saveModal.itemsSummary(itemCount, `$${totalPrice.toFixed(2)}`)}
+          {t.saveModal.itemsSummary(itemCount, totalLabel)}
         </p>
 
         <div className="mt-5 flex justify-end gap-2">

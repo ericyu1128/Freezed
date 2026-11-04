@@ -1,10 +1,14 @@
 /**
- * Freezed — mock gear database
+ * Freezed — gear database
  * Made by Eric Yu
  *
- * Prices are illustrative mock data for demo purposes.
+ * Prices are NOT stored here. They live in `data/prices.json`, keyed by item
+ * id then retailer id, and are entered by hand: `npm run prices:template`
+ * writes a CSV with a search link per item × retailer, and
+ * `npm run prices:import` validates the filled-in CSV and rewrites the JSON.
+ * Anything not yet checked is `null` and is never shown as a number.
  *
- * Retailer links are NOT mock: every one is generated at module load as a live
+ * Retailer links are generated, not stored: every one is generated at module load as a live
  * search query against that retailer's own site (see `buildRetailerUrl` in
  * `retailers.ts`), so a link always lands on real results rather than a dead
  * product-detail URL.
@@ -26,14 +30,16 @@
 import type { GearItem, RetailerPrice } from './types';
 import { buildGearImage } from './gearImages';
 import { computePerformanceProfile } from './performanceProfile';
-import { buildRetailerUrl, type RetailerId } from './retailers';
+import { buildRetailerUrl, RETAILER_IDS, RETAILERS } from './retailers';
+import pricesJson from '../data/prices.json';
 
-/** A price row before its link has been generated. */
-type PriceQuote = { retailerId: RetailerId; price: number };
+/** Shape of `data/prices.json`: item id → retailer id → hand-checked price. */
+export type PriceTable = Record<string, Record<string, { price: number | null; checkedAt: string | null }>>;
 
-/** Database rows are authored without links or performance scores; both are derived on export. */
+const priceTable = pricesJson as PriceTable;
+
+/** Database rows are authored without prices, links or performance scores; all three are derived on export. */
 type GearListing = Omit<GearItem, 'prices' | 'image' | 'performance'> & {
-  prices: PriceQuote[];
   /**
    * Optional override for the retailer search string. Use when the brand field
    * and the shelf name disagree — e.g. Anon is a Burton company but retailers
@@ -69,11 +75,6 @@ const listings: GearListing[] = [
       'A forgiving, groomer-focused carver with a soft flex pattern that rewards clean technique without punishing mistakes. The narrow 78 mm waist snaps edge-to-edge with very little input.',
     matchReason:
       'Built for riders learning to carve on hardpack who want a stable, confidence-inspiring ski at a value price.',
-    prices: [
-      { retailerId: 'evo', price: 399.95 },
-      { retailerId: 'rei', price: 429.0 },
-      { retailerId: 'sportchek', price: 449.99 },
-    ],
   },
   {
     id: 'ski-salomon-stance-84',
@@ -98,11 +99,6 @@ const listings: GearListing[] = [
       'The frontside member of the Stance family: one sheet of Titanal keeps it quiet at speed while the 84 mm platform still handles a lap through soft snow.',
     matchReason:
       'A do-most-things frontside ski for riders who spend 80% of the day on groomers but want a little margin off-piste.',
-    prices: [
-      { retailerId: 'evo', price: 449.95 },
-      { retailerId: 'backcountry', price: 479.95 },
-      { retailerId: 'sportchek', price: 499.99 },
-    ],
   },
   {
     id: 'ski-salomon-qst-92',
@@ -127,11 +123,6 @@ const listings: GearListing[] = [
       'The benchmark 90-something all-mountain ski. Light enough to throw around in trees, damp enough to hold a line on refrozen morning corduroy.',
     matchReason:
       'Ideal for the rider whose day is genuinely mixed — groomers to the lift line, then side-country and chopped-up snow after lunch.',
-    prices: [
-      { retailerId: 'evo', price: 599.95 },
-      { retailerId: 'rei', price: 629.0 },
-      { retailerId: 'backcountry', price: 649.95 },
-    ],
   },
   {
     id: 'ski-k2-mindbender-89ti',
@@ -156,11 +147,6 @@ const listings: GearListing[] = [
       'Titanal Y-beam gives torsional bite where it matters and tapers out toward the tip so the ski still releases in soft snow. A hard-charging daily driver.',
     matchReason:
       'For strong skiers who want metal underfoot and a narrow enough waist to still carve a proper arc on firm snow.',
-    prices: [
-      { retailerId: 'evo', price: 649.95 },
-      { retailerId: 'the-house', price: 674.99 },
-      { retailerId: 'sportchek', price: 719.99 },
-    ],
   },
   {
     id: 'ski-atomic-bent-100',
@@ -185,11 +171,6 @@ const listings: GearListing[] = [
       'Chris Benchetler’s playful twin-tip: surfy, buttery and switch-friendly, but with enough width to float through a storm day.',
     matchReason:
       'The pick for park-and-powder riders who ride switch, hit side hits and want one ski for the whole mountain.',
-    prices: [
-      { retailerId: 'evo', price: 599.95 },
-      { retailerId: 'backcountry', price: 629.95 },
-      { retailerId: 'rei', price: 649.0 },
-    ],
   },
   {
     id: 'ski-k2-poacher',
@@ -214,11 +195,6 @@ const listings: GearListing[] = [
       'A durable, impact-tolerant park twin with reinforced edges and a symmetrical flex that lands switch as happily as forward.',
     matchReason:
       'Value-focused freestyle ski for riders learning rails and jumps who do not want to babysit an expensive topsheet.',
-    prices: [
-      { retailerId: 'evo', price: 379.95 },
-      { retailerId: 'the-house', price: 399.99 },
-      { retailerId: 'sportchek', price: 429.99 },
-    ],
   },
   {
     id: 'ski-volkl-mantra-m7',
@@ -243,11 +219,6 @@ const listings: GearListing[] = [
       'The reference hard-charging all-mountain ski. Titanal thickness is tuned per length so a 170 and a 191 ride with the same intent.',
     matchReason:
       'For powerful, aggressive skiers who want maximum damping and edge hold and are willing to work for it.',
-    prices: [
-      { retailerId: 'evo', price: 849.95 },
-      { retailerId: 'backcountry', price: 899.95 },
-      { retailerId: 'rei', price: 925.0 },
-    ],
   },
   {
     id: 'ski-atomic-redster-x9',
@@ -272,11 +243,6 @@ const listings: GearListing[] = [
       'A race-room carver detuned just enough for the public. Revoshock damping keeps the edge glued through rutted, icy turns.',
     matchReason:
       'Built for advanced piste specialists who measure a good day in clean, high-angle arcs on firm snow.',
-    prices: [
-      { retailerId: 'evo', price: 899.95 },
-      { retailerId: 'sportchek', price: 949.99 },
-      { retailerId: 'the-house', price: 979.99 },
-    ],
   },
   {
     id: 'ski-black-crows-camox',
@@ -301,11 +267,6 @@ const listings: GearListing[] = [
       'Chamonix-bred freeride all-rounder. Light, lively and quick to pivot in tight terrain without feeling nervous at speed.',
     matchReason:
       'A great match for playful all-mountain skiers who ride trees, chutes and side hits more than they ride the fall line.',
-    prices: [
-      { retailerId: 'evo', price: 679.95 },
-      { retailerId: 'backcountry', price: 699.95 },
-      { retailerId: 'the-house', price: 729.99 },
-    ],
   },
   {
     id: 'ski-black-crows-corvus',
@@ -330,11 +291,6 @@ const listings: GearListing[] = [
       'A big-mountain plank with a stiff shovel that punches through crud and stays composed at genuinely high speed in open terrain.',
     matchReason:
       'For expert freeriders hunting deep days and committed lines who need float first and groomer manners second.',
-    prices: [
-      { retailerId: 'evo', price: 899.95 },
-      { retailerId: 'backcountry', price: 949.95 },
-      { retailerId: 'rei', price: 979.0 },
-    ],
   },
   {
     id: 'ski-atomic-backland-107',
@@ -359,11 +315,6 @@ const listings: GearListing[] = [
       'A touring-first powder ski: under 1,600 g per ski at 182 cm, yet the carbon backbone keeps it honest on the descent.',
     matchReason:
       'The pick for riders earning turns — light enough for long skin tracks, wide enough to float on the way back down.',
-    prices: [
-      { retailerId: 'evo', price: 799.95 },
-      { retailerId: 'backcountry', price: 849.95 },
-      { retailerId: 'rei', price: 869.0 },
-    ],
   },
   {
     id: 'ski-volkl-blaze-114',
@@ -388,11 +339,6 @@ const listings: GearListing[] = [
       'A genuinely light 114 that still tolerates a resort day. The suspension tip cuts chatter without adding swing weight.',
     matchReason:
       'For riders splitting time between lift-served powder laps and short tours who do not want two separate setups.',
-    prices: [
-      { retailerId: 'evo', price: 699.95 },
-      { retailerId: 'the-house', price: 724.99 },
-      { retailerId: 'sportchek', price: 769.99 },
-    ],
   },
 
   /* ================================================================ */
@@ -421,11 +367,6 @@ const listings: GearListing[] = [
       'A forgiving flat-to-rocker directional twin that is famously easy to learn on but still holds together at intermediate speeds.',
     matchReason:
       'One of the best value first boards — catch-free feel, but with enough camber-free stability to progress on.',
-    prices: [
-      { retailerId: 'evo', price: 349.95 },
-      { retailerId: 'the-house', price: 369.99 },
-      { retailerId: 'sportchek', price: 399.99 },
-    ],
   },
   {
     id: 'board-salomon-assassin',
@@ -450,11 +391,6 @@ const listings: GearListing[] = [
       'The quiver-killer twin: camber between the feet for pop, rocker at the contact points so it never hooks up unexpectedly.',
     matchReason:
       'Perfect for riders who lap the park in the morning and chase side hits and soft snow in the afternoon.',
-    prices: [
-      { retailerId: 'evo', price: 499.95 },
-      { retailerId: 'backcountry', price: 529.95 },
-      { retailerId: 'rei', price: 549.0 },
-    ],
   },
   {
     id: 'board-burton-custom',
@@ -479,11 +415,6 @@ const listings: GearListing[] = [
       'Thirty-plus seasons of refinement. Traditional camber, carbon Squeezebox and a fast sintered base — precise, poppy and unforgiving of laziness.',
     matchReason:
       'For confident riders who load the board hard through turns and want maximum edge hold and rebound.',
-    prices: [
-      { retailerId: 'evo', price: 649.95 },
-      { retailerId: 'backcountry', price: 679.95 },
-      { retailerId: 'sportchek', price: 719.99 },
-    ],
   },
   {
     id: 'board-burton-process',
@@ -508,11 +439,6 @@ const listings: GearListing[] = [
       'A true twin with a loose, playful rocker-dominant profile that presses easily and stays catch-free on rails.',
     matchReason:
       'A forgiving freestyle platform for riders drilling butters, boxes and switch riding in the park.',
-    prices: [
-      { retailerId: 'evo', price: 499.95 },
-      { retailerId: 'the-house', price: 519.99 },
-      { retailerId: 'rei', price: 549.0 },
-    ],
   },
   {
     id: 'board-k2-party-platter',
@@ -537,11 +463,6 @@ const listings: GearListing[] = [
       'A short, fat, volume-shifted powder toy. Ride it 8–10 cm shorter than your usual length and let the surface area do the work.',
     matchReason:
       'For surfy riders on storm days who want a playful powder board rather than a straight-lining big-mountain deck.',
-    prices: [
-      { retailerId: 'evo', price: 479.95 },
-      { retailerId: 'the-house', price: 499.99 },
-      { retailerId: 'backcountry', price: 529.95 },
-    ],
   },
   {
     id: 'board-burton-hometown-hero',
@@ -566,11 +487,6 @@ const listings: GearListing[] = [
       'A directional freeride weapon with a tapered tail that sinks on demand and a stiff nose that stays afloat in deep snow.',
     matchReason:
       'For expert riders charging big backcountry lines who still want the board to carve on the traverse out.',
-    prices: [
-      { retailerId: 'evo', price: 699.95 },
-      { retailerId: 'backcountry', price: 729.95 },
-      { retailerId: 'sportchek', price: 779.99 },
-    ],
   },
   {
     id: 'board-salomon-huck-knife',
@@ -595,11 +511,6 @@ const listings: GearListing[] = [
       'A stiff-ish true twin built for jump lines and hard-charging park riding, with Popster milling that stores and releases energy off the lip.',
     matchReason:
       'For strong freestyle riders sending medium-to-large jumps who need a board that stays stable on landings.',
-    prices: [
-      { retailerId: 'evo', price: 519.95 },
-      { retailerId: 'the-house', price: 539.99 },
-      { retailerId: 'rei', price: 569.0 },
-    ],
   },
 
   /* ================================================================ */
@@ -627,11 +538,6 @@ const listings: GearListing[] = [
       'A heat-mouldable 100 mm-last boot with a friendly 90 flex — enough support to drive a ski, soft enough to flex forward comfortably all day.',
     matchReason:
       'The classic first "real" boot: shop-customisable shell, medium volume fit and a flex that will not overpower a developing skier.',
-    prices: [
-      { retailerId: 'evo', price: 349.95 },
-      { retailerId: 'rei', price: 369.0 },
-      { retailerId: 'sportchek', price: 399.99 },
-    ],
   },
   {
     id: 'boot-k2-anthem-85',
@@ -655,11 +561,6 @@ const listings: GearListing[] = [
       'Women’s-specific shell with a lower cuff height, warmer liner and a BOA forefoot dial that wraps the foot evenly instead of clamping it.',
     matchReason:
       'A warm, easy-entry women’s boot for progressing skiers who want precision without a punishing flex.',
-    prices: [
-      { retailerId: 'evo', price: 399.95 },
-      { retailerId: 'rei', price: 419.0 },
-      { retailerId: 'the-house', price: 439.99 },
-    ],
   },
   {
     id: 'boot-salomon-shift-pro-110w',
@@ -683,11 +584,6 @@ const listings: GearListing[] = [
       'A freeride-leaning women’s boot with a real walk mode and a fully mouldable shell, tuned stiffer for skiers who drive the tongue.',
     matchReason:
       'For advancing women skiers who ride aggressively inbounds but want hike mode for boot-packs and short tours.',
-    prices: [
-      { retailerId: 'evo', price: 599.95 },
-      { retailerId: 'backcountry', price: 629.95 },
-      { retailerId: 'rei', price: 649.0 },
-    ],
   },
   {
     id: 'boot-k2-method-100',
@@ -711,11 +607,6 @@ const listings: GearListing[] = [
       'Intuition liner, medium-volume shell and a progressive flex pattern that absorbs landings instead of spiking through them.',
     matchReason:
       'A freestyle-friendly 100 flex for park skiers who need shock absorption and a liner that packs out to their foot.',
-    prices: [
-      { retailerId: 'evo', price: 549.95 },
-      { retailerId: 'the-house', price: 569.99 },
-      { retailerId: 'sportchek', price: 599.99 },
-    ],
   },
   {
     id: 'boot-salomon-spro-supra-120',
@@ -739,11 +630,6 @@ const listings: GearListing[] = [
       'BOA forefoot closure removes shell distortion and delivers noticeably more even wrap and power transfer than a conventional buckle.',
     matchReason:
       'For advanced skiers who want race-adjacent response and a precise, dialled fit without a 130-flex punishment.',
-    prices: [
-      { retailerId: 'evo', price: 749.95 },
-      { retailerId: 'backcountry', price: 799.95 },
-      { retailerId: 'rei', price: 819.0 },
-    ],
   },
   {
     id: 'boot-atomic-hawx-ultra-130',
@@ -767,11 +653,6 @@ const listings: GearListing[] = [
       'A 130-flex hybrid: low-volume performance last, tech fittings for touring, and a walk mode that actually walks.',
     matchReason:
       'The one-boot answer for expert skiers who ride hard inbounds and occasionally clip into a touring binding.',
-    prices: [
-      { retailerId: 'evo', price: 899.95 },
-      { retailerId: 'backcountry', price: 929.95 },
-      { retailerId: 'sportchek', price: 999.99 },
-    ],
   },
   {
     id: 'boot-volkl-secret-105',
@@ -795,11 +676,6 @@ const listings: GearListing[] = [
       'A women’s performance shell with a genuinely low-volume last and a stiff, supportive cuff for skiers who ski at the front of the boot.',
     matchReason:
       'For expert women skiers who have outgrown 90-flex boots and need real lateral support at speed.',
-    prices: [
-      { retailerId: 'evo', price: 779.95 },
-      { retailerId: 'backcountry', price: 799.95 },
-      { retailerId: 'rei', price: 829.0 },
-    ],
   },
 
   /* ================================================================ */
@@ -827,11 +703,6 @@ const listings: GearListing[] = [
       'Dual-zone BOA gives independent upper/lower tension so the ankle stays locked while the toes stay comfortable. Soft, tourable flex.',
     matchReason:
       'A comfortable, low-effort entry boot for riders still building ankle strength and board feel.',
-    prices: [
-      { retailerId: 'evo', price: 249.95 },
-      { retailerId: 'the-house', price: 259.99 },
-      { retailerId: 'sportchek', price: 279.99 },
-    ],
   },
   {
     id: 'boot-burton-ruler',
@@ -855,11 +726,6 @@ const listings: GearListing[] = [
       'The default all-mountain snowboard boot: medium flex, heat-mouldable liner and a shock-absorbing DynoLITE outsole.',
     matchReason:
       'Balanced support for riders who mix park laps with all-mountain riding and want one boot for everything.',
-    prices: [
-      { retailerId: 'evo', price: 329.95 },
-      { retailerId: 'rei', price: 349.0 },
-      { retailerId: 'backcountry', price: 359.95 },
-    ],
   },
   {
     id: 'boot-k2-maysis',
@@ -883,11 +749,6 @@ const listings: GearListing[] = [
       'The Conda BOA zone wraps the ankle independently and eliminates heel lift — the reason this boot has a cult following.',
     matchReason:
       'For riders whose heels lift in standard boots and who want stiffer support for bigger terrain.',
-    prices: [
-      { retailerId: 'evo', price: 379.95 },
-      { retailerId: 'the-house', price: 399.99 },
-      { retailerId: 'sportchek', price: 429.99 },
-    ],
   },
   {
     id: 'boot-burton-photon-step-on',
@@ -911,11 +772,6 @@ const listings: GearListing[] = [
       'A stiff, responsive boot that clicks straight into Step On bindings — no strapping in, and a very direct power transfer to the edge.',
     matchReason:
       'For advanced riders who charge hard and value response and fast entry over a soft, playful feel.',
-    prices: [
-      { retailerId: 'evo', price: 549.95 },
-      { retailerId: 'backcountry', price: 569.95 },
-      { retailerId: 'rei', price: 589.0 },
-    ],
   },
 
   /* ================================================================ */
@@ -945,11 +801,6 @@ const listings: GearListing[] = [
       'A warm, durable ABS hardshell with adjustable venting and a plush liner — the practical value pick for cold resort days.',
     matchReason:
       'Reliable certified protection and real warmth without paying for rotational-impact tech.',
-    prices: [
-      { retailerId: 'evo', price: 89.95 },
-      { retailerId: 'the-house', price: 99.99 },
-      { retailerId: 'sportchek', price: 109.99 },
-    ],
   },
   {
     id: 'helmet-salomon-pioneer-lt',
@@ -975,11 +826,6 @@ const listings: GearListing[] = [
       'Lightweight in-mould shell with a warm fleece liner and a simple dial fit system. Straightforward and comfortable.',
     matchReason:
       'A well-priced, warm helmet for riders who mostly stay on-piste in cold conditions.',
-    prices: [
-      { retailerId: 'evo', price: 99.95 },
-      { retailerId: 'rei', price: 109.0 },
-      { retailerId: 'sportchek', price: 119.99 },
-    ],
   },
   {
     id: 'helmet-smith-mission-mips',
@@ -1005,11 +851,6 @@ const listings: GearListing[] = [
       'MIPS rotational protection, AirEvac ventilation that pulls fog out of your goggles, and a low-profile in-mould shell.',
     matchReason:
       'The sweet spot for value and safety tech — MIPS plus proper goggle integration at a mid-tier price.',
-    prices: [
-      { retailerId: 'evo', price: 139.95 },
-      { retailerId: 'rei', price: 149.0 },
-      { retailerId: 'backcountry', price: 154.95 },
-    ],
   },
   {
     id: 'helmet-oakley-mod3',
@@ -1035,11 +876,6 @@ const listings: GearListing[] = [
       'A light in-mould lid with a Modular Brim System that seals to Oakley goggles and adjustable vents for warm spring laps.',
     matchReason:
       'Best for riders who run hot or ride spring conditions and want big adjustable airflow.',
-    prices: [
-      { retailerId: 'evo', price: 149.95 },
-      { retailerId: 'backcountry', price: 159.95 },
-      { retailerId: 'sportchek', price: 179.99 },
-    ],
   },
   {
     id: 'helmet-smith-vantage-mips',
@@ -1065,11 +901,6 @@ const listings: GearListing[] = [
       'Koroyd honeycomb absorbs energy and ventilates at the same time; 21 adjustable vents let you dump or trap heat mid-run.',
     matchReason:
       'Top-tier impact protection with the widest temperature range of any helmet here — the buy-once option.',
-    prices: [
-      { retailerId: 'evo', price: 279.95 },
-      { retailerId: 'rei', price: 289.0 },
-      { retailerId: 'backcountry', price: 299.95 },
-    ],
   },
   {
     id: 'helmet-oakley-mod5',
@@ -1095,11 +926,6 @@ const listings: GearListing[] = [
       'BOA 360 fit system, MIPS and a three-position Modular Brim that lets you dial the goggle gap out completely.',
     matchReason:
       'For riders who want a precise micro-adjustable fit and a seamless goggle seal across changing conditions.',
-    prices: [
-      { retailerId: 'evo', price: 259.95 },
-      { retailerId: 'backcountry', price: 269.95 },
-      { retailerId: 'the-house', price: 289.99 },
-    ],
   },
 
   /* ================================================================ */
@@ -1129,11 +955,6 @@ const listings: GearListing[] = [
       'A high-VLT low-light lens that lifts contrast in flat light and falling snow, with a bonus clear lens for night laps.',
     matchReason:
       'Maximum light transmission for storm days and dusk — the right lens when the light goes flat.',
-    prices: [
-      { retailerId: 'evo', price: 109.95 },
-      { retailerId: 'the-house', price: 119.99 },
-      { retailerId: 'sportchek', price: 129.99 },
-    ],
   },
   {
     id: 'goggle-salomon-radium-pro',
@@ -1159,11 +980,6 @@ const listings: GearListing[] = [
       'A do-everything mid-VLT toric lens with genuinely wide peripheral vision and a magnetic-free but very quick lens swap.',
     matchReason:
       'The most versatile VLT window there is — usable in bright sun and passable when clouds roll in.',
-    prices: [
-      { retailerId: 'evo', price: 159.95 },
-      { retailerId: 'rei', price: 169.0 },
-      { retailerId: 'backcountry', price: 174.95 },
-    ],
   },
   {
     id: 'goggle-oakley-line-miner',
@@ -1189,11 +1005,6 @@ const listings: GearListing[] = [
       'The cult cylindrical frame with a low-VLT Prizm mirror that cuts glare on bluebird days without flattening terrain detail.',
     matchReason:
       'A bright-light lens for sunny, high-albedo days — spring corn and mid-winter bluebird.',
-    prices: [
-      { retailerId: 'evo', price: 179.95 },
-      { retailerId: 'sportchek', price: 194.99 },
-      { retailerId: 'rei', price: 199.0 },
-    ],
   },
   {
     id: 'goggle-burton-anon-m4',
@@ -1221,11 +1032,6 @@ const listings: GearListing[] = [
       'Magnetic lens changes in under five seconds, plus a magnetic facemask that seals to the frame and stops fogging at the chin.',
     matchReason:
       'A high-VLT storm lens with a bright spare in the box — one purchase that covers the entire light spectrum.',
-    prices: [
-      { retailerId: 'evo', price: 259.95 },
-      { retailerId: 'backcountry', price: 269.95 },
-      { retailerId: 'the-house', price: 279.99 },
-    ],
   },
   {
     id: 'goggle-smith-io-mag-storm',
@@ -1251,11 +1057,6 @@ const listings: GearListing[] = [
       'Spherical ChromaPop optics with a magnetic lens system; the Storm Rose lens is the reference low-light tint for grey days.',
     matchReason:
       'Storm-day clarity with a low-VLT spare included, so one goggle covers freezing overcast and bright sun.',
-    prices: [
-      { retailerId: 'evo', price: 269.95 },
-      { retailerId: 'rei', price: 280.0 },
-      { retailerId: 'backcountry', price: 289.95 },
-    ],
   },
   {
     id: 'goggle-smith-4d-mag-sun',
@@ -1281,11 +1082,6 @@ const listings: GearListing[] = [
       'The BirdsEye lens curve extends your downward field of view so you can see your feet without dropping your chin. Very dark sun tint.',
     matchReason:
       'Built for high-glare spring sun and reflective snowpack where standard tints let too much light through.',
-    prices: [
-      { retailerId: 'evo', price: 299.95 },
-      { retailerId: 'backcountry', price: 309.95 },
-      { retailerId: 'sportchek', price: 329.99 },
-    ],
   },
   {
     id: 'goggle-oakley-flight-deck-torch',
@@ -1311,11 +1107,6 @@ const listings: GearListing[] = [
       'Rimless spherical design borrowed from fighter-pilot helmet optics — the widest unobstructed field of view Oakley makes.',
     matchReason:
       'A mid-low VLT all-rounder for variable light, with peripheral vision that genuinely helps in trees and traffic.',
-    prices: [
-      { retailerId: 'evo', price: 229.95 },
-      { retailerId: 'rei', price: 239.0 },
-      { retailerId: 'backcountry', price: 249.95 },
-    ],
   },
 
   /* ================================================================ */
@@ -1345,11 +1136,6 @@ const listings: GearListing[] = [
       'A clean 2-layer GORE-TEX shell with big pit zips. No insulation — you control warmth entirely through your mid-layer.',
     matchReason:
       'The right call for warm, wet spring days and for anyone who runs hot and prefers layering to built-in loft.',
-    prices: [
-      { retailerId: 'evo', price: 229.95 },
-      { retailerId: 'the-house', price: 249.99 },
-      { retailerId: 'sportchek', price: 279.99 },
-    ],
   },
   {
     id: 'jacket-salomon-brilliant',
@@ -1375,11 +1161,6 @@ const listings: GearListing[] = [
       'A warm, fully-featured resort jacket with synthetic loft that keeps insulating even when it gets damp.',
     matchReason:
       'Reliable warmth at an entry price for cold lift-served days — synthetic fill handles moisture better than down.',
-    prices: [
-      { retailerId: 'evo', price: 199.95 },
-      { retailerId: 'sportchek', price: 219.99 },
-      { retailerId: 'rei', price: 229.0 },
-    ],
   },
   {
     id: 'jacket-burton-covert',
@@ -1405,11 +1186,6 @@ const listings: GearListing[] = [
       'The everyday resort jacket: relaxed fit, moderate insulation and every pocket you actually use, at a sane price.',
     matchReason:
       'A balanced mid-weight for typical -5 °C to 0 °C days, cut loose enough for a mid-layer when it gets colder.',
-    prices: [
-      { retailerId: 'evo', price: 279.95 },
-      { retailerId: 'rei', price: 289.0 },
-      { retailerId: 'the-house', price: 299.99 },
-    ],
   },
   {
     id: 'jacket-burton-frostner-down',
@@ -1435,11 +1211,6 @@ const listings: GearListing[] = [
       'Down through the core for maximum warmth-to-weight, synthetic in the shoulders and cuffs where moisture collects.',
     matchReason:
       'Purpose-built for deep-cold days — the hybrid fill avoids down’s classic failure mode in wet weather.',
-    prices: [
-      { retailerId: 'evo', price: 349.95 },
-      { retailerId: 'backcountry', price: 369.95 },
-      { retailerId: 'sportchek', price: 399.99 },
-    ],
   },
   {
     id: 'jacket-salomon-stance-3l',
@@ -1465,11 +1236,6 @@ const listings: GearListing[] = [
       'A light, highly breathable 3-layer touring shell with full-length vents and a beacon pocket. Built to move.',
     matchReason:
       'For riders generating their own heat on the skin track who need breathability over insulation.',
-    prices: [
-      { retailerId: 'evo', price: 379.95 },
-      { retailerId: 'backcountry', price: 399.95 },
-      { retailerId: 'rei', price: 409.0 },
-    ],
   },
   {
     id: 'jacket-arcteryx-macai',
@@ -1495,11 +1261,6 @@ const listings: GearListing[] = [
       "Arc'teryx's warmest resort piece: down-filled baffles under a full 3L GORE-TEX shell, so the loft never gets wet.",
     matchReason:
       'The definitive deep-cold jacket — for chairlift days at -15 °C and below where nothing else is warm enough.',
-    prices: [
-      { retailerId: 'backcountry', price: 949.0 },
-      { retailerId: 'rei', price: 975.0 },
-      { retailerId: 'evo', price: 999.95 },
-    ],
   },
   {
     id: 'jacket-arcteryx-sabre',
@@ -1525,11 +1286,6 @@ const listings: GearListing[] = [
       'The reference all-mountain 3L shell — burly enough for tree runs, breathable enough to hike in, with a relaxed freeride cut.',
     matchReason:
       'For riders who want one shell for everything and layer underneath to match the day’s temperature.',
-    prices: [
-      { retailerId: 'backcountry', price: 649.0 },
-      { retailerId: 'rei', price: 675.0 },
-      { retailerId: 'evo', price: 699.95 },
-    ],
   },
   {
     id: 'jacket-arcteryx-rush',
@@ -1555,11 +1311,6 @@ const listings: GearListing[] = [
       'GORE-TEX Pro in its most breathable configuration, cut for movement and sized to fit over a light insulator on the descent.',
     matchReason:
       'For committed ski tourers and splitboarders where sweat management matters more than raw warmth.',
-    prices: [
-      { retailerId: 'backcountry', price: 699.0 },
-      { retailerId: 'rei', price: 725.0 },
-      { retailerId: 'evo', price: 749.95 },
-    ],
   },
   {
     id: 'jacket-burton-ak-cyclic',
@@ -1585,11 +1336,6 @@ const listings: GearListing[] = [
       'Burton’s backcountry-focused stretch shell with articulated sleeves that stay put through a full grab.',
     matchReason:
       'A snowboard-specific freeride shell built for movement, hiking and layering across changing conditions.',
-    prices: [
-      { retailerId: 'evo', price: 429.95 },
-      { retailerId: 'backcountry', price: 449.95 },
-      { retailerId: 'the-house', price: 479.99 },
-    ],
   },
 
   /* ================================================================ */
@@ -1618,11 +1364,6 @@ const listings: GearListing[] = [
       'A light, forgiving release binding built around a low DIN range so a developing skier releases when they should.',
     matchReason:
       'The right release range for beginners and early intermediates — protective without being twitchy.',
-    prices: [
-      { retailerId: 'evo', price: 149.95 },
-      { retailerId: 'rei', price: 159.0 },
-      { retailerId: 'sportchek', price: 169.99 },
-    ],
   },
   {
     id: 'binding-atomic-warden-13',
@@ -1647,11 +1388,6 @@ const listings: GearListing[] = [
       'A wide-range Multi-Norm binding that mounts almost anything in a boot rack, with enough elasticity to shrug off park landings.',
     matchReason:
       'A do-everything all-mountain binding for intermediate-to-advanced skiers who want one setup for groomers and park laps.',
-    prices: [
-      { retailerId: 'evo', price: 219.95 },
-      { retailerId: 'backcountry', price: 229.95 },
-      { retailerId: 'sportchek', price: 239.99 },
-    ],
   },
   {
     id: 'binding-marker-jester-16',
@@ -1676,11 +1412,6 @@ const listings: GearListing[] = [
       'A freeride workhorse: a high-DIN Triple Pivot toe that holds through chattery snow and hucked landings without pre-releasing.',
     matchReason:
       'Built for expert skiers who ski aggressively across variable terrain and need retention that will not back off under load.',
-    prices: [
-      { retailerId: 'evo', price: 289.95 },
-      { retailerId: 'backcountry', price: 299.95 },
-      { retailerId: 'rei', price: 309.0 },
-    ],
   },
 
   /* ================================================================ */
@@ -1709,11 +1440,6 @@ const listings: GearListing[] = [
       'A soft, forgiving binding with a cushioned baseplate that takes the edge off flat-landing park laps.',
     matchReason:
       'Easy to strap in and forgiving underfoot — a comfortable first binding for riders still building confidence.',
-    prices: [
-      { retailerId: 'evo', price: 129.95 },
-      { retailerId: 'the-house', price: 139.99 },
-      { retailerId: 'sportchek', price: 149.99 },
-    ],
   },
   {
     id: 'binding-union-force',
@@ -1738,11 +1464,6 @@ const listings: GearListing[] = [
       'The reference all-mountain binding: a canted highback and dual ratchet straps that lock the boot down without dead spots.',
     matchReason:
       'Medium-stiff response for riders who charge all-mountain terrain and still want to press a jib on the way down.',
-    prices: [
-      { retailerId: 'evo', price: 229.95 },
-      { retailerId: 'backcountry', price: 239.95 },
-      { retailerId: 'the-house', price: 249.99 },
-    ],
   },
   {
     id: 'binding-burton-genesis-x',
@@ -1767,29 +1488,34 @@ const listings: GearListing[] = [
       'Burton’s flagship binding: a carbon highback and Hammockstrap suspension that wrap the boot instead of clamping it, at a genuinely light weight.',
     matchReason:
       'Stiff, precise and light enough to disappear underfoot — for expert riders who feel every dead spot in a lesser binding.',
-    prices: [
-      { retailerId: 'evo', price: 329.95 },
-      { retailerId: 'backcountry', price: 339.95 },
-      { retailerId: 'rei', price: 349.0 },
-    ],
   },
 ];
+
+/** Defensive read of one price cell — anything malformed reads as unchecked. */
+const readPrice = (itemId: string, retailerId: string): Pick<RetailerPrice, 'price' | 'checkedAt'> => {
+  const entry = priceTable[itemId]?.[retailerId];
+  const price = typeof entry?.price === 'number' && Number.isFinite(entry.price) && entry.price > 0 ? entry.price : null;
+  const checkedAt = typeof entry?.checkedAt === 'string' && entry.checkedAt ? entry.checkedAt : null;
+  return { price, checkedAt };
+};
 
 /**
  * Public database.
  *
- * Retailer links are generated here rather than stored, so every link is a live
- * search on that retailer's own site for the exact product — no dead
- * product-detail URLs to rot. Cards render these with
+ * Every item carries one `RetailerPrice` per known retailer, in registry
+ * order, priced or not — the UI filters to the selected region. Links are
+ * generated here rather than stored, so every link is a live search on that
+ * retailer's own site for the exact product. Cards render these with
  * `target="_blank" rel="noopener noreferrer sponsored"`.
  */
-export const gearDatabase: GearItem[] = listings.map(({ searchTerm, prices, ...item }) => ({
+export const gearDatabase: GearItem[] = listings.map(({ searchTerm, ...item }) => ({
   ...item,
   image: buildGearImage(item),
   performance: computePerformanceProfile(item),
-  prices: prices.map<RetailerPrice>(({ retailerId, price }) => ({
+  prices: RETAILER_IDS.map<RetailerPrice>((retailerId) => ({
     retailerId,
-    price,
+    currency: RETAILERS[retailerId].currency,
+    ...readPrice(item.id, retailerId),
     link: buildRetailerUrl(retailerId, searchTerm ?? `${item.brand} ${item.name}`),
   })),
 }));

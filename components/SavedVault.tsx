@@ -4,7 +4,11 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { SavedSetup, UserStats } from '@/lib/types';
 import { deleteSavedSetup, loadSavedSetups, renameSavedSetup } from '@/lib/savedSetups';
+import { getGearById } from '@/lib/gearDatabase';
+import { formatPrice, kitTotal } from '@/lib/pricing';
+import type { Region } from '@/lib/retailers';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { useRegion } from '@/lib/region/RegionContext';
 import { BookmarkIcon, CheckIcon, PencilIcon, RefreshIcon, TrashIcon, XIcon } from './Icons';
 
 /** Viewport margin the flyout must always keep clear on every side. */
@@ -49,6 +53,25 @@ interface SavedVaultProps {
   refreshToken?: number;
 }
 
+/**
+ * Totals a saved setup live from the current price data for `region`, so the
+ * vault never shows a stale snapshot or a number in the wrong currency.
+ * Items no longer in the catalogue are skipped.
+ */
+function setupTotalLabel(
+  setup: SavedSetup,
+  region: Region,
+  pricedOf: (priced: number, count: number) => string,
+): string | null {
+  const items = setup.recommendations
+    .map((summary) => getGearById(summary.itemId))
+    .filter((item): item is NonNullable<typeof item> => item !== undefined);
+  const kit = kitTotal(items, region);
+  if (kit.priced === 0) return null;
+  const total = formatPrice(kit.total, kit.currency);
+  return kit.priced < kit.count ? `${total} ${pricedOf(kit.priced, kit.count)}` : total;
+}
+
 function formatTimestamp(iso: string): string {
   try {
     return new Date(iso).toLocaleString(undefined, {
@@ -64,6 +87,7 @@ function formatTimestamp(iso: string): string {
 
 export default function SavedVault({ onLoad, refreshToken }: SavedVaultProps) {
   const { t } = useLanguage();
+  const { region } = useRegion();
   const [open, setOpen] = useState(false);
   const [setups, setSetups] = useState<SavedSetup[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -225,7 +249,7 @@ export default function SavedVault({ onLoad, refreshToken }: SavedVaultProps) {
                                 {formatTimestamp(setup.timestamp)} ·{' '}
                                 {t.savedVault.itemsSummary(
                                   setup.recommendations.length,
-                                  `$${setup.totalBestPrice.toFixed(2)}`,
+                                  setupTotalLabel(setup, region, t.dashboard.pricedOf),
                                 )}
                               </p>
                             </div>

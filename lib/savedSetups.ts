@@ -7,7 +7,6 @@
  * questionnaire. Pure browser-storage functions — no server, no network.
  */
 
-import { getRetailer } from './retailers';
 import type { MatchResult, SavedGearSummary, SavedSetup } from './types';
 
 const STORAGE_KEY = 'freezed:saved-setups:v1';
@@ -48,8 +47,6 @@ const summarizeRecommendations = (result: MatchResult): SavedGearSummary[] =>
     brand: rec.item.brand,
     name: rec.item.name,
     image: rec.item.image,
-    bestPrice: rec.bestPrice.price,
-    retailer: getRetailer(rec.bestPrice.retailerId).name,
   }));
 
 /** Save a new named configuration built from the current match result. Returns the updated list. */
@@ -60,7 +57,6 @@ export const addSavedSetup = (name: string, result: MatchResult): SavedSetup[] =
     timestamp: new Date().toISOString(),
     stats: result.stats,
     recommendations: summarizeRecommendations(result),
-    totalBestPrice: result.totalBestPrice,
   };
   const next = [setup, ...loadSavedSetups()];
   persist(next);

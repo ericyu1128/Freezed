@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Snowfall from '@/components/Snowfall';
 import { LanguageProvider } from '@/lib/i18n/LanguageContext';
+import { RegionProvider } from '@/lib/region/RegionContext';
 
 export const metadata: Metadata = {
   title: 'Freezed — Ski & Snowboard Gear Matcher',
@@ -42,12 +43,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen">
         <LanguageProvider>
-          <Snowfall />
-          <div className="relative z-10 flex min-h-screen flex-col">
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
+          <RegionProvider>
+            <Snowfall />
+            <div className="relative z-10 flex min-h-screen flex-col">
+              <Navbar />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </div>
+          </RegionProvider>
         </LanguageProvider>
         <Analytics />
       </body>

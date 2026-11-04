@@ -26,6 +26,7 @@ import type {
   Temperature,
 } from '@/lib/types';
 import type { StepId } from '@/lib/stepFlow';
+import type { Currency } from '@/lib/retailers';
 
 export type Language = 'en' | 'zh';
 
@@ -51,6 +52,12 @@ export interface Dictionary {
     ariaLabel: string;
     english: string;
     chinese: string;
+  };
+
+  regionSwitch: {
+    ariaLabel: string;
+    canada: string;
+    unitedStates: string;
   };
 
   hero: {
@@ -99,7 +106,8 @@ export interface Dictionary {
     level: Record<Level, OptionCopy>;
     style: Record<RidingStyle, OptionCopy>;
     temperature: Record<Temperature, OptionCopy>;
-    budget: Record<BudgetTier, OptionCopy & { range: string }>;
+    /** `range` is copy, not a computed total — one string per currency, never converted. */
+    budget: Record<BudgetTier, OptionCopy & { range: Record<Currency, string> }>;
     heightLabel: string;
     heightHint: string;
     heightUnit: string;
@@ -141,6 +149,9 @@ export interface Dictionary {
     kitTotal: string;
     windowRange: (min: number, max: number) => string;
     itemsCheapest: (n: number) => string;
+    itemsPricedOf: (priced: number, count: number) => string;
+    /** Short "(x of y priced)" suffix for any total that skipped unpriced items. */
+    pricedOf: (priced: number, count: number) => string;
     howWeCalculated: (label: string) => string;
     recommendedLabel: (label: string) => string;
     poleLengthNote: (pole: number, mondo: string) => string;
@@ -165,13 +176,17 @@ export interface Dictionary {
     bestPrice: string;
     at: string;
     viewDeal: string;
+    checkPrice: string;
+    noPriceYet: string;
+    checkedOn: (date: string) => string;
     viewAtRetailer: (product: string, retailer: string) => string;
   };
 
   saveModal: {
     title: string;
     description: string;
-    itemsSummary: (count: number, total: string) => string;
+    /** `total` is `null` when nothing in the kit has been priced in the selected region. */
+    itemsSummary: (count: number, total: string | null) => string;
     cancel: string;
     save: string;
     close: string;
@@ -190,7 +205,8 @@ export interface Dictionary {
     deleteBtn: string;
     cancelBtn: string;
     reload: string;
-    itemsSummary: (n: number, total: string) => string;
+    /** `total` is `null` when nothing in the setup has been priced in the selected region. */
+    itemsSummary: (n: number, total: string | null) => string;
   };
 
   loading: {
@@ -242,6 +258,12 @@ export const en: Dictionary = {
     ariaLabel: 'Switch language',
     english: 'EN',
     chinese: '中文',
+  },
+
+  regionSwitch: {
+    ariaLabel: 'Shopping region and currency',
+    canada: '🇨🇦 CAD',
+    unitedStates: '🇺🇸 USD',
   },
 
   hero: {
@@ -393,17 +415,26 @@ export const en: Dictionary = {
       budget: {
         label: 'Budget',
         description: 'Entry-level / Value. Proven basics, no exotic materials.',
-        range: '≈ $1,000 – $1,400 full kit',
+        range: {
+          CAD: '≈ $1,350 – $1,900 CAD full kit', // TODO verify CAD range against real Canadian prices
+          USD: '≈ $1,000 – $1,400 USD full kit',
+        },
       },
       'mid-range': {
         label: 'Mid-Range',
         description: 'Balanced performance / price. Where most riders should shop.',
-        range: '≈ $1,800 – $2,400 full kit',
+        range: {
+          CAD: '≈ $2,450 – $3,250 CAD full kit', // TODO verify CAD range against real Canadian prices
+          USD: '≈ $1,800 – $2,400 USD full kit',
+        },
       },
       premium: {
         label: 'Premium',
         description: 'Top-tier / Pro construction. Titanal, GORE-TEX Pro, magnetic optics.',
-        range: '≈ $2,800 – $3,600 full kit',
+        range: {
+          CAD: '≈ $3,800 – $4,900 CAD full kit', // TODO verify CAD range against real Canadian prices
+          USD: '≈ $2,800 – $3,600 USD full kit',
+        },
       },
     },
     heightLabel: 'Height',
@@ -449,6 +480,8 @@ export const en: Dictionary = {
     kitTotal: 'Kit total (best prices)',
     windowRange: (min, max) => `Window ${min}–${max} cm`,
     itemsCheapest: (n) => `${n} items · cheapest retailer each`,
+    itemsPricedOf: (priced, count) => `(${priced} of ${count} priced) · cheapest retailer each`,
+    pricedOf: (priced, count) => `(${priced} of ${count} priced)`,
     howWeCalculated: (label) => `How we calculated your ${label.toLowerCase()}`,
     recommendedLabel: (label) => `Recommended ${label.toLowerCase()}`,
     poleLengthNote: (pole, mondo) =>
@@ -475,6 +508,9 @@ export const en: Dictionary = {
     bestPrice: 'Best price',
     at: 'at',
     viewDeal: 'View deal',
+    checkPrice: 'Check price →',
+    noPriceYet: 'No price yet',
+    checkedOn: (date) => `checked ${date}`,
     viewAtRetailer: (product, retailer) => `View ${product} at ${retailer} (opens in a new tab)`,
   },
 
@@ -482,7 +518,8 @@ export const en: Dictionary = {
     title: 'Save this configuration',
     description:
       'Name your setup so you can reload it later — e.g. "Deep Powder Rig" or "Park & Rails".',
-    itemsSummary: (count, total) => `${count} items · ${total} best-price total`,
+    itemsSummary: (count, total) =>
+      total === null ? `${count} items · no prices checked yet` : `${count} items · ${total} best-price total`,
     cancel: 'Cancel',
     save: 'Save configuration',
     close: 'Close',
@@ -501,7 +538,7 @@ export const en: Dictionary = {
     deleteBtn: 'Delete',
     cancelBtn: 'Cancel',
     reload: 'Reload this setup',
-    itemsSummary: (n, total) => `${n} items · ${total}`,
+    itemsSummary: (n, total) => (total === null ? `${n} items` : `${n} items · ${total}`),
   },
 
   loading: {
@@ -537,7 +574,7 @@ export const en: Dictionary = {
     retailersHeading: 'Retailers',
     brandsHeading: 'Brands',
     copyright: (year) =>
-      `© ${year} Freezed. Built by Eric Yu. Prices are illustrative demo data.`,
+      `© ${year} Freezed. Built by Eric Yu. Prices checked by hand on the date shown and may change.`,
     disclaimer: 'Sizing output is guidance, not a fitting. Always shell-fit boots with a qualified bootfitter.',
     aboutLink: 'About',
     privacyLink: 'Privacy',
@@ -560,6 +597,12 @@ export const zh: Dictionary = {
     ariaLabel: '切换语言',
     english: 'EN',
     chinese: '中文',
+  },
+
+  regionSwitch: {
+    ariaLabel: '购物地区与币种',
+    canada: '🇨🇦 CAD',
+    unitedStates: '🇺🇸 USD',
   },
 
   hero: {
@@ -710,17 +753,26 @@ export const zh: Dictionary = {
       budget: {
         label: '经济型',
         description: '入门 / 高性价比。成熟基础款,不含特殊材质。',
-        range: '≈ 全套 $1,000 – $1,400',
+        range: {
+          CAD: '≈ 全套 $1,350 – $1,900 CAD', // TODO verify CAD range against real Canadian prices
+          USD: '≈ 全套 $1,000 – $1,400 USD',
+        },
       },
       'mid-range': {
         label: '中端',
         description: '性能与价格均衡。大多数玩家的最佳选择。',
-        range: '≈ 全套 $1,800 – $2,400',
+        range: {
+          CAD: '≈ 全套 $2,450 – $3,250 CAD', // TODO verify CAD range against real Canadian prices
+          USD: '≈ 全套 $1,800 – $2,400 USD',
+        },
       },
       premium: {
         label: '高端',
         description: '顶级 / 专业级结构。钛合金、GORE-TEX Pro、磁吸镜片。',
-        range: '≈ 全套 $2,800 – $3,600',
+        range: {
+          CAD: '≈ 全套 $3,800 – $4,900 CAD', // TODO verify CAD range against real Canadian prices
+          USD: '≈ 全套 $2,800 – $3,600 USD',
+        },
       },
     },
     heightLabel: '身高',
@@ -766,6 +818,8 @@ export const zh: Dictionary = {
     kitTotal: '全套总价(最低价)',
     windowRange: (min, max) => `区间 ${min}–${max} 厘米`,
     itemsCheapest: (n) => `${n} 件商品 · 各取最低价商家`,
+    itemsPricedOf: (priced, count) => `(已核价 ${priced}/${count} 件) · 各取最低价商家`,
+    pricedOf: (priced, count) => `(已核价 ${priced}/${count} 件)`,
     howWeCalculated: (label) => `我们如何计算你的${label}`,
     recommendedLabel: (label) => `推荐${label}`,
     poleLengthNote: (pole, mondo) =>
@@ -791,13 +845,17 @@ export const zh: Dictionary = {
     bestPrice: '最优价格',
     at: '来自',
     viewDeal: '查看优惠',
+    checkPrice: '查看价格 →',
+    noPriceYet: '暂无价格',
+    checkedOn: (date) => `核价于 ${date}`,
     viewAtRetailer: (product, retailer) => `在 ${retailer} 查看 ${product}(在新标签页打开)`,
   },
 
   saveModal: {
     title: '保存这份配置',
     description: '为你的配置命名,方便以后重新加载——例如「深雪座驾」或「公园与道具」。',
-    itemsSummary: (count, total) => `${count} 件商品 · 最低总价 ${total}`,
+    itemsSummary: (count, total) =>
+      total === null ? `${count} 件商品 · 尚未核价` : `${count} 件商品 · 最低总价 ${total}`,
     cancel: '取消',
     save: '保存配置',
     close: '关闭',
@@ -816,7 +874,7 @@ export const zh: Dictionary = {
     deleteBtn: '删除',
     cancelBtn: '取消',
     reload: '重新加载此配置',
-    itemsSummary: (n, total) => `${n} 件商品 · ${total}`,
+    itemsSummary: (n, total) => (total === null ? `${n} 件商品` : `${n} 件商品 · ${total}`),
   },
 
   loading: {
@@ -852,7 +910,7 @@ export const zh: Dictionary = {
     retailersHeading: '商家',
     brandsHeading: '品牌',
     copyright: (year) =>
-      `© ${year} Freezed。由 Eric Yu 制作。价格为示例数据。`,
+      `© ${year} Freezed。由 Eric Yu 制作。价格为人工核对，以所示日期为准，可能会有变动。`,
     disclaimer: '尺寸结果仅供参考,并非最终试穿结论。请务必请专业雪靴技师为你进行内壳试穿。',
     aboutLink: '关于',
     privacyLink: '隐私',

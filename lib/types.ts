@@ -3,7 +3,7 @@
  * Made by Eric Yu
  */
 
-import type { RetailerId } from './retailers';
+import type { Currency, RetailerId } from './retailers';
 
 /* ------------------------------------------------------------------ */
 /*  Primitive unions                                                   */
@@ -58,10 +58,19 @@ export interface UserStats {
 /*  Gear                                                               */
 /* ------------------------------------------------------------------ */
 
+/**
+ * One retailer's listing for one item. Prices are entered by hand from
+ * `data/prices.json` (see `npm run prices:import`) and are never converted
+ * between currencies — `currency` is always the retailer's own.
+ */
 export interface RetailerPrice {
-  /** Key into `RETAILERS` in `retailers.ts` — display name, region and currency live there. */
+  /** Key into `RETAILERS` in `retailers.ts` — display name and region live there. */
   retailerId: RetailerId;
-  price: number;
+  /** `null` until someone has checked this retailer by hand. */
+  price: number | null;
+  currency: Currency;
+  /** ISO date (`YYYY-MM-DD`) the price was last checked, or `null` if never. */
+  checkedAt: string | null;
   link: string;
 }
 
@@ -180,8 +189,6 @@ export interface RankedCandidate {
   score: number;
   /** Per-feature breakdown behind `score`, most-influential first. */
   breakdown: FeatureContribution[];
-  /** Cheapest retailer price found. */
-  bestPrice: RetailerPrice;
 }
 
 export interface Recommendation {
@@ -194,8 +201,6 @@ export interface Recommendation {
   reasoning: string;
   /** Short bullet justifications for `item`. */
   reasonBullets: string[];
-  /** Cheapest retailer price found for `item`. */
-  bestPrice: RetailerPrice;
   /** Every item in this category that survived hard filtering, sorted by Compatibility Score descending. */
   candidates: RankedCandidate[];
 }
@@ -204,8 +209,6 @@ export interface MatchResult {
   stats: UserStats;
   specs: CalculatedSpecs;
   recommendations: Recommendation[];
-  /** Sum of the cheapest price for every recommended item. */
-  totalBestPrice: number;
   generatedAt: string;
 }
 
@@ -228,15 +231,18 @@ export interface HotspotDefinition {
 /*  Saved setups (local vault)                                         */
 /* ------------------------------------------------------------------ */
 
-/** Slim per-item snapshot stored with a saved setup — enough to render the vault list. */
+/**
+ * Slim per-item snapshot stored with a saved setup — enough to render the vault list.
+ * Prices are deliberately not snapshotted: the vault totals them live from the
+ * current price data for the selected region, so a saved setup never shows a
+ * stale or wrong-currency number.
+ */
 export interface SavedGearSummary {
   category: GearCategory;
   itemId: string;
   brand: string;
   name: string;
   image: string;
-  bestPrice: number;
-  retailer: string;
 }
 
 /** A user-named snapshot of a match result, persisted to `localStorage`. */
@@ -247,5 +253,4 @@ export interface SavedSetup {
   timestamp: string;
   stats: UserStats;
   recommendations: SavedGearSummary[];
-  totalBestPrice: number;
 }

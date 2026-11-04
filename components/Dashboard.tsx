@@ -4,7 +4,9 @@ import { useState } from 'react';
 import type { GearCategory, MatchResult, UserStats } from '@/lib/types';
 import { calculateLength, categoryLabel, levelLabel, styleLabel, temperatureLabel, tierLabel } from '@/lib/matcherLogic';
 import { addSavedSetup } from '@/lib/savedSetups';
+import { formatAmount, formatPrice, kitTotal } from '@/lib/pricing';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { useRegion } from '@/lib/region/RegionContext';
 import GearCard from './GearCard';
 import SaveConfigurationModal from './SaveConfigurationModal';
 import SavedVault from './SavedVault';
@@ -28,7 +30,14 @@ export default function Dashboard({
   onLoadSetup,
 }: DashboardProps) {
   const { t, language } = useLanguage();
-  const { stats, specs, recommendations, totalBestPrice } = result;
+  const { region } = useRegion();
+  const { stats, specs, recommendations } = result;
+  // Only items priced in the selected region count; unpriced ones are reported, never guessed.
+  const kit = kitTotal(
+    recommendations.map((rec) => rec.item),
+    region,
+  );
+  const kitTotalLabel = kit.priced > 0 ? formatPrice(kit.total, kit.currency) : null;
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [vaultRefreshToken, setVaultRefreshToken] = useState(0);
   const lengthLabel = stats.activity === 'snowboard' ? t.dashboard.boardLength : t.dashboard.skiLength;
@@ -122,8 +131,21 @@ export default function Dashboard({
           />
           <SummaryTile
             label={t.dashboard.kitTotal}
-            value={`$${totalBestPrice.toFixed(2)}`}
-            sub={t.dashboard.itemsCheapest(recommendations.length)}
+            value={
+              kit.priced > 0 ? (
+                <>
+                  {formatAmount(kit.total)}{' '}
+                  <span className="text-xs font-bold text-slate-400">{kit.currency}</span>
+                </>
+              ) : (
+                '—'
+              )
+            }
+            sub={
+              kit.priced === kit.count
+                ? t.dashboard.itemsCheapest(kit.count)
+                : t.dashboard.itemsPricedOf(kit.priced, kit.count)
+            }
           />
         </div>
       </section>
@@ -232,7 +254,11 @@ export default function Dashboard({
       <SaveConfigurationModal
         open={saveModalOpen}
         itemCount={recommendations.length}
-        totalPrice={totalBestPrice}
+        totalLabel={
+          kitTotalLabel && kit.priced < kit.count
+            ? `${kitTotalLabel} ${t.dashboard.pricedOf(kit.priced, kit.count)}`
+            : kitTotalLabel
+        }
         onClose={() => setSaveModalOpen(false)}
         onSave={handleSaveConfiguration}
       />
@@ -249,7 +275,7 @@ function SummaryTile({
   accent,
 }: {
   label: string;
-  value: string;
+  value: React.ReactNode;
   sub: string;
   accent?: boolean;
 }) {

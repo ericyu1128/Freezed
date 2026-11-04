@@ -23,7 +23,6 @@ import type {
   NumericRange,
   RankedCandidate,
   Recommendation,
-  RetailerPrice,
   RidingStyle,
   Temperature,
   UserStats,
@@ -546,9 +545,6 @@ const numericSpec = (item: GearItem, key: string): number | null => {
 /*  7. Dynamic card specs + generated reasoning                        */
 /* ------------------------------------------------------------------ */
 
-const cheapest = (prices: RetailerPrice[]): RetailerPrice =>
-  prices.reduce((best, current) => (current.price < best.price ? current : best), prices[0]);
-
 export const buildCalculatedSpecs = (
   item: GearItem,
   stats: UserStats,
@@ -756,7 +752,9 @@ export const buildReasonBullets = (
   if (item.levels?.includes(stats.level)) {
     bullets.push(`Tuned for ${LEVEL_LABEL[stats.level].toLowerCase()} riders.`);
   }
-  bullets.push(`Price: ${tierWord} — cheapest listing $${cheapest(item.prices).price.toFixed(2)}.`);
+  // Prices are region-specific and shown in the card's own price block; this
+  // bullet only explains how the price *tier* affected the score.
+  bullets.push(`Price tier: ${tierWord}.`);
 
   return bullets;
 };
@@ -813,7 +811,7 @@ export const matchGear = (stats: UserStats, database: GearItem[] = gearDatabase)
     const ranked: RankedCandidate[] = pool
       .map((item) => {
         const { score, contributions } = computeCompatibility(item, stats, specs);
-        return { item, score, breakdown: contributions, bestPrice: cheapest(item.prices) };
+        return { item, score, breakdown: contributions };
       })
       .sort((a, b) => b.score - a.score)
       .slice(0, MAX_CANDIDATES);
@@ -828,18 +826,14 @@ export const matchGear = (stats: UserStats, database: GearItem[] = gearDatabase)
       score: winner.score,
       reasoning: buildReasoning(winner.item, stats, specs),
       reasonBullets: buildReasonBullets(winner.item, stats, specs),
-      bestPrice: winner.bestPrice,
       candidates: ranked,
     } satisfies Recommendation;
   }).filter((entry): entry is Recommendation => entry !== null);
-
-  const totalBestPrice = recommendations.reduce((sum, rec) => sum + rec.bestPrice.price, 0);
 
   return {
     stats,
     specs,
     recommendations,
-    totalBestPrice,
     generatedAt: new Date().toISOString(),
   };
 };

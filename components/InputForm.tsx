@@ -13,6 +13,7 @@ import type {
 import { LAST_STEP_INDEX, STEPS, indexOfStep, transition, type StepId } from '@/lib/stepFlow';
 import { levelLabel, styleLabel, temperatureLabel, tierLabel } from '@/lib/matcherLogic';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { useRegion } from '@/lib/region/RegionContext';
 import { cmToIn, inToCm, kgToLb, lbToKg, type UnitSystem } from '@/lib/units';
 import {
   ArrowLeftIcon,
@@ -307,6 +308,7 @@ interface InputFormProps {
 
 export default function InputForm({ onSubmit, isLoading = false, initialStats }: InputFormProps) {
   const { t, language } = useLanguage();
+  const { currency } = useRegion();
   const [stats, setStats] = useState<UserStats>({ ...DEFAULTS, ...initialStats });
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState<'forward' | 'back'>('forward');
@@ -349,9 +351,9 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
     { value: 'premium', label: t.form.budget.premium.label, description: t.form.budget.premium.description },
   ];
   const BUDGET_RANGE: Record<BudgetTier, string> = {
-    budget: t.form.budget.budget.range,
-    'mid-range': t.form.budget['mid-range'].range,
-    premium: t.form.budget.premium.range,
+    budget: t.form.budget.budget.range[currency],
+    'mid-range': t.form.budget['mid-range'].range[currency],
+    premium: t.form.budget.premium.range[currency],
   };
   const UNIT_SYSTEM_OPTIONS: Option<UnitSystem>[] = [
     { value: 'metric', label: t.form.unitSystemMetric, description: `${t.form.heightUnit} / ${t.form.weightUnit}` },

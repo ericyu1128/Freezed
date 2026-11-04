@@ -3,9 +3,12 @@
 import Link from 'next/link';
 import Logo from './Logo';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { useRegion } from '@/lib/region/RegionContext';
+import { retailersForRegion } from '@/lib/retailers';
 
 export default function Footer() {
   const { t } = useLanguage();
+  const { region } = useRegion();
 
   return (
     <footer className="mt-24 border-t border-white/10 bg-glacier-1000/60 backdrop-blur-xl">
@@ -39,9 +42,9 @@ export default function Footer() {
                 {t.footer.retailersHeading}
               </p>
               <ul className="space-y-1 text-slate-400">
-                <li>Evo</li>
-                <li>REI</li>
-                <li>Sport Chek</li>
+                {retailersForRegion(region).map((retailer) => (
+                  <li key={retailer.id}>{retailer.name}</li>
+                ))}
               </ul>
             </div>
             <div className="col-span-2 sm:col-span-1">

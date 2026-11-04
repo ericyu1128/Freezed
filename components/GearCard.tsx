@@ -5,7 +5,17 @@ import type { Activity, CalculatedSpecs, GearCategory, Recommendation, UserStats
 import { buildCalculatedSpecs, buildReasonBullets, buildReasoning, categoryLabel } from '@/lib/matcherLogic';
 import { getPerformanceAxes } from '@/lib/performanceProfile';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { useRegion } from '@/lib/region/RegionContext';
 import { getRetailer, SHOW_RETAILER_LINKS } from '@/lib/retailers';
+import {
+  bestPriceFor,
+  formatCheckedDate,
+  formatPrice,
+  isPriced,
+  pricesForRegion,
+  primaryLinkFor,
+  sortForDisplay,
+} from '@/lib/pricing';
 import { categoryIcon, CheckIcon, ExternalIcon, SparkIcon } from './Icons';
 import GearImage from './GearImage';
 import PerformanceHexagon from './PerformanceHexagon';
@@ -37,13 +47,14 @@ export default function GearCard({
   onSelect,
 }: GearCardProps) {
   const { t, language } = useLanguage();
+  const { region } = useRegion();
   const [showAllSpecs, setShowAllSpecs] = useState(false);
   const { candidates } = recommendation;
   const [selectedId, setSelectedId] = useState(recommendation.item.id);
 
   const activeCandidate = candidates.find((candidate) => candidate.item.id === selectedId) ?? candidates[0];
   const isTopPick = activeCandidate.item.id === recommendation.item.id;
-  const { item, score, breakdown, bestPrice } = activeCandidate;
+  const { item, score, breakdown } = activeCandidate;
 
   const { reasoning, reasonBullets } = useMemo(
     () =>
@@ -58,8 +69,12 @@ export default function GearCard({
 
   const calculatedSpecs = buildCalculatedSpecs(item, stats, specs, language);
 
-  const sortedPrices = [...item.prices].sort((a, b) => a.price - b.price);
-  const spread = sortedPrices[sortedPrices.length - 1].price - sortedPrices[0].price;
+  // Only the selected region's retailers, in their own currency — never converted.
+  const sortedPrices = sortForDisplay(pricesForRegion(item, region));
+  const pricedRows = sortedPrices.filter(isPriced);
+  const bestPrice = pricedRows[0] ?? null;
+  const spread = pricedRows.length > 1 ? pricedRows[pricedRows.length - 1].price - pricedRows[0].price : 0;
+  const primaryLink = primaryLinkFor(item, region);
   const performanceAxes = getPerformanceAxes(item.category, language);
 
   return (
@@ -226,15 +241,15 @@ export default function GearCard({
             <h4 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
               {t.gearCard.priceComparison}
             </h4>
-            {spread > 0 && (
+            {spread > 0 && bestPrice && (
               <span className="text-[11px] font-medium text-emerald-300">
-                {t.gearCard.save(`$${spread.toFixed(2)}`)}
+                {t.gearCard.save(formatPrice(spread, bestPrice.currency))}
               </span>
             )}
           </div>
           <ul className="space-y-1.5">
-            {sortedPrices.map((price, index) => {
-              const isBest = index === 0;
+            {sortedPrices.map((price) => {
+              const isBest = bestPrice !== null && price.retailerId === bestPrice.retailerId;
               const retailerName = getRetailer(price.retailerId).name;
               const rowContent = (
                 <>
@@ -253,14 +268,29 @@ export default function GearCard({
                     )}
                   </span>
                   <span className="flex shrink-0 items-center gap-2">
-                    <span
-                      className={`text-sm font-bold tabular-nums ${
-                        isBest ? 'text-emerald-200' : 'text-slate-200'
-                      }`}
-                    >
-                      ${price.price.toFixed(2)}
-                    </span>
-                    {SHOW_RETAILER_LINKS && <ExternalIcon className="h-3.5 w-3.5 text-slate-500" />}
+                    {price.price !== null ? (
+                      <span className="flex flex-col items-end">
+                        <span
+                          className={`text-sm font-bold tabular-nums ${
+                            isBest ? 'text-emerald-200' : 'text-slate-200'
+                          }`}
+                        >
+                          {formatPrice(price.price, price.currency)}
+                        </span>
+                        {price.checkedAt && (
+                          <span className="text-[10px] text-slate-500">
+                            {t.gearCard.checkedOn(formatCheckedDate(price.checkedAt, language))}
+                          </span>
+                        )}
+                      </span>
+                    ) : (
+                      <span className="text-xs font-semibold text-slate-400">
+                        {SHOW_RETAILER_LINKS ? t.gearCard.checkPrice : t.gearCard.noPriceYet}
+                      </span>
+                    )}
+                    {SHOW_RETAILER_LINKS && price.price !== null && (
+                      <ExternalIcon className="h-3.5 w-3.5 text-slate-500" />
+                    )}
                   </span>
                 </>
               );
@@ -354,6 +384,8 @@ export default function GearCard({
               {candidates.map((candidate) => {
                 const isSelected = candidate.item.id === activeCandidate.item.id;
                 const candidateName = `${candidate.item.brand} ${candidate.item.name}`;
+                const candidateBest = bestPriceFor(candidate.item, region);
+                const candidateLink = primaryLinkFor(candidate.item, region);
                 return (
                   <li key={candidate.item.id} className="flex items-stretch gap-1.5">
                     <button
@@ -385,15 +417,15 @@ export default function GearCard({
                         </span>
                       </span>
                       <span className="shrink-0 text-xs font-bold tabular-nums text-slate-400">
-                        ${candidate.bestPrice.price.toFixed(0)}
+                        {candidateBest ? formatPrice(candidateBest.price, candidateBest.currency) : '—'}
                       </span>
                     </button>
-                    {SHOW_RETAILER_LINKS && (
+                    {SHOW_RETAILER_LINKS && candidateLink && (
                       <RetailerLink
-                        href={candidate.bestPrice.link}
+                        href={candidateLink.link}
                         ariaLabel={t.gearCard.viewAtRetailer(
                           candidateName,
-                          getRetailer(candidate.bestPrice.retailerId).name,
+                          getRetailer(candidateLink.retailerId).name,
                         )}
                         className="focus-ring flex w-9 shrink-0 items-center justify-center rounded-xl border border-white/8 bg-white/[0.02] text-slate-400 transition-all duration-200 hover:border-white/20 hover:bg-white/[0.05] hover:text-frost-200"
                       >
@@ -412,17 +444,25 @@ export default function GearCard({
             <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
               {t.gearCard.bestPrice}
             </p>
-            <p className="font-display text-xl font-black tabular-nums text-white">
-              ${bestPrice.price.toFixed(2)}
-              <span className="ml-1.5 text-xs font-medium text-slate-500">
-                {t.gearCard.at} {getRetailer(bestPrice.retailerId).name}
-              </span>
-            </p>
+            {bestPrice ? (
+              <p className="font-display text-xl font-black tabular-nums text-white">
+                {formatPrice(bestPrice.price, bestPrice.currency)}
+                <span className="ml-1.5 text-xs font-medium text-slate-500">
+                  {t.gearCard.at} {getRetailer(bestPrice.retailerId).name}
+                </span>
+              </p>
+            ) : (
+              <p className="font-display text-base font-bold text-slate-400">{t.gearCard.noPriceYet}</p>
+            )}
           </div>
-          {SHOW_RETAILER_LINKS && (
-            <RetailerLink href={bestPrice.link} className="btn-primary !px-4 !py-2.5 text-xs">
-              {t.gearCard.viewDeal}
-              <ExternalIcon className="h-3.5 w-3.5" />
+          {SHOW_RETAILER_LINKS && primaryLink && (
+            <RetailerLink
+              href={primaryLink.link}
+              ariaLabel={t.gearCard.viewAtRetailer(`${item.brand} ${item.name}`, getRetailer(primaryLink.retailerId).name)}
+              className="btn-primary shrink-0 !px-4 !py-2.5 text-xs"
+            >
+              {bestPrice ? t.gearCard.viewDeal : t.gearCard.checkPrice}
+              {bestPrice && <ExternalIcon className="h-3.5 w-3.5" />}
             </RetailerLink>
           )}
         </div>
