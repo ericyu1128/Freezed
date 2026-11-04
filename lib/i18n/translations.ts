@@ -213,7 +213,8 @@ export interface Dictionary {
   loading: {
     heading: string;
     srLabel: string;
-    phases: [string, string, string, string, string];
+    /** Counts come from the live catalogue, so the copy can never go stale. */
+    phases: (catalogue: { items: number; categories: number }) => [string, string, string, string, string];
   };
 
   stickman: {
@@ -250,7 +251,7 @@ export const en: Dictionary = {
   nav: {
     matcherLink: 'Matcher',
     howItWorksLink: 'How it works',
-    seasonBadge: '2025/26 season data',
+    seasonBadge: '2026/27 season',
     startMatching: 'Start matching',
     madeBy: 'Made by Eric Yu',
   },
@@ -546,11 +547,11 @@ export const en: Dictionary = {
   loading: {
     heading: 'Matching your kit',
     srLabel: 'Loading recommendations',
-    phases: [
+    phases: ({ items, categories }) => [
       'Reading your body metrics…',
       'Calculating length, waist width and flex…',
       'Filtering the catalogue to your budget…',
-      'Scoring 40+ items across 5 categories…',
+      `Scoring ${items} items across ${categories} categories…`,
       'Comparing retailer prices…',
     ],
   },
@@ -590,7 +591,7 @@ export const zh: Dictionary = {
   nav: {
     matcherLink: '装备匹配',
     howItWorksLink: '工作原理',
-    seasonBadge: '2025/26 雪季数据',
+    seasonBadge: '2026/27 雪季',
     startMatching: '开始匹配',
     madeBy: '由 Eric Yu 制作',
   },
@@ -883,11 +884,11 @@ export const zh: Dictionary = {
   loading: {
     heading: '正在匹配你的装备',
     srLabel: '正在加载推荐结果',
-    phases: [
+    phases: ({ items, categories }) => [
       '正在读取你的身体数据…',
       '正在计算长度、腰宽与硬度…',
       '正在按预算筛选商品目录…',
-      '正在为 5 个类别的 40 多件商品评分…',
+      `正在为 ${categories} 个类别的 ${items} 件商品评分…`,
       '正在比较各商家价格…',
     ],
   },
