@@ -3,6 +3,8 @@
  * Made by Eric Yu
  */
 
+import type { RetailerId } from './retailers';
+
 /* ------------------------------------------------------------------ */
 /*  Primitive unions                                                   */
 /* ------------------------------------------------------------------ */
@@ -57,7 +59,8 @@ export interface UserStats {
 /* ------------------------------------------------------------------ */
 
 export interface RetailerPrice {
-  retailer: string;
+  /** Key into `RETAILERS` in `retailers.ts` — display name, region and currency live there. */
+  retailerId: RetailerId;
   price: number;
   link: string;
 }

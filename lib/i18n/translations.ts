@@ -165,6 +165,7 @@ export interface Dictionary {
     bestPrice: string;
     at: string;
     viewDeal: string;
+    viewAtRetailer: (product: string, retailer: string) => string;
   };
 
   saveModal: {
@@ -474,6 +475,7 @@ export const en: Dictionary = {
     bestPrice: 'Best price',
     at: 'at',
     viewDeal: 'View deal',
+    viewAtRetailer: (product, retailer) => `View ${product} at ${retailer} (opens in a new tab)`,
   },
 
   saveModal: {
@@ -789,6 +791,7 @@ export const zh: Dictionary = {
     bestPrice: '最优价格',
     at: '来自',
     viewDeal: '查看优惠',
+    viewAtRetailer: (product, retailer) => `在 ${retailer} 查看 ${product}(在新标签页打开)`,
   },
 
   saveModal: {

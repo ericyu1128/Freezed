@@ -5,9 +5,11 @@ import type { Activity, CalculatedSpecs, GearCategory, Recommendation, UserStats
 import { buildCalculatedSpecs, buildReasonBullets, buildReasoning, categoryLabel } from '@/lib/matcherLogic';
 import { getPerformanceAxes } from '@/lib/performanceProfile';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
-import { categoryIcon, CheckIcon, SparkIcon } from './Icons';
+import { getRetailer, SHOW_RETAILER_LINKS } from '@/lib/retailers';
+import { categoryIcon, CheckIcon, ExternalIcon, SparkIcon } from './Icons';
 import GearImage from './GearImage';
 import PerformanceHexagon from './PerformanceHexagon';
+import RetailerLink from './RetailerLink';
 
 const TIER_STYLE: Record<string, string> = {
   budget: 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200',
@@ -233,39 +235,60 @@ export default function GearCard({
           <ul className="space-y-1.5">
             {sortedPrices.map((price, index) => {
               const isBest = index === 0;
+              const retailerName = getRetailer(price.retailerId).name;
+              const rowContent = (
+                <>
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span
+                      className={`truncate text-sm font-medium ${
+                        isBest ? 'text-emerald-100' : 'text-slate-300'
+                      }`}
+                    >
+                      {retailerName}
+                    </span>
+                    {isBest && (
+                      <span className="shrink-0 rounded-md bg-emerald-400/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-200">
+                        {t.gearCard.best}
+                      </span>
+                    )}
+                  </span>
+                  <span className="flex shrink-0 items-center gap-2">
+                    <span
+                      className={`text-sm font-bold tabular-nums ${
+                        isBest ? 'text-emerald-200' : 'text-slate-200'
+                      }`}
+                    >
+                      ${price.price.toFixed(2)}
+                    </span>
+                    {SHOW_RETAILER_LINKS && <ExternalIcon className="h-3.5 w-3.5 text-slate-500" />}
+                  </span>
+                </>
+              );
               return (
-                <li key={price.retailer}>
-                  <div
-                    className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-2 ${
-                      isBest
-                        ? 'border-emerald-400/35 bg-emerald-400/[0.08]'
-                        : 'border-white/8 bg-white/[0.02]'
-                    }`}
-                  >
-                    <span className="flex min-w-0 items-center gap-2">
-                      <span
-                        className={`truncate text-sm font-medium ${
-                          isBest ? 'text-emerald-100' : 'text-slate-300'
-                        }`}
-                      >
-                        {price.retailer}
-                      </span>
-                      {isBest && (
-                        <span className="shrink-0 rounded-md bg-emerald-400/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-200">
-                          {t.gearCard.best}
-                        </span>
-                      )}
-                    </span>
-                    <span className="flex shrink-0 items-center gap-2">
-                      <span
-                        className={`text-sm font-bold tabular-nums ${
-                          isBest ? 'text-emerald-200' : 'text-slate-200'
-                        }`}
-                      >
-                        ${price.price.toFixed(2)}
-                      </span>
-                    </span>
-                  </div>
+                <li key={price.retailerId}>
+                  {SHOW_RETAILER_LINKS ? (
+                    <RetailerLink
+                      href={price.link}
+                      ariaLabel={t.gearCard.viewAtRetailer(`${item.brand} ${item.name}`, retailerName)}
+                      className={`focus-ring flex items-center justify-between gap-3 rounded-xl border px-3 py-2 transition-all duration-200 ${
+                        isBest
+                          ? 'border-emerald-400/35 bg-emerald-400/[0.08] hover:border-emerald-300/60'
+                          : 'border-white/8 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.05]'
+                      }`}
+                    >
+                      {rowContent}
+                    </RetailerLink>
+                  ) : (
+                    <div
+                      className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-2 ${
+                        isBest
+                          ? 'border-emerald-400/35 bg-emerald-400/[0.08]'
+                          : 'border-white/8 bg-white/[0.02]'
+                      }`}
+                    >
+                      {rowContent}
+                    </div>
+                  )}
                 </li>
               );
             })}
@@ -330,15 +353,16 @@ export default function GearCard({
             <ul className="space-y-1.5">
               {candidates.map((candidate) => {
                 const isSelected = candidate.item.id === activeCandidate.item.id;
+                const candidateName = `${candidate.item.brand} ${candidate.item.name}`;
                 return (
-                  <li key={candidate.item.id}>
+                  <li key={candidate.item.id} className="flex items-stretch gap-1.5">
                     <button
                       type="button"
                       onClick={(event) => {
                         event.stopPropagation();
                         setSelectedId(candidate.item.id);
                       }}
-                      className={`focus-ring flex w-full items-center justify-between gap-3 rounded-xl border px-3 py-2 text-left transition-all duration-200 ${
+                      className={`focus-ring flex min-w-0 flex-1 items-center justify-between gap-3 rounded-xl border px-3 py-2 text-left transition-all duration-200 ${
                         isSelected
                           ? 'border-frost-400/50 bg-frost-400/[0.08]'
                           : 'border-white/8 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.05]'
@@ -364,6 +388,18 @@ export default function GearCard({
                         ${candidate.bestPrice.price.toFixed(0)}
                       </span>
                     </button>
+                    {SHOW_RETAILER_LINKS && (
+                      <RetailerLink
+                        href={candidate.bestPrice.link}
+                        ariaLabel={t.gearCard.viewAtRetailer(
+                          candidateName,
+                          getRetailer(candidate.bestPrice.retailerId).name,
+                        )}
+                        className="focus-ring flex w-9 shrink-0 items-center justify-center rounded-xl border border-white/8 bg-white/[0.02] text-slate-400 transition-all duration-200 hover:border-white/20 hover:bg-white/[0.05] hover:text-frost-200"
+                      >
+                        <ExternalIcon className="h-3.5 w-3.5" />
+                      </RetailerLink>
+                    )}
                   </li>
                 );
               })}
@@ -371,7 +407,7 @@ export default function GearCard({
           </section>
         )}
 
-        <div className="border-t border-white/8 pt-4">
+        <div className="flex items-center justify-between gap-3 border-t border-white/8 pt-4">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
               {t.gearCard.bestPrice}
@@ -379,10 +415,16 @@ export default function GearCard({
             <p className="font-display text-xl font-black tabular-nums text-white">
               ${bestPrice.price.toFixed(2)}
               <span className="ml-1.5 text-xs font-medium text-slate-500">
-                {t.gearCard.at} {bestPrice.retailer}
+                {t.gearCard.at} {getRetailer(bestPrice.retailerId).name}
               </span>
             </p>
           </div>
+          {SHOW_RETAILER_LINKS && (
+            <RetailerLink href={bestPrice.link} className="btn-primary !px-4 !py-2.5 text-xs">
+              {t.gearCard.viewDeal}
+              <ExternalIcon className="h-3.5 w-3.5" />
+            </RetailerLink>
+          )}
         </div>
       </div>
     </article>

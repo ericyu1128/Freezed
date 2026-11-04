@@ -5,8 +5,9 @@
  * Prices are illustrative mock data for demo purposes.
  *
  * Retailer links are NOT mock: every one is generated at module load as a live
- * search query against that retailer's own site (see `buildSearchUrl`), so a
- * link always lands on real results rather than a dead product-detail URL.
+ * search query against that retailer's own site (see `buildRetailerUrl` in
+ * `retailers.ts`), so a link always lands on real results rather than a dead
+ * product-detail URL.
  *
  * Product images are likewise generated, not stored: `buildGearImage` in
  * `gearImages.ts` draws each item from the very spec values listed below, so
@@ -25,50 +26,10 @@
 import type { GearItem, RetailerPrice } from './types';
 import { buildGearImage } from './gearImages';
 import { computePerformanceProfile } from './performanceProfile';
-
-/* ------------------------------------------------------------------ */
-/*  Retailers & live search links                                      */
-/* ------------------------------------------------------------------ */
-
-export const RETAILERS = ['Evo', 'REI', 'Sport Chek', 'Backcountry', 'The House'] as const;
-
-export type Retailer = (typeof RETAILERS)[number];
-
-/** Each retailer's public search endpoint, keyed by display name. */
-const RETAILER_SEARCH: Record<Retailer, (encodedQuery: string) => string> = {
-  Evo: (q) => `https://www.evo.com/shop?text=${q}`,
-  REI: (q) => `https://www.rei.com/search?q=${q}`,
-  'Sport Chek': (q) => `https://www.sportchek.ca/search?q=${q}`,
-  Backcountry: (q) => `https://www.backcountry.com/search?q=${q}`,
-  'The House': (q) => `https://www.the-house.com/search?q=${q}`,
-};
-
-/**
- * Turn a brand + product name into a retailer-friendly query.
- *
- * - Strips diacritics so `Völkl` matches `Volkl`
- * - Drops apostrophes so `Arc'teryx` matches `Arcteryx`
- * - Removes em/en-dash suffixes — `I/O MAG — ChromaPop Storm Rose` searches as
- *   `I/O MAG`, since colourway names rarely match a retailer's index
- * - Removes square brackets so Burton's `[ak]` collection reads as `ak`
- * - Leaves hyphens intact: `GORE-TEX` and `Step-On` are real product tokens
- */
-export const toSearchTerm = (value: string): string =>
-  value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '') // Völkl -> Volkl
-    .replace(/[\u2018\u2019']/g, '') // Arc'teryx -> Arcteryx
-    .replace(/\s*[\u2013\u2014]\s.*$/, '') // drop “— ChromaPop Storm Rose” suffixes
-    .replace(/[[\]]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-/** Build a live search URL for one retailer and one product. */
-export const buildSearchUrl = (retailer: Retailer, query: string): string =>
-  RETAILER_SEARCH[retailer](encodeURIComponent(toSearchTerm(query)));
+import { buildRetailerUrl, type RetailerId } from './retailers';
 
 /** A price row before its link has been generated. */
-type PriceQuote = { retailer: Retailer; price: number };
+type PriceQuote = { retailerId: RetailerId; price: number };
 
 /** Database rows are authored without links or performance scores; both are derived on export. */
 type GearListing = Omit<GearItem, 'prices' | 'image' | 'performance'> & {
@@ -109,9 +70,9 @@ const listings: GearListing[] = [
     matchReason:
       'Built for riders learning to carve on hardpack who want a stable, confidence-inspiring ski at a value price.',
     prices: [
-      { retailer: 'Evo', price: 399.95 },
-      { retailer: 'REI', price: 429.0 },
-      { retailer: 'Sport Chek', price: 449.99 },
+      { retailerId: 'evo', price: 399.95 },
+      { retailerId: 'rei', price: 429.0 },
+      { retailerId: 'sportchek', price: 449.99 },
     ],
   },
   {
@@ -138,9 +99,9 @@ const listings: GearListing[] = [
     matchReason:
       'A do-most-things frontside ski for riders who spend 80% of the day on groomers but want a little margin off-piste.',
     prices: [
-      { retailer: 'Evo', price: 449.95 },
-      { retailer: 'Backcountry', price: 479.95 },
-      { retailer: 'Sport Chek', price: 499.99 },
+      { retailerId: 'evo', price: 449.95 },
+      { retailerId: 'backcountry', price: 479.95 },
+      { retailerId: 'sportchek', price: 499.99 },
     ],
   },
   {
@@ -167,9 +128,9 @@ const listings: GearListing[] = [
     matchReason:
       'Ideal for the rider whose day is genuinely mixed — groomers to the lift line, then side-country and chopped-up snow after lunch.',
     prices: [
-      { retailer: 'Evo', price: 599.95 },
-      { retailer: 'REI', price: 629.0 },
-      { retailer: 'Backcountry', price: 649.95 },
+      { retailerId: 'evo', price: 599.95 },
+      { retailerId: 'rei', price: 629.0 },
+      { retailerId: 'backcountry', price: 649.95 },
     ],
   },
   {
@@ -196,9 +157,9 @@ const listings: GearListing[] = [
     matchReason:
       'For strong skiers who want metal underfoot and a narrow enough waist to still carve a proper arc on firm snow.',
     prices: [
-      { retailer: 'Evo', price: 649.95 },
-      { retailer: 'The House', price: 674.99 },
-      { retailer: 'Sport Chek', price: 719.99 },
+      { retailerId: 'evo', price: 649.95 },
+      { retailerId: 'the-house', price: 674.99 },
+      { retailerId: 'sportchek', price: 719.99 },
     ],
   },
   {
@@ -225,9 +186,9 @@ const listings: GearListing[] = [
     matchReason:
       'The pick for park-and-powder riders who ride switch, hit side hits and want one ski for the whole mountain.',
     prices: [
-      { retailer: 'Evo', price: 599.95 },
-      { retailer: 'Backcountry', price: 629.95 },
-      { retailer: 'REI', price: 649.0 },
+      { retailerId: 'evo', price: 599.95 },
+      { retailerId: 'backcountry', price: 629.95 },
+      { retailerId: 'rei', price: 649.0 },
     ],
   },
   {
@@ -254,9 +215,9 @@ const listings: GearListing[] = [
     matchReason:
       'Value-focused freestyle ski for riders learning rails and jumps who do not want to babysit an expensive topsheet.',
     prices: [
-      { retailer: 'Evo', price: 379.95 },
-      { retailer: 'The House', price: 399.99 },
-      { retailer: 'Sport Chek', price: 429.99 },
+      { retailerId: 'evo', price: 379.95 },
+      { retailerId: 'the-house', price: 399.99 },
+      { retailerId: 'sportchek', price: 429.99 },
     ],
   },
   {
@@ -283,9 +244,9 @@ const listings: GearListing[] = [
     matchReason:
       'For powerful, aggressive skiers who want maximum damping and edge hold and are willing to work for it.',
     prices: [
-      { retailer: 'Evo', price: 849.95 },
-      { retailer: 'Backcountry', price: 899.95 },
-      { retailer: 'REI', price: 925.0 },
+      { retailerId: 'evo', price: 849.95 },
+      { retailerId: 'backcountry', price: 899.95 },
+      { retailerId: 'rei', price: 925.0 },
     ],
   },
   {
@@ -312,9 +273,9 @@ const listings: GearListing[] = [
     matchReason:
       'Built for advanced piste specialists who measure a good day in clean, high-angle arcs on firm snow.',
     prices: [
-      { retailer: 'Evo', price: 899.95 },
-      { retailer: 'Sport Chek', price: 949.99 },
-      { retailer: 'The House', price: 979.99 },
+      { retailerId: 'evo', price: 899.95 },
+      { retailerId: 'sportchek', price: 949.99 },
+      { retailerId: 'the-house', price: 979.99 },
     ],
   },
   {
@@ -341,9 +302,9 @@ const listings: GearListing[] = [
     matchReason:
       'A great match for playful all-mountain skiers who ride trees, chutes and side hits more than they ride the fall line.',
     prices: [
-      { retailer: 'Evo', price: 679.95 },
-      { retailer: 'Backcountry', price: 699.95 },
-      { retailer: 'The House', price: 729.99 },
+      { retailerId: 'evo', price: 679.95 },
+      { retailerId: 'backcountry', price: 699.95 },
+      { retailerId: 'the-house', price: 729.99 },
     ],
   },
   {
@@ -370,9 +331,9 @@ const listings: GearListing[] = [
     matchReason:
       'For expert freeriders hunting deep days and committed lines who need float first and groomer manners second.',
     prices: [
-      { retailer: 'Evo', price: 899.95 },
-      { retailer: 'Backcountry', price: 949.95 },
-      { retailer: 'REI', price: 979.0 },
+      { retailerId: 'evo', price: 899.95 },
+      { retailerId: 'backcountry', price: 949.95 },
+      { retailerId: 'rei', price: 979.0 },
     ],
   },
   {
@@ -399,9 +360,9 @@ const listings: GearListing[] = [
     matchReason:
       'The pick for riders earning turns — light enough for long skin tracks, wide enough to float on the way back down.',
     prices: [
-      { retailer: 'Evo', price: 799.95 },
-      { retailer: 'Backcountry', price: 849.95 },
-      { retailer: 'REI', price: 869.0 },
+      { retailerId: 'evo', price: 799.95 },
+      { retailerId: 'backcountry', price: 849.95 },
+      { retailerId: 'rei', price: 869.0 },
     ],
   },
   {
@@ -428,9 +389,9 @@ const listings: GearListing[] = [
     matchReason:
       'For riders splitting time between lift-served powder laps and short tours who do not want two separate setups.',
     prices: [
-      { retailer: 'Evo', price: 699.95 },
-      { retailer: 'The House', price: 724.99 },
-      { retailer: 'Sport Chek', price: 769.99 },
+      { retailerId: 'evo', price: 699.95 },
+      { retailerId: 'the-house', price: 724.99 },
+      { retailerId: 'sportchek', price: 769.99 },
     ],
   },
 
@@ -461,9 +422,9 @@ const listings: GearListing[] = [
     matchReason:
       'One of the best value first boards — catch-free feel, but with enough camber-free stability to progress on.',
     prices: [
-      { retailer: 'Evo', price: 349.95 },
-      { retailer: 'The House', price: 369.99 },
-      { retailer: 'Sport Chek', price: 399.99 },
+      { retailerId: 'evo', price: 349.95 },
+      { retailerId: 'the-house', price: 369.99 },
+      { retailerId: 'sportchek', price: 399.99 },
     ],
   },
   {
@@ -490,9 +451,9 @@ const listings: GearListing[] = [
     matchReason:
       'Perfect for riders who lap the park in the morning and chase side hits and soft snow in the afternoon.',
     prices: [
-      { retailer: 'Evo', price: 499.95 },
-      { retailer: 'Backcountry', price: 529.95 },
-      { retailer: 'REI', price: 549.0 },
+      { retailerId: 'evo', price: 499.95 },
+      { retailerId: 'backcountry', price: 529.95 },
+      { retailerId: 'rei', price: 549.0 },
     ],
   },
   {
@@ -519,9 +480,9 @@ const listings: GearListing[] = [
     matchReason:
       'For confident riders who load the board hard through turns and want maximum edge hold and rebound.',
     prices: [
-      { retailer: 'Evo', price: 649.95 },
-      { retailer: 'Backcountry', price: 679.95 },
-      { retailer: 'Sport Chek', price: 719.99 },
+      { retailerId: 'evo', price: 649.95 },
+      { retailerId: 'backcountry', price: 679.95 },
+      { retailerId: 'sportchek', price: 719.99 },
     ],
   },
   {
@@ -548,9 +509,9 @@ const listings: GearListing[] = [
     matchReason:
       'A forgiving freestyle platform for riders drilling butters, boxes and switch riding in the park.',
     prices: [
-      { retailer: 'Evo', price: 499.95 },
-      { retailer: 'The House', price: 519.99 },
-      { retailer: 'REI', price: 549.0 },
+      { retailerId: 'evo', price: 499.95 },
+      { retailerId: 'the-house', price: 519.99 },
+      { retailerId: 'rei', price: 549.0 },
     ],
   },
   {
@@ -577,9 +538,9 @@ const listings: GearListing[] = [
     matchReason:
       'For surfy riders on storm days who want a playful powder board rather than a straight-lining big-mountain deck.',
     prices: [
-      { retailer: 'Evo', price: 479.95 },
-      { retailer: 'The House', price: 499.99 },
-      { retailer: 'Backcountry', price: 529.95 },
+      { retailerId: 'evo', price: 479.95 },
+      { retailerId: 'the-house', price: 499.99 },
+      { retailerId: 'backcountry', price: 529.95 },
     ],
   },
   {
@@ -606,9 +567,9 @@ const listings: GearListing[] = [
     matchReason:
       'For expert riders charging big backcountry lines who still want the board to carve on the traverse out.',
     prices: [
-      { retailer: 'Evo', price: 699.95 },
-      { retailer: 'Backcountry', price: 729.95 },
-      { retailer: 'Sport Chek', price: 779.99 },
+      { retailerId: 'evo', price: 699.95 },
+      { retailerId: 'backcountry', price: 729.95 },
+      { retailerId: 'sportchek', price: 779.99 },
     ],
   },
   {
@@ -635,9 +596,9 @@ const listings: GearListing[] = [
     matchReason:
       'For strong freestyle riders sending medium-to-large jumps who need a board that stays stable on landings.',
     prices: [
-      { retailer: 'Evo', price: 519.95 },
-      { retailer: 'The House', price: 539.99 },
-      { retailer: 'REI', price: 569.0 },
+      { retailerId: 'evo', price: 519.95 },
+      { retailerId: 'the-house', price: 539.99 },
+      { retailerId: 'rei', price: 569.0 },
     ],
   },
 
@@ -667,9 +628,9 @@ const listings: GearListing[] = [
     matchReason:
       'The classic first "real" boot: shop-customisable shell, medium volume fit and a flex that will not overpower a developing skier.',
     prices: [
-      { retailer: 'Evo', price: 349.95 },
-      { retailer: 'REI', price: 369.0 },
-      { retailer: 'Sport Chek', price: 399.99 },
+      { retailerId: 'evo', price: 349.95 },
+      { retailerId: 'rei', price: 369.0 },
+      { retailerId: 'sportchek', price: 399.99 },
     ],
   },
   {
@@ -695,9 +656,9 @@ const listings: GearListing[] = [
     matchReason:
       'A warm, easy-entry women’s boot for progressing skiers who want precision without a punishing flex.',
     prices: [
-      { retailer: 'Evo', price: 399.95 },
-      { retailer: 'REI', price: 419.0 },
-      { retailer: 'The House', price: 439.99 },
+      { retailerId: 'evo', price: 399.95 },
+      { retailerId: 'rei', price: 419.0 },
+      { retailerId: 'the-house', price: 439.99 },
     ],
   },
   {
@@ -723,9 +684,9 @@ const listings: GearListing[] = [
     matchReason:
       'For advancing women skiers who ride aggressively inbounds but want hike mode for boot-packs and short tours.',
     prices: [
-      { retailer: 'Evo', price: 599.95 },
-      { retailer: 'Backcountry', price: 629.95 },
-      { retailer: 'REI', price: 649.0 },
+      { retailerId: 'evo', price: 599.95 },
+      { retailerId: 'backcountry', price: 629.95 },
+      { retailerId: 'rei', price: 649.0 },
     ],
   },
   {
@@ -751,9 +712,9 @@ const listings: GearListing[] = [
     matchReason:
       'A freestyle-friendly 100 flex for park skiers who need shock absorption and a liner that packs out to their foot.',
     prices: [
-      { retailer: 'Evo', price: 549.95 },
-      { retailer: 'The House', price: 569.99 },
-      { retailer: 'Sport Chek', price: 599.99 },
+      { retailerId: 'evo', price: 549.95 },
+      { retailerId: 'the-house', price: 569.99 },
+      { retailerId: 'sportchek', price: 599.99 },
     ],
   },
   {
@@ -779,9 +740,9 @@ const listings: GearListing[] = [
     matchReason:
       'For advanced skiers who want race-adjacent response and a precise, dialled fit without a 130-flex punishment.',
     prices: [
-      { retailer: 'Evo', price: 749.95 },
-      { retailer: 'Backcountry', price: 799.95 },
-      { retailer: 'REI', price: 819.0 },
+      { retailerId: 'evo', price: 749.95 },
+      { retailerId: 'backcountry', price: 799.95 },
+      { retailerId: 'rei', price: 819.0 },
     ],
   },
   {
@@ -807,9 +768,9 @@ const listings: GearListing[] = [
     matchReason:
       'The one-boot answer for expert skiers who ride hard inbounds and occasionally clip into a touring binding.',
     prices: [
-      { retailer: 'Evo', price: 899.95 },
-      { retailer: 'Backcountry', price: 929.95 },
-      { retailer: 'Sport Chek', price: 999.99 },
+      { retailerId: 'evo', price: 899.95 },
+      { retailerId: 'backcountry', price: 929.95 },
+      { retailerId: 'sportchek', price: 999.99 },
     ],
   },
   {
@@ -835,9 +796,9 @@ const listings: GearListing[] = [
     matchReason:
       'For expert women skiers who have outgrown 90-flex boots and need real lateral support at speed.',
     prices: [
-      { retailer: 'Evo', price: 779.95 },
-      { retailer: 'Backcountry', price: 799.95 },
-      { retailer: 'REI', price: 829.0 },
+      { retailerId: 'evo', price: 779.95 },
+      { retailerId: 'backcountry', price: 799.95 },
+      { retailerId: 'rei', price: 829.0 },
     ],
   },
 
@@ -867,9 +828,9 @@ const listings: GearListing[] = [
     matchReason:
       'A comfortable, low-effort entry boot for riders still building ankle strength and board feel.',
     prices: [
-      { retailer: 'Evo', price: 249.95 },
-      { retailer: 'The House', price: 259.99 },
-      { retailer: 'Sport Chek', price: 279.99 },
+      { retailerId: 'evo', price: 249.95 },
+      { retailerId: 'the-house', price: 259.99 },
+      { retailerId: 'sportchek', price: 279.99 },
     ],
   },
   {
@@ -895,9 +856,9 @@ const listings: GearListing[] = [
     matchReason:
       'Balanced support for riders who mix park laps with all-mountain riding and want one boot for everything.',
     prices: [
-      { retailer: 'Evo', price: 329.95 },
-      { retailer: 'REI', price: 349.0 },
-      { retailer: 'Backcountry', price: 359.95 },
+      { retailerId: 'evo', price: 329.95 },
+      { retailerId: 'rei', price: 349.0 },
+      { retailerId: 'backcountry', price: 359.95 },
     ],
   },
   {
@@ -923,9 +884,9 @@ const listings: GearListing[] = [
     matchReason:
       'For riders whose heels lift in standard boots and who want stiffer support for bigger terrain.',
     prices: [
-      { retailer: 'Evo', price: 379.95 },
-      { retailer: 'The House', price: 399.99 },
-      { retailer: 'Sport Chek', price: 429.99 },
+      { retailerId: 'evo', price: 379.95 },
+      { retailerId: 'the-house', price: 399.99 },
+      { retailerId: 'sportchek', price: 429.99 },
     ],
   },
   {
@@ -951,9 +912,9 @@ const listings: GearListing[] = [
     matchReason:
       'For advanced riders who charge hard and value response and fast entry over a soft, playful feel.',
     prices: [
-      { retailer: 'Evo', price: 549.95 },
-      { retailer: 'Backcountry', price: 569.95 },
-      { retailer: 'REI', price: 589.0 },
+      { retailerId: 'evo', price: 549.95 },
+      { retailerId: 'backcountry', price: 569.95 },
+      { retailerId: 'rei', price: 589.0 },
     ],
   },
 
@@ -985,9 +946,9 @@ const listings: GearListing[] = [
     matchReason:
       'Reliable certified protection and real warmth without paying for rotational-impact tech.',
     prices: [
-      { retailer: 'Evo', price: 89.95 },
-      { retailer: 'The House', price: 99.99 },
-      { retailer: 'Sport Chek', price: 109.99 },
+      { retailerId: 'evo', price: 89.95 },
+      { retailerId: 'the-house', price: 99.99 },
+      { retailerId: 'sportchek', price: 109.99 },
     ],
   },
   {
@@ -1015,9 +976,9 @@ const listings: GearListing[] = [
     matchReason:
       'A well-priced, warm helmet for riders who mostly stay on-piste in cold conditions.',
     prices: [
-      { retailer: 'Evo', price: 99.95 },
-      { retailer: 'REI', price: 109.0 },
-      { retailer: 'Sport Chek', price: 119.99 },
+      { retailerId: 'evo', price: 99.95 },
+      { retailerId: 'rei', price: 109.0 },
+      { retailerId: 'sportchek', price: 119.99 },
     ],
   },
   {
@@ -1045,9 +1006,9 @@ const listings: GearListing[] = [
     matchReason:
       'The sweet spot for value and safety tech — MIPS plus proper goggle integration at a mid-tier price.',
     prices: [
-      { retailer: 'Evo', price: 139.95 },
-      { retailer: 'REI', price: 149.0 },
-      { retailer: 'Backcountry', price: 154.95 },
+      { retailerId: 'evo', price: 139.95 },
+      { retailerId: 'rei', price: 149.0 },
+      { retailerId: 'backcountry', price: 154.95 },
     ],
   },
   {
@@ -1075,9 +1036,9 @@ const listings: GearListing[] = [
     matchReason:
       'Best for riders who run hot or ride spring conditions and want big adjustable airflow.',
     prices: [
-      { retailer: 'Evo', price: 149.95 },
-      { retailer: 'Backcountry', price: 159.95 },
-      { retailer: 'Sport Chek', price: 179.99 },
+      { retailerId: 'evo', price: 149.95 },
+      { retailerId: 'backcountry', price: 159.95 },
+      { retailerId: 'sportchek', price: 179.99 },
     ],
   },
   {
@@ -1105,9 +1066,9 @@ const listings: GearListing[] = [
     matchReason:
       'Top-tier impact protection with the widest temperature range of any helmet here — the buy-once option.',
     prices: [
-      { retailer: 'Evo', price: 279.95 },
-      { retailer: 'REI', price: 289.0 },
-      { retailer: 'Backcountry', price: 299.95 },
+      { retailerId: 'evo', price: 279.95 },
+      { retailerId: 'rei', price: 289.0 },
+      { retailerId: 'backcountry', price: 299.95 },
     ],
   },
   {
@@ -1135,9 +1096,9 @@ const listings: GearListing[] = [
     matchReason:
       'For riders who want a precise micro-adjustable fit and a seamless goggle seal across changing conditions.',
     prices: [
-      { retailer: 'Evo', price: 259.95 },
-      { retailer: 'Backcountry', price: 269.95 },
-      { retailer: 'The House', price: 289.99 },
+      { retailerId: 'evo', price: 259.95 },
+      { retailerId: 'backcountry', price: 269.95 },
+      { retailerId: 'the-house', price: 289.99 },
     ],
   },
 
@@ -1169,9 +1130,9 @@ const listings: GearListing[] = [
     matchReason:
       'Maximum light transmission for storm days and dusk — the right lens when the light goes flat.',
     prices: [
-      { retailer: 'Evo', price: 109.95 },
-      { retailer: 'The House', price: 119.99 },
-      { retailer: 'Sport Chek', price: 129.99 },
+      { retailerId: 'evo', price: 109.95 },
+      { retailerId: 'the-house', price: 119.99 },
+      { retailerId: 'sportchek', price: 129.99 },
     ],
   },
   {
@@ -1199,9 +1160,9 @@ const listings: GearListing[] = [
     matchReason:
       'The most versatile VLT window there is — usable in bright sun and passable when clouds roll in.',
     prices: [
-      { retailer: 'Evo', price: 159.95 },
-      { retailer: 'REI', price: 169.0 },
-      { retailer: 'Backcountry', price: 174.95 },
+      { retailerId: 'evo', price: 159.95 },
+      { retailerId: 'rei', price: 169.0 },
+      { retailerId: 'backcountry', price: 174.95 },
     ],
   },
   {
@@ -1229,9 +1190,9 @@ const listings: GearListing[] = [
     matchReason:
       'A bright-light lens for sunny, high-albedo days — spring corn and mid-winter bluebird.',
     prices: [
-      { retailer: 'Evo', price: 179.95 },
-      { retailer: 'Sport Chek', price: 194.99 },
-      { retailer: 'REI', price: 199.0 },
+      { retailerId: 'evo', price: 179.95 },
+      { retailerId: 'sportchek', price: 194.99 },
+      { retailerId: 'rei', price: 199.0 },
     ],
   },
   {
@@ -1261,9 +1222,9 @@ const listings: GearListing[] = [
     matchReason:
       'A high-VLT storm lens with a bright spare in the box — one purchase that covers the entire light spectrum.',
     prices: [
-      { retailer: 'Evo', price: 259.95 },
-      { retailer: 'Backcountry', price: 269.95 },
-      { retailer: 'The House', price: 279.99 },
+      { retailerId: 'evo', price: 259.95 },
+      { retailerId: 'backcountry', price: 269.95 },
+      { retailerId: 'the-house', price: 279.99 },
     ],
   },
   {
@@ -1291,9 +1252,9 @@ const listings: GearListing[] = [
     matchReason:
       'Storm-day clarity with a low-VLT spare included, so one goggle covers freezing overcast and bright sun.',
     prices: [
-      { retailer: 'Evo', price: 269.95 },
-      { retailer: 'REI', price: 280.0 },
-      { retailer: 'Backcountry', price: 289.95 },
+      { retailerId: 'evo', price: 269.95 },
+      { retailerId: 'rei', price: 280.0 },
+      { retailerId: 'backcountry', price: 289.95 },
     ],
   },
   {
@@ -1321,9 +1282,9 @@ const listings: GearListing[] = [
     matchReason:
       'Built for high-glare spring sun and reflective snowpack where standard tints let too much light through.',
     prices: [
-      { retailer: 'Evo', price: 299.95 },
-      { retailer: 'Backcountry', price: 309.95 },
-      { retailer: 'Sport Chek', price: 329.99 },
+      { retailerId: 'evo', price: 299.95 },
+      { retailerId: 'backcountry', price: 309.95 },
+      { retailerId: 'sportchek', price: 329.99 },
     ],
   },
   {
@@ -1351,9 +1312,9 @@ const listings: GearListing[] = [
     matchReason:
       'A mid-low VLT all-rounder for variable light, with peripheral vision that genuinely helps in trees and traffic.',
     prices: [
-      { retailer: 'Evo', price: 229.95 },
-      { retailer: 'REI', price: 239.0 },
-      { retailer: 'Backcountry', price: 249.95 },
+      { retailerId: 'evo', price: 229.95 },
+      { retailerId: 'rei', price: 239.0 },
+      { retailerId: 'backcountry', price: 249.95 },
     ],
   },
 
@@ -1385,9 +1346,9 @@ const listings: GearListing[] = [
     matchReason:
       'The right call for warm, wet spring days and for anyone who runs hot and prefers layering to built-in loft.',
     prices: [
-      { retailer: 'Evo', price: 229.95 },
-      { retailer: 'The House', price: 249.99 },
-      { retailer: 'Sport Chek', price: 279.99 },
+      { retailerId: 'evo', price: 229.95 },
+      { retailerId: 'the-house', price: 249.99 },
+      { retailerId: 'sportchek', price: 279.99 },
     ],
   },
   {
@@ -1415,9 +1376,9 @@ const listings: GearListing[] = [
     matchReason:
       'Reliable warmth at an entry price for cold lift-served days — synthetic fill handles moisture better than down.',
     prices: [
-      { retailer: 'Evo', price: 199.95 },
-      { retailer: 'Sport Chek', price: 219.99 },
-      { retailer: 'REI', price: 229.0 },
+      { retailerId: 'evo', price: 199.95 },
+      { retailerId: 'sportchek', price: 219.99 },
+      { retailerId: 'rei', price: 229.0 },
     ],
   },
   {
@@ -1445,9 +1406,9 @@ const listings: GearListing[] = [
     matchReason:
       'A balanced mid-weight for typical -5 °C to 0 °C days, cut loose enough for a mid-layer when it gets colder.',
     prices: [
-      { retailer: 'Evo', price: 279.95 },
-      { retailer: 'REI', price: 289.0 },
-      { retailer: 'The House', price: 299.99 },
+      { retailerId: 'evo', price: 279.95 },
+      { retailerId: 'rei', price: 289.0 },
+      { retailerId: 'the-house', price: 299.99 },
     ],
   },
   {
@@ -1475,9 +1436,9 @@ const listings: GearListing[] = [
     matchReason:
       'Purpose-built for deep-cold days — the hybrid fill avoids down’s classic failure mode in wet weather.',
     prices: [
-      { retailer: 'Evo', price: 349.95 },
-      { retailer: 'Backcountry', price: 369.95 },
-      { retailer: 'Sport Chek', price: 399.99 },
+      { retailerId: 'evo', price: 349.95 },
+      { retailerId: 'backcountry', price: 369.95 },
+      { retailerId: 'sportchek', price: 399.99 },
     ],
   },
   {
@@ -1505,9 +1466,9 @@ const listings: GearListing[] = [
     matchReason:
       'For riders generating their own heat on the skin track who need breathability over insulation.',
     prices: [
-      { retailer: 'Evo', price: 379.95 },
-      { retailer: 'Backcountry', price: 399.95 },
-      { retailer: 'REI', price: 409.0 },
+      { retailerId: 'evo', price: 379.95 },
+      { retailerId: 'backcountry', price: 399.95 },
+      { retailerId: 'rei', price: 409.0 },
     ],
   },
   {
@@ -1535,9 +1496,9 @@ const listings: GearListing[] = [
     matchReason:
       'The definitive deep-cold jacket — for chairlift days at -15 °C and below where nothing else is warm enough.',
     prices: [
-      { retailer: 'Backcountry', price: 949.0 },
-      { retailer: 'REI', price: 975.0 },
-      { retailer: 'Evo', price: 999.95 },
+      { retailerId: 'backcountry', price: 949.0 },
+      { retailerId: 'rei', price: 975.0 },
+      { retailerId: 'evo', price: 999.95 },
     ],
   },
   {
@@ -1565,9 +1526,9 @@ const listings: GearListing[] = [
     matchReason:
       'For riders who want one shell for everything and layer underneath to match the day’s temperature.',
     prices: [
-      { retailer: 'Backcountry', price: 649.0 },
-      { retailer: 'REI', price: 675.0 },
-      { retailer: 'Evo', price: 699.95 },
+      { retailerId: 'backcountry', price: 649.0 },
+      { retailerId: 'rei', price: 675.0 },
+      { retailerId: 'evo', price: 699.95 },
     ],
   },
   {
@@ -1595,9 +1556,9 @@ const listings: GearListing[] = [
     matchReason:
       'For committed ski tourers and splitboarders where sweat management matters more than raw warmth.',
     prices: [
-      { retailer: 'Backcountry', price: 699.0 },
-      { retailer: 'REI', price: 725.0 },
-      { retailer: 'Evo', price: 749.95 },
+      { retailerId: 'backcountry', price: 699.0 },
+      { retailerId: 'rei', price: 725.0 },
+      { retailerId: 'evo', price: 749.95 },
     ],
   },
   {
@@ -1625,9 +1586,9 @@ const listings: GearListing[] = [
     matchReason:
       'A snowboard-specific freeride shell built for movement, hiking and layering across changing conditions.',
     prices: [
-      { retailer: 'Evo', price: 429.95 },
-      { retailer: 'Backcountry', price: 449.95 },
-      { retailer: 'The House', price: 479.99 },
+      { retailerId: 'evo', price: 429.95 },
+      { retailerId: 'backcountry', price: 449.95 },
+      { retailerId: 'the-house', price: 479.99 },
     ],
   },
 
@@ -1658,9 +1619,9 @@ const listings: GearListing[] = [
     matchReason:
       'The right release range for beginners and early intermediates — protective without being twitchy.',
     prices: [
-      { retailer: 'Evo', price: 149.95 },
-      { retailer: 'REI', price: 159.0 },
-      { retailer: 'Sport Chek', price: 169.99 },
+      { retailerId: 'evo', price: 149.95 },
+      { retailerId: 'rei', price: 159.0 },
+      { retailerId: 'sportchek', price: 169.99 },
     ],
   },
   {
@@ -1687,9 +1648,9 @@ const listings: GearListing[] = [
     matchReason:
       'A do-everything all-mountain binding for intermediate-to-advanced skiers who want one setup for groomers and park laps.',
     prices: [
-      { retailer: 'Evo', price: 219.95 },
-      { retailer: 'Backcountry', price: 229.95 },
-      { retailer: 'Sport Chek', price: 239.99 },
+      { retailerId: 'evo', price: 219.95 },
+      { retailerId: 'backcountry', price: 229.95 },
+      { retailerId: 'sportchek', price: 239.99 },
     ],
   },
   {
@@ -1716,9 +1677,9 @@ const listings: GearListing[] = [
     matchReason:
       'Built for expert skiers who ski aggressively across variable terrain and need retention that will not back off under load.',
     prices: [
-      { retailer: 'Evo', price: 289.95 },
-      { retailer: 'Backcountry', price: 299.95 },
-      { retailer: 'REI', price: 309.0 },
+      { retailerId: 'evo', price: 289.95 },
+      { retailerId: 'backcountry', price: 299.95 },
+      { retailerId: 'rei', price: 309.0 },
     ],
   },
 
@@ -1749,9 +1710,9 @@ const listings: GearListing[] = [
     matchReason:
       'Easy to strap in and forgiving underfoot — a comfortable first binding for riders still building confidence.',
     prices: [
-      { retailer: 'Evo', price: 129.95 },
-      { retailer: 'The House', price: 139.99 },
-      { retailer: 'Sport Chek', price: 149.99 },
+      { retailerId: 'evo', price: 129.95 },
+      { retailerId: 'the-house', price: 139.99 },
+      { retailerId: 'sportchek', price: 149.99 },
     ],
   },
   {
@@ -1778,9 +1739,9 @@ const listings: GearListing[] = [
     matchReason:
       'Medium-stiff response for riders who charge all-mountain terrain and still want to press a jib on the way down.',
     prices: [
-      { retailer: 'Evo', price: 229.95 },
-      { retailer: 'Backcountry', price: 239.95 },
-      { retailer: 'The House', price: 249.99 },
+      { retailerId: 'evo', price: 229.95 },
+      { retailerId: 'backcountry', price: 239.95 },
+      { retailerId: 'the-house', price: 249.99 },
     ],
   },
   {
@@ -1807,9 +1768,9 @@ const listings: GearListing[] = [
     matchReason:
       'Stiff, precise and light enough to disappear underfoot — for expert riders who feel every dead spot in a lesser binding.',
     prices: [
-      { retailer: 'Evo', price: 329.95 },
-      { retailer: 'Backcountry', price: 339.95 },
-      { retailer: 'REI', price: 349.0 },
+      { retailerId: 'evo', price: 329.95 },
+      { retailerId: 'backcountry', price: 339.95 },
+      { retailerId: 'rei', price: 349.0 },
     ],
   },
 ];
@@ -1820,16 +1781,16 @@ const listings: GearListing[] = [
  * Retailer links are generated here rather than stored, so every link is a live
  * search on that retailer's own site for the exact product — no dead
  * product-detail URLs to rot. Cards render these with
- * `target="_blank" rel="noopener noreferrer"`.
+ * `target="_blank" rel="noopener noreferrer sponsored"`.
  */
 export const gearDatabase: GearItem[] = listings.map(({ searchTerm, prices, ...item }) => ({
   ...item,
   image: buildGearImage(item),
   performance: computePerformanceProfile(item),
-  prices: prices.map<RetailerPrice>(({ retailer, price }) => ({
-    retailer,
+  prices: prices.map<RetailerPrice>(({ retailerId, price }) => ({
+    retailerId,
     price,
-    link: buildSearchUrl(retailer, searchTerm ?? `${item.brand} ${item.name}`),
+    link: buildRetailerUrl(retailerId, searchTerm ?? `${item.brand} ${item.name}`),
   })),
 }));
 
