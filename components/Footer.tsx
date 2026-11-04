@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import Logo from './Logo';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 
@@ -61,6 +62,10 @@ export default function Footer() {
         <div className="flex flex-col gap-3 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
           <p>{t.footer.copyright(new Date().getFullYear())}</p>
           <p className="text-slate-500">{t.footer.disclaimer}</p>
+          <nav className="flex gap-4">
+            <Link href="/about" className="hover:text-frost-300">{t.footer.aboutLink}</Link>
+            <Link href="/privacy" className="hover:text-frost-300">{t.footer.privacyLink}</Link>
+          </nav>
         </div>
       </div>
     </footer>

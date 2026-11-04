@@ -5,7 +5,7 @@ import type { Activity, CalculatedSpecs, GearCategory, Recommendation, UserStats
 import { buildCalculatedSpecs, buildReasonBullets, buildReasoning, categoryLabel } from '@/lib/matcherLogic';
 import { getPerformanceAxes } from '@/lib/performanceProfile';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
-import { categoryIcon, CheckIcon, ExternalIcon, SparkIcon } from './Icons';
+import { categoryIcon, CheckIcon, SparkIcon } from './Icons';
 import GearImage from './GearImage';
 import PerformanceHexagon from './PerformanceHexagon';
 
@@ -235,15 +235,11 @@ export default function GearCard({
               const isBest = index === 0;
               return (
                 <li key={price.retailer}>
-                  <a
-                    href={price.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(event) => event.stopPropagation()}
-                    className={`focus-ring flex items-center justify-between gap-3 rounded-xl border px-3 py-2 transition-all duration-200 ${
+                  <div
+                    className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-2 ${
                       isBest
-                        ? 'border-emerald-400/35 bg-emerald-400/[0.08] hover:border-emerald-300/60'
-                        : 'border-white/8 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.05]'
+                        ? 'border-emerald-400/35 bg-emerald-400/[0.08]'
+                        : 'border-white/8 bg-white/[0.02]'
                     }`}
                   >
                     <span className="flex min-w-0 items-center gap-2">
@@ -268,9 +264,8 @@ export default function GearCard({
                       >
                         ${price.price.toFixed(2)}
                       </span>
-                      <ExternalIcon className="h-3.5 w-3.5 text-slate-500" />
                     </span>
-                  </a>
+                  </div>
                 </li>
               );
             })}
@@ -376,7 +371,7 @@ export default function GearCard({
           </section>
         )}
 
-        <div className="flex items-center justify-between gap-3 border-t border-white/8 pt-4">
+        <div className="border-t border-white/8 pt-4">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
               {t.gearCard.bestPrice}
@@ -388,16 +383,6 @@ export default function GearCard({
               </span>
             </p>
           </div>
-          <a
-            href={bestPrice.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(event) => event.stopPropagation()}
-            className="btn-primary !px-4 !py-2.5 text-xs"
-          >
-            {t.gearCard.viewDeal}
-            <ExternalIcon className="h-3.5 w-3.5" />
-          </a>
         </div>
       </div>
     </article>

@@ -220,6 +220,8 @@ export interface Dictionary {
     brandsHeading: string;
     copyright: (year: number) => string;
     disclaimer: string;
+    aboutLink: string;
+    privacyLink: string;
   };
 }
 
@@ -532,8 +534,10 @@ export const en: Dictionary = {
     retailersHeading: 'Retailers',
     brandsHeading: 'Brands',
     copyright: (year) =>
-      `© ${year} Freezed. Built by Eric Yu. Prices are illustrative demo data; retailer links run a live search on each store.`,
+      `© ${year} Freezed. Built by Eric Yu. Prices are illustrative demo data.`,
     disclaimer: 'Sizing output is guidance, not a fitting. Always shell-fit boots with a qualified bootfitter.',
+    aboutLink: 'About',
+    privacyLink: 'Privacy',
   },
 };
 
@@ -843,8 +847,10 @@ export const zh: Dictionary = {
     retailersHeading: '商家',
     brandsHeading: '品牌',
     copyright: (year) =>
-      `© ${year} Freezed。由 Eric Yu 制作。价格为示例数据;商家链接会在各商店进行实时搜索。`,
+      `© ${year} Freezed。由 Eric Yu 制作。价格为示例数据。`,
     disclaimer: '尺寸结果仅供参考,并非最终试穿结论。请务必请专业雪靴技师为你进行内壳试穿。',
+    aboutLink: '关于',
+    privacyLink: '隐私',
   },
 };
 
