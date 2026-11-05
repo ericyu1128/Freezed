@@ -39,6 +39,7 @@ for (const item of gearDatabase) {
       retailer.id,
       retailer.region,
       retailer.currency,
+      listing.match ?? '',
       listing.price === null ? '' : listing.price.toFixed(2),
       listing.priceFrom ? 'yes' : '',
       listing.checkedAt ?? '',
@@ -53,7 +54,8 @@ writeFileSync(TEMPLATE_PATH, toCsv(rows), 'utf8');
 const retailerCount = gearDatabase[0]?.prices.length ?? 0;
 console.log(
   `Wrote ${relative}: ${rows.length - 1} rows (${gearDatabase.length} items × ${retailerCount} retailers).\n` +
-    `Fill in "price" (number, no currency symbol), "checkedAt" (YYYY-MM-DD) and "sourceUrl" (the product page)\n` +
-    `for each row you check, and "priceFrom" = yes when the price is the lowest of a size/colour range.\n` +
+    `For each row you check, set "match" (found / ambiguous / not_found) and "checkedAt" (YYYY-MM-DD);\n` +
+    `for found rows also "price" (number, no currency symbol) and "sourceUrl" (the product page),\n` +
+    `and "priceFrom" = yes when the price is the lowest of a size/colour range.\n` +
     `Leave them blank for rows you haven't checked, then run "npm run prices:import".`,
 );

@@ -21,6 +21,7 @@ export const COLUMNS = [
   'retailerId',
   'region',
   'currency',
+  'match',
   'price',
   'priceFrom',
   'checkedAt',

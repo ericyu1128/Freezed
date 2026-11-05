@@ -1,6 +1,6 @@
 # Live price check — 2026-11-04
 
-Canadian prices for 51 catalogue items at the five CA retailers in `lib/retailers.ts`, checked by hand in a browser on 2026-11-04 (255 item × retailer checks). Results are in `data/prices.json` (`checkedAt: "2026-11-04"`). Every recorded price has a `sourceUrl`, and that retailer link now opens the product page instead of a search.
+Canadian prices for 51 catalogue items at the five CA retailers in `lib/retailers.ts`, checked by hand in a browser on 2026-11-04 (255 item × retailer checks). Results are in `data/prices.json`: every checked cell has `checkedAt: "2026-11-04"` and a `match` of `found`, `ambiguous` or `not_found`. Every recorded price has a `sourceUrl`, and that retailer link now opens the product page instead of a search. Cards list found and ambiguous shops only; an item with neither at any Canadian shop shows one Evo Canada search link and "Not found at the Canadian shops we checked".
 
 Nothing here is estimated or remembered: every number was read off the retailer page on the day. Anything not found, ambiguous or unclear is `null` and listed below with the reason.
 

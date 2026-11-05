@@ -34,12 +34,28 @@ export const bestPriceFor = (item: GearItem, region: Region): PricedRetailerPric
   cheapest(pricesForRegion(item, region));
 
 /**
+ * The rows a card lists for a region: found and ambiguous listings, plus any
+ * retailer never checked. A retailer checked and found not to carry the item
+ * is left out.
+ */
+export const visiblePrices = (item: GearItem, region: Region): RetailerPrice[] =>
+  pricesForRegion(item, region).filter((price) => price.match !== 'not_found');
+
+/**
+ * When every retailer in the region was checked and none carries the item:
+ * one search link at the region's first retailer (Evo Canada for CA), shown
+ * with a "not found" note. `null` whenever there is anything to list.
+ */
+export const fallbackFor = (item: GearItem, region: Region): RetailerPrice | null =>
+  visiblePrices(item, region).length === 0 ? (pricesForRegion(item, region)[0] ?? null) : null;
+
+/**
  * The link a "View deal" / "Check price" control should open: the cheapest
- * priced retailer in the region, else the region's first retailer so an
- * unpriced item still links somewhere useful.
+ * priced retailer in the region, else the first listed row, else the
+ * fallback search, so an unpriced item still links somewhere useful.
  */
 export const primaryLinkFor = (item: GearItem, region: Region): RetailerPrice | null =>
-  bestPriceFor(item, region) ?? pricesForRegion(item, region)[0] ?? null;
+  bestPriceFor(item, region) ?? visiblePrices(item, region)[0] ?? fallbackFor(item, region);
 
 /** Priced listings cheapest-first, then unpriced ones in registry order. */
 export const sortForDisplay = (prices: RetailerPrice[]): RetailerPrice[] => [

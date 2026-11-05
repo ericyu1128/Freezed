@@ -9,6 +9,10 @@
  *   retailer. Prices are never converted between currencies.
  * - price: blank (unchecked) or a positive number with at most 2 decimals.
  *   A leading "$" and thousands commas are tolerated.
+ * - match: what the check found — found, ambiguous, not_found, or blank
+ *   (never checked). A price means found (blank is read as found); found
+ *   needs a price; ambiguous / not_found take no price, priceFrom or
+ *   sourceUrl. Any match needs a checkedAt. Cards hide not_found rows.
  * - priceFrom: blank/no or yes — the price is the lowest of a range (by size
  *   or colourway) and shows as "from". Needs a price.
  * - checkedAt: blank or an ISO date (YYYY-MM-DD), not in the future.
@@ -25,6 +29,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import gearDatabase, { type PriceTable } from '../lib/gearDatabase';
+import type { PriceMatch } from '../lib/types';
 import {
   getRetailer,
   isRetailerId,
@@ -148,7 +153,21 @@ const parseSourceUrl = (raw: string, retailerId: RetailerId, line: number): stri
   return value;
 };
 
-type Cell = { price: number | null; priceFrom: boolean; checkedAt: string | null; sourceUrl: string | null };
+const parseMatch = (raw: string, line: number): PriceMatch | null | undefined => {
+  const value = raw.trim().toLowerCase().replace(/\s+/g, '_');
+  if (value === '') return null;
+  if (value === 'found' || value === 'ambiguous' || value === 'not_found') return value;
+  fail(line, `match "${raw.trim()}" should be found, ambiguous, not_found or blank`);
+  return undefined;
+};
+
+type Cell = {
+  match: PriceMatch | null;
+  price: number | null;
+  priceFrom: boolean;
+  checkedAt: string | null;
+  sourceUrl: string | null;
+};
 const imported = new Map<string, Cell & { line: number }>();
 const key = (itemId: string, retailerId: RetailerId) => `${itemId}\u0000${retailerId}`;
 
@@ -188,11 +207,37 @@ for (const record of records.slice(1)) {
     warnings.push(`line ${line}: url column is ignored — put a product page in sourceUrl instead`);
   }
 
+  const parsedMatch = parseMatch(cell('match'), line);
   const price = parsePrice(cell('price'), line);
   const priceFrom = parsePriceFrom(cell('priceFrom'), line);
   const checkedAt = parseCheckedAt(cell('checkedAt'), line);
   const sourceUrl = parseSourceUrl(cell('sourceUrl'), retailerId, line);
-  if (price === undefined || priceFrom === undefined || checkedAt === undefined || sourceUrl === undefined) continue;
+  if (
+    parsedMatch === undefined ||
+    price === undefined ||
+    priceFrom === undefined ||
+    checkedAt === undefined ||
+    sourceUrl === undefined
+  ) {
+    continue;
+  }
+  const match = price !== null && parsedMatch === null ? 'found' : parsedMatch;
+  if (price !== null && match !== 'found') {
+    fail(line, `price ${price} with match "${match}" — a price means the item was found`);
+    continue;
+  }
+  if (match === 'found' && price === null) {
+    fail(line, `match is found but there is no price`);
+    continue;
+  }
+  if ((match === 'ambiguous' || match === 'not_found') && (priceFrom || sourceUrl)) {
+    fail(line, `match is ${match}, so priceFrom and sourceUrl must be blank`);
+    continue;
+  }
+  if (match !== null && checkedAt === null) {
+    fail(line, `match ${match} has no checkedAt date — every check must say when it was done`);
+    continue;
+  }
   if (price !== null && checkedAt === null) {
     fail(line, `price ${price} has no checkedAt date — every price must say when it was checked`);
     continue;
@@ -208,7 +253,7 @@ for (const record of records.slice(1)) {
     fail(line, `duplicate row for ${itemId} @ ${retailerId} (first seen on line ${duplicate.line})`);
     continue;
   }
-  imported.set(id, { price, priceFrom, checkedAt, sourceUrl, line });
+  imported.set(id, { match, price, priceFrom, checkedAt, sourceUrl, line });
 }
 
 if (errors.length > 0) {
@@ -229,7 +274,7 @@ const existing: PriceTable = existsSync(PRICES_JSON_PATH)
 const table: PriceTable = {};
 let keptFromExisting = 0;
 const stale: string[] = [];
-const counts = { rows: 0, priced: 0, from: 0, linked: 0, missing: 0 };
+const counts = { rows: 0, priced: 0, from: 0, linked: 0, missing: 0, ambiguous: 0, notFound: 0 };
 const pricedByRegion: Record<Region, number> = { CA: 0, US: 0 };
 
 for (const item of gearDatabase) {
@@ -239,6 +284,7 @@ for (const item of gearDatabase) {
     if (!cell) {
       const previous = existing[item.id]?.[retailerId];
       cell = {
+        match: previous?.match ?? (typeof previous?.price === 'number' ? 'found' : null),
         price: previous?.price ?? null,
         priceFrom: previous?.priceFrom === true,
         checkedAt: previous?.checkedAt ?? null,
@@ -247,6 +293,7 @@ for (const item of gearDatabase) {
       keptFromExisting += 1;
     }
     table[item.id][retailerId] = {
+      match: cell.match,
       price: cell.price,
       priceFrom: cell.priceFrom,
       checkedAt: cell.checkedAt,
@@ -255,6 +302,8 @@ for (const item of gearDatabase) {
 
     counts.rows += 1;
     if (cell.sourceUrl) counts.linked += 1;
+    if (cell.match === 'ambiguous') counts.ambiguous += 1;
+    if (cell.match === 'not_found') counts.notFound += 1;
     if (cell.price === null) {
       counts.missing += 1;
     } else {
@@ -278,7 +327,7 @@ const serialize = (data: PriceTable): string =>
         `  ${JSON.stringify(itemId)}: {\n${Object.entries(byRetailer)
           .map(
             ([retailerId, cell]) =>
-              `    ${JSON.stringify(retailerId)}: { "price": ${JSON.stringify(cell.price)}, "priceFrom": ${JSON.stringify(cell.priceFrom ?? false)}, "checkedAt": ${JSON.stringify(cell.checkedAt)}, "sourceUrl": ${JSON.stringify(cell.sourceUrl ?? null)} }`,
+              `    ${JSON.stringify(retailerId)}: { "match": ${JSON.stringify(cell.match ?? null)}, "price": ${JSON.stringify(cell.price)}, "priceFrom": ${JSON.stringify(cell.priceFrom ?? false)}, "checkedAt": ${JSON.stringify(cell.checkedAt)}, "sourceUrl": ${JSON.stringify(cell.sourceUrl ?? null)} }`,
           )
           .join(',\n')}\n  }`,
     )
@@ -298,7 +347,7 @@ console.log(`  ${pad('Rows')}${counts.rows} (${gearDatabase.length} items × ${R
 console.log(`  ${pad('Priced')}${counts.priced} (CA ${pricedByRegion.CA} · US ${pricedByRegion.US})`);
 console.log(`  ${pad('From')}${counts.from} (lowest of a size/colourway range)`);
 console.log(`  ${pad('Linked')}${counts.linked} (link to the checked product page)`);
-console.log(`  ${pad('Missing')}${counts.missing} (no price yet)`);
+console.log(`  ${pad('Missing')}${counts.missing} (no price: ${counts.ambiguous} ambiguous, ${counts.notFound} not found, ${counts.missing - counts.ambiguous - counts.notFound} never checked)`);
 console.log(`  ${pad('Stale')}${stale.length} (checked more than ${STALE_AFTER_DAYS} days ago)`);
 for (const entry of stale.slice(0, 40)) console.log(`    - ${entry}`);
 if (stale.length > 40) console.log(`    … and ${stale.length - 40} more`);

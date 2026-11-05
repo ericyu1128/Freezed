@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import gearDatabase from '../gearDatabase';
-import { bestPriceFor, kitTotal, withFrom } from '../pricing';
+import { bestPriceFor, fallbackFor, kitTotal, primaryLinkFor, visiblePrices, withFrom } from '../pricing';
 import { buildRetailerUrl, buildSearchUrl, getRetailer, isRetailerUrl } from '../retailers';
 
 describe('retailer links', () => {
@@ -38,6 +38,12 @@ describe('price data', () => {
     }
   });
 
+  it('a price always means found, and found always has a price', () => {
+    for (const { item, price } of listings) {
+      expect(price.match === 'found', `${item.id} @ ${price.retailerId}`).toBe(price.price !== null);
+    }
+  });
+
   it('prices are only ever in the retailer’s own currency', () => {
     for (const { price } of listings) expect(price.currency).toBe(getRetailer(price.retailerId).currency);
   });
@@ -59,5 +65,44 @@ describe('"from" prices', () => {
     expect(plainItem).toBeDefined();
     expect(kitTotal([plainItem!], 'CA').from).toBe(false);
     expect(kitTotal([plainItem!, fromItem!], 'CA').from).toBe(true);
+  });
+});
+
+describe('which retailer rows a card shows', () => {
+  const visible = gearDatabase.filter((item) => !item.hidden);
+
+  it('never lists a shop that was checked and does not carry the item', () => {
+    for (const item of visible) {
+      for (const region of ['CA', 'US'] as const) {
+        expect(visiblePrices(item, region).some((price) => price.match === 'not_found'), item.id).toBe(false);
+      }
+    }
+  });
+
+  it('an item no Canadian shop carries gets one Evo Canada search link instead', () => {
+    const missing = visible.filter((item) => visiblePrices(item, 'CA').length === 0);
+    expect(missing.length).toBeGreaterThan(0);
+    for (const item of missing) {
+      const fallback = fallbackFor(item, 'CA');
+      expect(fallback?.retailerId, item.id).toBe('evo-ca');
+      // A plain search, never a product page: the item wasn't found there.
+      expect(fallback?.sourceUrl).toBeNull();
+      expect(fallback?.link.startsWith('https://www.evo.com/en-ca/search?q=')).toBe(true);
+      expect(primaryLinkFor(item, 'CA')).toBe(fallback);
+    }
+  });
+
+  it('items with a found or ambiguous Canadian listing get no fallback', () => {
+    for (const item of visible.filter((entry) => visiblePrices(entry, 'CA').length > 0)) {
+      expect(fallbackFor(item, 'CA'), item.id).toBeNull();
+      expect(visiblePrices(item, 'CA').every((price) => price.match === 'found' || price.match === 'ambiguous')).toBe(true);
+    }
+  });
+
+  it('unchecked US shops are still listed (not checked is not "not found")', () => {
+    for (const item of visible) {
+      expect(visiblePrices(item, 'US').map((price) => price.retailerId)).toEqual(['evo', 'rei', 'backcountry', 'the-house']);
+      expect(fallbackFor(item, 'US')).toBeNull();
+    }
   });
 });

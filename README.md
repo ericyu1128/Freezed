@@ -197,22 +197,26 @@ candidate — renders through `components/RetailerLink.tsx` with
 Prices are entered by hand and never invented or converted.
 
 - **Data:** `data/prices.json`, keyed by item id then retailer id:
-  `{ "price": number | null, "priceFrom": boolean, "checkedAt": "YYYY-MM-DD" | null, "sourceUrl": string | null }`.
-  `null` means unchecked or not found. `priceFrom: true` marks the lowest of a range (by size or colourway) and
+  `{ "match": "found" | "ambiguous" | "not_found" | null, "price": number | null, "priceFrom": boolean, "checkedAt": "YYYY-MM-DD" | null, "sourceUrl": string | null }`.
+  `match` is what the hand check found (`null` = never checked); only `found` carries a price, so ambiguous
+  and not-found cells are `price: null`. `priceFrom: true` marks the lowest of a range (by size or colourway) and
   shows as "from $233.97 CAD". `sourceUrl` is the product page the price was read from; when present, that
   retailer's link opens it instead of a search. The CA prices were first filled on 2026-11-04 — see
   `docs/price-check-2026-11-04.md` for the method, per-retailer counts and the matches left for review.
 - **Workflow:** `npm run prices:template` writes `data/prices-template.csv`
-  (`itemId,brand,name,retailerId,region,currency,price,priceFrom,checkedAt,sourceUrl,url`) with each row's link
-  prefilled, so you can click through and check. Fill in `price`, `checkedAt`, `sourceUrl` and (for a range)
-  `priceFrom` = `yes`, then `npm run prices:import` validates it (numbers, real ISO dates not in the future, known
+  (`itemId,brand,name,retailerId,region,currency,match,price,priceFrom,checkedAt,sourceUrl,url`) with each row's
+  link prefilled, so you can click through and check. Fill in `match` and `checkedAt` for every row you check,
+  plus `price`, `sourceUrl` and (for a range) `priceFrom` = `yes` for found ones, then `npm run prices:import` validates it (numbers, real ISO dates not in the future, known
   ids, region/currency matching the retailer, `sourceUrl` on the retailer's own storefront) and writes the JSON.
   It prints how many rows are priced, "from", linked to a product page, missing, and older than 14 days. Nothing
   is written if any row fails. Pass `-- --dry-run` to validate only, or a path to import a different CSV. The
   template refuses to overwrite an existing CSV unless you pass `-- --force`.
 - **Region toggle:** 🇨🇦 CAD / 🇺🇸 USD next to the language switch (default CA, saved in `localStorage`, exposed
   by `lib/region/RegionContext.tsx`). A region shows only its own retailers, in their native currency, always
-  labelled (`$549.99 CAD`), with "checked {date}" under each price. An unchecked price shows "Check price →".
+  labelled (`$549.99 CAD`), with "checked {date}" under each price. An unpriced row (ambiguous, or never
+  checked) shows "Check price →". Shops checked and found not to carry the item are not listed; if that is
+  every shop in the region, the card shows one search link (Evo Canada for CA) and "Not found at the Canadian
+  shops we checked" (`visiblePrices` / `fallbackFor` in `lib/pricing.ts`). None of this touches ranking.
 - **Totals:** `lib/pricing.ts` counts only items priced in the selected region and reports "(x of y priced)"
   when some are missing. Saved setups are totalled live from current data, never from a snapshot.
 - **Ranking never reads prices** — budget fit uses each item's `priceTier`.

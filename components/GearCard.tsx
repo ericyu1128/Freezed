@@ -12,12 +12,13 @@ import { track } from '@/lib/analytics';
 import { getRetailer, SHOW_RETAILER_LINKS } from '@/lib/retailers';
 import {
   bestPriceFor,
+  fallbackFor,
   formatCheckedDate,
   formatPrice,
   isPriced,
-  pricesForRegion,
   primaryLinkFor,
   sortForDisplay,
+  visiblePrices,
   withFrom,
 } from '@/lib/pricing';
 import { categoryIcon, CheckIcon, ExternalIcon, SparkIcon } from './Icons';
@@ -74,7 +75,10 @@ export default function GearCard({
   const calculatedSpecs = buildCalculatedSpecs(item, stats, specs, language);
 
   // Only the selected region's retailers, in their own currency — never converted.
-  const sortedPrices = sortForDisplay(pricesForRegion(item, region));
+  // Shops checked and found not to carry the item are left out; if that is every
+  // shop in the region, one fallback search link stands in, with a note.
+  const sortedPrices = sortForDisplay(visiblePrices(item, region));
+  const fallback = fallbackFor(item, region);
   const pricedRows = sortedPrices.filter(isPriced);
   const bestPrice = pricedRows[0] ?? null;
   const spread = pricedRows.length > 1 ? pricedRows[pricedRows.length - 1].price - pricedRows[0].price : 0;
@@ -334,7 +338,33 @@ export default function GearCard({
                 </li>
               );
             })}
+            {fallback && SHOW_RETAILER_LINKS && (
+              <li>
+                <RetailerLink
+                  href={fallback.link}
+                  ariaLabel={t.gearCard.viewAtRetailer(`${item.brand} ${item.name}`, getRetailer(fallback.retailerId).name)}
+                  tracking={{
+                    retailer_id: fallback.retailerId,
+                    region,
+                    item_id: item.id,
+                    category: recommendation.category,
+                    rank: activeRank,
+                    is_top_pick: isTopPick,
+                    has_price: false,
+                  }}
+                  className="focus-ring flex items-center justify-between gap-3 rounded-xl border border-white/8 bg-white/[0.02] px-3 py-2 transition-all duration-200 hover:border-white/20 hover:bg-white/[0.05]"
+                >
+                  <span className="truncate text-sm font-medium text-slate-300">
+                    {getRetailer(fallback.retailerId).name}
+                  </span>
+                  <span className="shrink-0 text-xs font-semibold text-slate-400">{t.gearCard.searchRetailer}</span>
+                </RetailerLink>
+              </li>
+            )}
           </ul>
+          {fallback && (
+            <p className="mt-2 text-xs text-slate-400">{t.gearCard.notFoundInRegion[region]}</p>
+          )}
           {SHOW_RETAILER_LINKS && (
             <p className="mt-2 text-[11px] leading-relaxed text-slate-500">{t.gearCard.affiliateDisclosure}</p>
           )}

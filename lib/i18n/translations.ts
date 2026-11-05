@@ -181,6 +181,10 @@ export interface Dictionary {
     checkedOn: (date: string) => string;
     /** Wording around a price that is the lowest of a range (by size or colourway). */
     fromPrice: { before: string; after: string };
+    /** Label on the one fallback search link when no shop in the region carries the item. */
+    searchRetailer: string;
+    /** Note under that fallback link, per region. */
+    notFoundInRegion: { CA: string; US: string };
     viewAtRetailer: (product: string, retailer: string) => string;
     affiliateDisclosure: string;
   };
@@ -516,6 +520,11 @@ export const en: Dictionary = {
     noPriceYet: 'No price yet',
     checkedOn: (date) => `checked ${date}`,
     fromPrice: { before: 'from ', after: '' },
+    searchRetailer: 'Search →',
+    notFoundInRegion: {
+      CA: 'Not found at the Canadian shops we checked',
+      US: 'Not found at the US shops we checked',
+    },
     viewAtRetailer: (product, retailer) => `View ${product} at ${retailer} (opens in a new tab)`,
     affiliateDisclosure: 'Some links may be affiliate links — Freezed may earn a commission at no extra cost to you.',
   },
@@ -856,6 +865,13 @@ export const zh: Dictionary = {
     checkedOn: (date) => `核价于 ${date}`,
     // zh: needs review
     fromPrice: { before: '', after: ' 起' },
+    // zh: needs review
+    searchRetailer: '搜索 →',
+    // zh: needs review
+    notFoundInRegion: {
+      CA: '我们核查过的加拿大店铺均未找到此款',
+      US: '我们核查过的美国店铺均未找到此款',
+    },
     viewAtRetailer: (product, retailer) => `在 ${retailer} 查看 ${product}(在新标签页打开)`,
     affiliateDisclosure: '部分链接可能是联盟推广链接——你通过它购买时，Freezed 可能获得佣金，你无需额外付费。',
   },

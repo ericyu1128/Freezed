@@ -63,9 +63,14 @@ export interface UserStats {
  * `data/prices.json` (see `npm run prices:import`) and are never converted
  * between currencies — `currency` is always the retailer's own.
  */
+/** Outcome of a hand check at one retailer. Only `found` carries a price. */
+export type PriceMatch = 'found' | 'ambiguous' | 'not_found';
+
 export interface RetailerPrice {
   /** Key into `RETAILERS` in `retailers.ts` — display name and region live there. */
   retailerId: RetailerId;
+  /** What the last hand check found here; `null` = never checked. */
+  match: PriceMatch | null;
   /** `null` until someone has checked this retailer by hand. */
   price: number | null;
   /** `price` is the lowest of a range (by size or colourway) — shown as "from". */

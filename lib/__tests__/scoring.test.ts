@@ -55,4 +55,21 @@ describe('ranking ignores prices', () => {
       expect(ids(scrambled)).toEqual(ids(gearDatabase));
     }
   });
+
+  it('availability (found / not found at any shop) leaves every ranking unchanged', () => {
+    const nowhere = gearDatabase.map((item) => ({
+      ...item,
+      prices: item.prices.map((price) => ({ ...price, match: 'not_found' as const, price: null, priceFrom: false })),
+    }));
+    const everywhere = gearDatabase.map((item, i) => ({
+      ...item,
+      prices: item.prices.map((price, j) => ({ ...price, match: 'found' as const, price: ((i * 13 + j * 7) % 500) + 1 })),
+    }));
+    for (const stats of allProfiles()) {
+      const ids = (db: typeof gearDatabase) =>
+        matchGear(stats, db).recommendations.map((rec) => rec.candidates.map((c) => `${c.item.id}:${c.score}`).join(','));
+      expect(ids(nowhere)).toEqual(ids(gearDatabase));
+      expect(ids(everywhere)).toEqual(ids(gearDatabase));
+    }
+  });
 });

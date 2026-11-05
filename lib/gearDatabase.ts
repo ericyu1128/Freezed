@@ -27,7 +27,7 @@
  *   bindings -> specs.dinRange (ski, string range) / specs.flexRating (snowboard, "n/10")
  */
 
-import type { GearItem, RetailerPrice } from './types';
+import type { GearItem, PriceMatch, RetailerPrice } from './types';
 import { buildGearImage } from './gearImages';
 import { computePerformanceProfile } from './performanceProfile';
 import { buildRetailerUrl, isRetailerUrl, RETAILER_IDS, RETAILERS, type RetailerId } from './retailers';
@@ -35,6 +35,7 @@ import pricesJson from '../data/prices.json';
 
 /** One cell of `data/prices.json`. `priceFrom` and `sourceUrl` are optional so older files still read. */
 export interface PriceCell {
+  match?: PriceMatch | null;
   price: number | null;
   priceFrom?: boolean;
   checkedAt: string | null;
@@ -1861,20 +1862,22 @@ const listings: GearListing[] = [
 
 /**
  * Defensive read of one price cell — anything malformed reads as unchecked,
- * "from" only counts on a real price, and a source URL off the retailer's own
- * storefront is dropped.
+ * a price always means `found` (and `found` needs a price), "from" only counts
+ * on a real price, and a source URL off the retailer's own storefront is dropped.
  */
 const readPrice = (
   itemId: string,
   retailerId: RetailerId,
-): Pick<RetailerPrice, 'price' | 'priceFrom' | 'checkedAt' | 'sourceUrl'> => {
+): Pick<RetailerPrice, 'match' | 'price' | 'priceFrom' | 'checkedAt' | 'sourceUrl'> => {
   const entry = priceTable[itemId]?.[retailerId];
   const price = typeof entry?.price === 'number' && Number.isFinite(entry.price) && entry.price > 0 ? entry.price : null;
+  const match: PriceMatch | null =
+    price !== null ? 'found' : entry?.match === 'ambiguous' || entry?.match === 'not_found' ? entry.match : null;
   const priceFrom = price !== null && entry?.priceFrom === true;
   const checkedAt = typeof entry?.checkedAt === 'string' && entry.checkedAt ? entry.checkedAt : null;
   const sourceUrl =
     typeof entry?.sourceUrl === 'string' && isRetailerUrl(retailerId, entry.sourceUrl) ? entry.sourceUrl : null;
-  return { price, priceFrom, checkedAt, sourceUrl };
+  return { match, price, priceFrom, checkedAt, sourceUrl };
 };
 
 /**
