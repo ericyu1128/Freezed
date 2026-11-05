@@ -106,7 +106,11 @@ export interface Dictionary {
     level: Record<Level, OptionCopy>;
     style: Record<RidingStyle, OptionCopy>;
     temperature: Record<Temperature, OptionCopy>;
-    /** `range` is copy, not a computed total — one string per currency, never converted. */
+    /**
+     * `range` is copy, not a computed total — one string per currency, never converted.
+     * UNVERIFIED estimates, not shown anywhere: hidden from the budget step until they
+     * are checked against real prices. Kept so they can be re-shown once verified.
+     */
     budget: Record<BudgetTier, OptionCopy & { range: Record<Currency, string> }>;
     heightLabel: string;
     heightHint: string;
@@ -423,6 +427,7 @@ export const en: Dictionary = {
       budget: {
         label: 'Budget',
         description: 'Entry-level / Value. Proven basics, no exotic materials.',
+        // Unverified (CAD and USD) — not shown in the UI.
         range: {
           CAD: '≈ $1,350 – $1,900 CAD full kit', // TODO verify CAD range against real Canadian prices
           USD: '≈ $1,000 – $1,400 USD full kit',
@@ -431,6 +436,7 @@ export const en: Dictionary = {
       'mid-range': {
         label: 'Mid-Range',
         description: 'Balanced performance / price. Where most riders should shop.',
+        // Unverified (CAD and USD) — not shown in the UI.
         range: {
           CAD: '≈ $2,450 – $3,250 CAD full kit', // TODO verify CAD range against real Canadian prices
           USD: '≈ $1,800 – $2,400 USD full kit',
@@ -439,6 +445,7 @@ export const en: Dictionary = {
       premium: {
         label: 'Premium',
         description: 'Top-tier / Pro construction. Titanal, GORE-TEX Pro, magnetic optics.',
+        // Unverified (CAD and USD) — not shown in the UI.
         range: {
           CAD: '≈ $3,800 – $4,900 CAD full kit', // TODO verify CAD range against real Canadian prices
           USD: '≈ $2,800 – $3,600 USD full kit',
@@ -768,6 +775,7 @@ export const zh: Dictionary = {
       budget: {
         label: '经济型',
         description: '入门 / 高性价比。成熟基础款,不含特殊材质。',
+        // Unverified (CAD and USD) — not shown in the UI.
         range: {
           CAD: '≈ 全套 $1,350 – $1,900 CAD', // TODO verify CAD range against real Canadian prices
           USD: '≈ 全套 $1,000 – $1,400 USD',
@@ -776,6 +784,7 @@ export const zh: Dictionary = {
       'mid-range': {
         label: '中端',
         description: '性能与价格均衡。大多数玩家的最佳选择。',
+        // Unverified (CAD and USD) — not shown in the UI.
         range: {
           CAD: '≈ 全套 $2,450 – $3,250 CAD', // TODO verify CAD range against real Canadian prices
           USD: '≈ 全套 $1,800 – $2,400 USD',
@@ -784,6 +793,7 @@ export const zh: Dictionary = {
       premium: {
         label: '高端',
         description: '顶级 / 专业级结构。钛合金、GORE-TEX Pro、磁吸镜片。',
+        // Unverified (CAD and USD) — not shown in the UI.
         range: {
           CAD: '≈ 全套 $3,800 – $4,900 CAD', // TODO verify CAD range against real Canadian prices
           USD: '≈ 全套 $2,800 – $3,600 USD',

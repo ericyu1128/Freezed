@@ -309,7 +309,7 @@ interface InputFormProps {
 
 export default function InputForm({ onSubmit, isLoading = false, initialStats }: InputFormProps) {
   const { t, language } = useLanguage();
-  const { currency, region } = useRegion();
+  const { region } = useRegion();
   const [stats, setStats] = useState<UserStats>({ ...DEFAULTS, ...initialStats });
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState<'forward' | 'back'>('forward');
@@ -351,11 +351,6 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
     },
     { value: 'premium', label: t.form.budget.premium.label, description: t.form.budget.premium.description },
   ];
-  const BUDGET_RANGE: Record<BudgetTier, string> = {
-    budget: t.form.budget.budget.range[currency],
-    'mid-range': t.form.budget['mid-range'].range[currency],
-    premium: t.form.budget.premium.range[currency],
-  };
   const UNIT_SYSTEM_OPTIONS: Option<UnitSystem>[] = [
     { value: 'metric', label: t.form.unitSystemMetric, description: `${t.form.heightUnit} / ${t.form.weightUnit}` },
     {
@@ -752,9 +747,7 @@ export default function InputForm({ onSubmit, isLoading = false, initialStats }:
                         <span className="text-xs leading-relaxed text-slate-400">
                           {option.description}
                         </span>
-                        <span className="mt-2 inline-flex rounded-md bg-white/5 px-2 py-1 text-[11px] font-semibold tabular-nums text-frost-200">
-                          {BUDGET_RANGE[option.value]}
-                        </span>
+                        {/* Dollar ranges (t.form.budget[tier].range) are hidden until verified. */}
                       </button>
                     );
                   })}
