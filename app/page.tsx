@@ -3,7 +3,7 @@
 import { useCallback, useRef, useState } from 'react';
 import type { GearCategory, MatchResult, UserStats } from '@/lib/types';
 import { matchGear } from '@/lib/matcherLogic';
-import gearDatabase from '@/lib/gearDatabase';
+import gearDatabase, { matchableGear } from '@/lib/gearDatabase';
 import InputForm from '@/components/InputForm';
 import StickmanVisualizer from '@/components/StickmanVisualizer';
 import Dashboard from '@/components/Dashboard';
@@ -93,10 +93,10 @@ export default function HomePage() {
 
         <div className="mx-auto mt-10 grid max-w-3xl grid-cols-2 gap-3 sm:grid-cols-4">
           {[
-            { value: `${gearDatabase.length}`, label: t.hero.statCatalogueItems },
-            { value: `${new Set(gearDatabase.map((item) => item.brand)).size}`, label: t.hero.statBrands },
+            { value: `${matchableGear.length}`, label: t.hero.statCatalogueItems },
+            { value: `${new Set(matchableGear.map((item) => item.brand)).size}`, label: t.hero.statBrands },
             {
-              value: `${new Set(gearDatabase.map((item) => item.category)).size}`,
+              value: `${new Set(matchableGear.map((item) => item.category)).size}`,
               label: t.hero.statCategories,
             },
             { value: '3', label: t.hero.statBudgetTiers },

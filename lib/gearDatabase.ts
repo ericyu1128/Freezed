@@ -361,6 +361,8 @@ const listings: GearListing[] = [
   },
   {
     id: 'ski-atomic-backland-107',
+    // Hidden from matching: discontinued (successor: Backland 109) — see docs/catalogue-audit.md.
+    hidden: true,
     category: 'skis',
     brand: 'Atomic',
     name: 'Backland 107',
@@ -697,6 +699,8 @@ const listings: GearListing[] = [
   },
   {
     id: 'boot-salomon-shift-pro-110w',
+    // Hidden from matching: discontinued (successor: Shift Alpha BOA 115 W) — see docs/catalogue-audit.md.
+    hidden: true,
     category: 'boots',
     brand: 'Salomon',
     name: 'Shift Pro 110 W',
@@ -726,6 +730,8 @@ const listings: GearListing[] = [
   },
   {
     id: 'boot-k2-method-100',
+    // Hidden from matching: no boot by this name exists (K2 Method Pro / Recon 100 MV do) — see docs/catalogue-audit.md.
+    hidden: true,
     category: 'boots',
     brand: 'K2',
     name: 'Method 100 MV',
@@ -813,6 +819,8 @@ const listings: GearListing[] = [
   },
   {
     id: 'boot-volkl-secret-105',
+    // Hidden from matching: no boot by this name exists (Secret is a Völkl women's ski line) — see docs/catalogue-audit.md.
+    hidden: true,
     category: 'boots',
     brand: 'Völkl',
     name: 'Secret Pro 105 W',
@@ -997,6 +1005,8 @@ const listings: GearListing[] = [
   },
   {
     id: 'helmet-salomon-pioneer-lt',
+    // Hidden from matching: Visor version discontinued (the non-visor Pioneer LT is current) — see docs/catalogue-audit.md.
+    hidden: true,
     category: 'helmet',
     brand: 'Salomon',
     name: 'Pioneer LT Visor',
@@ -1090,6 +1100,8 @@ const listings: GearListing[] = [
   },
   {
     id: 'helmet-smith-vantage-mips',
+    // Hidden from matching: discontinued (successor: Vantage 2 MIPS) — see docs/catalogue-audit.md.
+    hidden: true,
     category: 'helmet',
     brand: 'Smith',
     name: 'Vantage MIPS',
@@ -1815,6 +1827,8 @@ const listings: GearListing[] = [
   },
   {
     id: 'binding-burton-genesis-x',
+    // Hidden from matching: discontinued, last made for 2020 — see docs/catalogue-audit.md.
+    hidden: true,
     category: 'bindings',
     brand: 'Burton',
     name: 'Genesis X',
@@ -1887,7 +1901,10 @@ export const gearDatabase: GearItem[] = listings.map(({ searchTerm, ...item }) =
   }),
 }));
 
-/** Lookup helper. */
+/** Items the matcher can recommend: everything not `hidden`. Use this for counts shown to riders. */
+export const matchableGear: GearItem[] = gearDatabase.filter((item) => !item.hidden);
+
+/** Lookup helper. Finds hidden items too, so saved setups that include one still total. */
 export const getGearById = (id: string): GearItem | undefined =>
   gearDatabase.find((item) => item.id === id);
 

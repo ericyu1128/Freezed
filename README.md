@@ -5,7 +5,7 @@ Made by **Eric Yu**.
 
 Freezed takes your body metrics, ability, riding style, expected temperature and budget, calculates
 a real spec sheet (length, waist width, boot flex, lens VLT, jacket warmth), then scores a catalogue
-of 58 items from Atomic, Völkl, Salomon, K2, Black Crows, Burton, Arc'teryx, Smith and Oakley
+of 51 current items from Atomic, Völkl, Salomon, K2, Black Crows, Burton, Arc'teryx, Smith and Oakley
 against it.
 
 ---
@@ -60,7 +60,7 @@ components/
   GearImage / PerformanceHexagon / LoadingState / Navbar / Footer / Logo / Snowfall / Icons
 lib/
   types.ts                All domain types
-  gearDatabase.ts         58 items with specs; prices merged in from data/prices.json
+  gearDatabase.ts         58 items with specs (7 hidden); prices merged in from data/prices.json
   retailers.ts            Retailer registry + buildRetailerUrl (the one link builder)
   pricing.ts              Region-aware best price / kit total helpers (never converts currency)
   matcherLogic.ts         Pure sizing engine, filtering, ranking and generated copy
@@ -335,8 +335,15 @@ is the fallback). Drafted Chinese strings are marked `// zh: needs review`.
 ## Catalogue
 
 `docs/catalogue-audit.md` records a fact-check of all 58 items against 2025/26–2026/27 sources: status,
-what was wrong, and a link for each. Spec fixes with a source have been applied; discontinued or nonexistent
-items are listed there with proposed replacements.
+what was wrong, and a link for each. Spec fixes with a source have been applied. The 7 items it marks
+discontinued or nonexistent (including the K2 Method 100 MV) stay in `lib/gearDatabase.ts` with
+`hidden: true`: `matchGear` never considers them, the hero and loading counts use `matchableGear`, and
+`lib/__tests__/hidden.test.ts` checks that the hidden set matches the audit and that no hidden item is a
+candidate for any of the 864 test profiles. Proposed replacements are listed in the audit.
+
+Hiding the K2 Method 100 MV left one gap: no budget or mid-range ski boot is rated advanced/expert, so
+expert skiers on a budget get the Atomic Hawx Prime 90. The level-fit test records this as a known gap
+(`KNOWN_GAPS`) until a real boot fills it.
 
 ---
 

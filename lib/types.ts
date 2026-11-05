@@ -98,6 +98,11 @@ export interface GearItem {
   prices: RetailerPrice[];
   /** Normalized 0–10 scores across the six hexagon axes, derived from this item's specs. */
   performance: PerformanceProfile;
+  /**
+   * Kept in the catalogue but never matched or counted: discontinued or
+   * nonexistent per docs/catalogue-audit.md.
+   */
+  hidden?: boolean;
 
   /* -------- optional matching metadata (used by matcherLogic) -------- */
   /** Which discipline the item serves. `both` = shared hardgood/softgood. */

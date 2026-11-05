@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import Logo from './Logo';
-import gearDatabase from '@/lib/gearDatabase';
+import { matchableGear } from '@/lib/gearDatabase';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 const CATALOGUE = {
-  items: gearDatabase.length,
-  categories: new Set(gearDatabase.map((item) => item.category)).size,
+  items: matchableGear.length,
+  categories: new Set(matchableGear.map((item) => item.category)).size,
 };
 
 export default function LoadingState() {

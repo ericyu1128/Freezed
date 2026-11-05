@@ -949,6 +949,7 @@ export const matchGear = (stats: UserStats, database: GearItem[] = gearDatabase)
     const pool = filterByBudget(
       database.filter(
         (item) =>
+          !item.hidden &&
           item.category === category &&
           (!item.activity || item.activity === 'both' || item.activity === stats.activity),
       ),
