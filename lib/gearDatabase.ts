@@ -427,34 +427,37 @@ const listings: GearListing[] = [
   /*  SNOWBOARDS (stored under the `skis` hardgood category)          */
   /* ================================================================ */
   {
-    id: 'board-k2-raygun',
+    id: 'board-burton-cultivator',
     category: 'skis',
-    brand: 'K2',
-    name: 'Raygun',
+    brand: 'Burton',
+    name: 'Cultivator Flat Top',
     priceTier: 'budget',
     activity: 'snowboard',
     styles: ['all-mountain', 'piste'],
     levels: ['beginner', 'intermediate'],
-    genders: ['male', 'unisex'],
+    // Burton: "gender neutral sizing" — tagged unisex (universal fit), not women's-specific.
+    genders: ['unisex'],
+    // Replaces the K2 Raygun (not stocked in Canada). Specs: burton.com/en-ca/products/burton-cultivator-flat-top-snowboard-311741, checked 2026-11-05.
+    // waistWidth is the 155 cm size. Burton states no ability level; levels follow its "progression" / "soft flex" copy.
     specs: {
       waistWidth: 252,
-      lengths: '149 / 152 / 156 / 159W / 162W',
-      profile: 'Tweekend — flat to rocker',
-      core: 'Bamboo 3D stringers',
-      flexRating: '5 / 10',
-      shape: 'Directional twin',
-      base: 'Extruded 2000',
+      lengths: '135 / 140 / 145 / 150 / 155 / 160 / 155W / 160W / 165W',
+      profile: 'Flat Top with Easy Bevel',
+      core: 'Fly 900G wood core, Biax fibreglass',
+      flexRating: 'Soft & Playful (Burton personality scale)',
+      shape: 'Twin, twin flex',
+      base: 'Extruded',
     },
     description:
-      'A forgiving flat-to-rocker directional twin that is famously easy to learn on but still holds together at intermediate speeds.',
+      "Burton's progression board: a Flat Top profile with Easy Bevel edges for a catch-free ride, a true twin shape and flex, and gender-neutral sizing from 135 to 165W.",
     matchReason:
-      'One of the best value first boards — catch-free feel, but with enough camber-free stability to progress on.',
+      'Burton built it for riders still learning — soft, forgiving and happy anywhere on the mountain.',
     // zh: needs review
     descriptionZh:
-      '一块宽容的平板转反翘定向双翘单板，以好学出名，到中级速度时依然稳得住。',
+      'Burton 的进阶单板：Flat Top 板型配 Easy Bevel 板刃，不易卡刃；真双向板形与硬度，男女通用尺码 135 到 165W。',
     // zh: needs review
     matchReasonZh:
-      '最值的入门单板之一——不容易卡刃，又有足够的稳定性让你继续进步。',
+      'Burton 为还在学习阶段的玩家打造——软、宽容，全山地都能玩。',
   },
   {
     id: 'board-salomon-assassin',
@@ -641,33 +644,65 @@ const listings: GearListing[] = [
   /*  BOOTS — SKI                                                     */
   /* ================================================================ */
   {
-    id: 'boot-atomic-hawx-prime-90',
+    id: 'boot-k2-bfc-90',
     category: 'boots',
-    brand: 'Atomic',
-    name: 'Hawx Prime 90 GW',
+    brand: 'K2',
+    name: 'BFC 90',
     priceTier: 'budget',
     activity: 'ski',
     styles: ['piste', 'all-mountain'],
     levels: ['beginner', 'intermediate'],
     genders: ['male', 'unisex'],
+    // Replaces the Atomic Hawx Prime 90 GW (no current version at 2+ CA shops). Specs: k2snow.com/en-ca/p/bfc-90-mens-ski-boots-ks261938, checked 2026-11-05.
     specs: {
       flex: 90,
-      lastWidth: '100 mm (medium)',
-      liner: 'Prolite / Memory Fit 3D',
+      lastWidth: '103 mm (high volume)',
+      liner: 'CushFit Comfort',
       soleStandard: 'GripWalk',
-      cuffAlignment: 'Single-side canting',
-      weight: '1,780 g @ 27.5',
+      construction: 'Heat-mouldable TPU shell, PP cuff',
     },
     description:
-      'A heat-mouldable 100 mm-last boot with a friendly 90 flex — enough support to drive a ski, soft enough to flex forward comfortably all day.',
+      "K2's comfort boot: a wide 103 mm, high-volume shell that heat-moulds to your foot, a 90 flex that stays forgiving, and GripWalk soles for the walk to the lift.",
     matchReason:
-      'The classic first "real" boot: shop-customisable shell, medium volume fit and a flex that will not overpower a developing skier.',
+      'K2 builds it for beginner and intermediate resort skiers who want an easygoing fit without giving up real support.',
     // zh: needs review
     descriptionZh:
-      '可热塑的 100 mm 鞋楦雪靴，硬度 90 很友好——足以驱动雪板，又软到能舒服地前倾一整天。',
+      'K2 的舒适型雪靴：103 mm 宽楦、高容积外壳可热塑贴合脚型，硬度 90 不压人，GripWalk 鞋底走去缆车也方便。',
     // zh: needs review
     matchReasonZh:
-      '经典的第一双"正经"雪靴：可到店定制的外壳、中等容积，硬度也不会压垮正在进步的双板玩家。',
+      'K2 专为初中级雪场玩家设计——想要宽松好穿、又不失真实支撑的双板玩家之选。',
+  },
+  {
+    id: 'boot-dalbello-veloce-space-100',
+    category: 'boots',
+    brand: 'Dalbello',
+    name: 'Veloce Space 100 BOA',
+    priceTier: 'budget',
+    activity: 'ski',
+    styles: ['all-mountain', 'piste'],
+    levels: ['intermediate', 'advanced'],
+    genders: ['male', 'unisex'],
+    // Added so budget riders have a boot rated for advanced skiing (Dalbello: Intermediate, Advanced).
+    // Specs: dalbelloboots.com/en-ca/p/veloce-space-100-ski-boots-d2503103, checked 2026-11-05.
+    specs: {
+      flex: 100,
+      lastWidth: '101 mm',
+      liner: 'Space IF Sport',
+      closure: 'BOA Fit System (single dial) + 40 mm power strap',
+      walkMode: 'Yes',
+      soleStandard: 'GripWalk (pre-mounted)',
+      construction: 'PU shell, DB Hyperlite cuff',
+    },
+    description:
+      "Dalbello's BOA all-mountain boot: a single BOA dial wraps a 101 mm PU shell with a 100 flex, plus a walk mode and pre-mounted GripWalk soles.",
+    matchReason:
+      'Dalbello rates it for intermediate and advanced skiers — a stiffer, more precise boot that still steps in easily and walks well.',
+    // zh: needs review
+    descriptionZh:
+      'Dalbello 的 BOA 全山地雪靴：单旋钮 BOA 包裹 101 mm PU 外壳，硬度 100，带行走模式和预装 GripWalk 鞋底。',
+    // zh: needs review
+    matchReasonZh:
+      'Dalbello 将它定位于中级到高级玩家——更硬、更精准，同时穿脱方便、走路也舒服。',
   },
   {
     id: 'boot-k2-anthem-85',
@@ -764,30 +799,32 @@ const listings: GearListing[] = [
     id: 'boot-salomon-spro-supra-120',
     category: 'boots',
     brand: 'Salomon',
-    name: 'S/Pro Supra BOA 120',
+    name: 'S/Pro Supra S BOA 120',
     priceTier: 'premium',
     activity: 'ski',
     styles: ['piste', 'all-mountain'],
-    levels: ['advanced', 'expert'],
+    levels: ['advanced'],
     genders: ['male', 'unisex'],
+    // Updated to the 2027 single-dial S BOA version. Specs: salomon.com/en-ca/product/s-pro-supra-s-boa-120-li1498/L45420600 (Level of practice: Advanced), checked 2026-11-05.
     specs: {
       flex: 120,
       lastWidth: '100 mm (medium)',
-      liner: 'Coreframe 360 + My Custom Fit 4D',
-      soleStandard: 'GripWalk',
-      closure: 'BOA Fit System forefoot',
-      weight: '1,850 g @ 27.5',
+      liner: 'S/Pro CF Expert + Custom Tongue 2',
+      soleStandard: 'GripWalk (ISO 23223)',
+      closure: 'BOA Fit System (single dial), Exowrap',
+      weight: '1,870 g',
+      construction: 'PU shell and cuff, Custom Shell HD, power spine',
     },
     description:
-      'BOA forefoot closure removes shell distortion and delivers noticeably more even wrap and power transfer than a conventional buckle.',
+      "Salomon's single-dial BOA boot: a 120-flex PU shell and cuff on a 100 mm last, an Exowrap shell-and-liner wrap, and a Custom Shell HD that bootfitters can mould in about ten minutes.",
     matchReason:
-      'For advanced skiers who want race-adjacent response and a precise, dialled fit without a 130-flex punishment.',
+      'Salomon rates it for advanced all-mountain skiers who want a precise, powerful boot that is quick to fit.',
     // zh: needs review
     descriptionZh:
-      '前掌 BOA 闭合避免外壳变形，包裹和力量传导明显比传统卡扣更均匀。',
+      'Salomon 的单旋钮 BOA 雪靴：100 mm 鞋楦、硬度 120 的 PU 外壳与靴筒，Exowrap 外壳与内胆一体包裹，Custom Shell HD 外壳约十分钟即可由调靴师定制。',
     // zh: needs review
     matchReasonZh:
-      '适合想要接近竞技的反馈、精准贴合，又不想受 130 硬度折磨的高级玩家。',
+      'Salomon 将它定位于高级全山地玩家——想要精准、有力又能快速调好的雪靴。',
   },
   {
     id: 'boot-atomic-hawx-ultra-130',
@@ -1038,35 +1075,37 @@ const listings: GearListing[] = [
       '一顶价格实在又保暖的头盔，适合天冷时主要在压雪道上滑的人。',
   },
   {
-    id: 'helmet-smith-mission-mips',
+    id: 'helmet-smith-descend-mips',
     category: 'helmet',
     brand: 'Smith',
-    name: 'Mission MIPS',
+    name: 'Descend MIPS',
     priceTier: 'mid-range',
     activity: 'both',
     styles: ['all-mountain', 'piste', 'freestyle'],
     levels: ['beginner', 'intermediate', 'advanced'],
     genders: ['male', 'female', 'unisex'],
     temps: ['freezing', 'moderate', 'spring'],
+    // Replaces the Smith Mission MIPS (no longer on smithoptics.com). Specs: smithoptics.com/en-ca/products/descend-mips-r, checked 2026-11-05.
+    // warmth is the Freezed 1–5 rating, not a Smith figure.
     specs: {
       warmth: 3,
-      construction: 'In-mould with EPS liner',
-      certification: 'ASTM F2040 / CE EN1077 Class B',
-      vents: 14,
-      ventControl: 'Fixed vents + AirEvac goggle integration',
+      construction: 'In-mould shell + EPS with Zonal Koroyd',
+      certification: 'ASTM F2040 / CE EN1077:2007 Class B / CPSC',
+      vents: 16,
+      ventControl: 'Regulator adjustable vents + AirEvac goggle integration',
       rotational: 'MIPS',
-      weight: '425 g (M)',
+      weight: '400 g (M)',
     },
     description:
-      'MIPS rotational protection, AirEvac ventilation that pulls fog out of your goggles, and a low-profile in-mould shell.',
+      'A light in-mould helmet with MIPS and Zonal Koroyd, 16 vents you open or close with one hand, and AirEvac venting to keep Smith goggles clear.',
     matchReason:
-      'The sweet spot for value and safety tech — MIPS plus proper goggle integration at a mid-tier price.',
+      'A mid-priced all-rounder: rotational protection, adjustable venting for cold and warm days, and removable ear pads.',
     // zh: needs review
     descriptionZh:
-      'MIPS 防旋转保护，AirEvac 通风能把雪镜里的雾气抽走，外壳是低调的一体成型。',
+      '轻量模内成型头盔，配备 MIPS 与分区 Koroyd，16 个通风孔可单手开合，AirEvac 通风让 Smith 雪镜保持清晰。',
     // zh: needs review
     matchReasonZh:
-      '性价比和安全科技的甜蜜点——中端价位就有 MIPS 和真正好用的雪镜整合。',
+      '中等价位的全能头盔：防旋转保护、冷暖天都能调的通风，还有可拆卸耳罩。',
   },
   {
     id: 'helmet-oakley-mod3',
@@ -1168,35 +1207,36 @@ const listings: GearListing[] = [
   /*  GOGGLES                                                         */
   /* ================================================================ */
   {
-    id: 'goggle-smith-squad-yellow',
+    id: 'goggle-oakley-target-line-persimmon',
     category: 'goggles',
-    brand: 'Smith',
-    name: 'Squad — Yellow Sensor Mirror',
+    brand: 'Oakley',
+    name: 'Target Line L — Persimmon',
     priceTier: 'budget',
     activity: 'both',
     styles: ['piste', 'all-mountain', 'freestyle'],
     levels: ['beginner', 'intermediate'],
     genders: ['male', 'female', 'unisex'],
     temps: ['freezing'],
+    // Replaces the Smith Squad — Yellow Sensor Mirror (no shop sells a Squad with a 40–70% VLT installed lens). Specs: oakley.com/en-ca/product/W0OO7120S (Persimmon, OO7120-02), checked 2026-11-05.
     specs: {
-      vlt: 65,
-      lensTint: 'Yellow Sensor Mirror',
+      vlt: 61,
+      lensTint: 'Persimmon (Cat. 1)',
       lensShape: 'Cylindrical',
-      lensTech: 'Carbonic-X with TLT optics',
-      antiFog: 'Fog-X inner lens',
-      spareLens: 'Included (Clear, 89% VLT)',
-      fit: 'Medium',
+      lensTech: 'Plutonite, 100% UVA / UVB / UVC',
+      antiFog: 'Dual lens with F3 anti-fog',
+      spareLens: 'None',
+      fit: 'Large',
     },
     description:
-      'A high-VLT low-light lens that lifts contrast in flat light and falling snow, with a bonus clear lens for night laps.',
+      "Oakley's budget goggle with a jumbo cylindrical lens; the Persimmon tint lets 61% of light through for snowy, overcast days.",
     matchReason:
-      'Maximum light transmission for storm days and dusk — the right lens when the light goes flat.',
+      'A simple low-light goggle that works over most glasses and sits flush with Oakley helmets. No spare lens, so it is for flat-light days.',
     // zh: needs review
     descriptionZh:
-      '高透光率的弱光镜片，在平光和下雪时拉高对比度，还附送一片夜滑用的透明镜片。',
+      'Oakley 入门款雪镜，超大柱面镜片；Persimmon 色调透光率 61%，适合下雪和阴天。',
     // zh: needs review
     matchReasonZh:
-      '透光最大化，专为暴雪天和黄昏准备——光线一变平，就该换上它。',
+      '简单的弱光雪镜，可兼容大多数近视眼镜并贴合 Oakley 头盔。没有备用镜片，专为平光天准备。',
   },
   {
     id: 'goggle-salomon-radium-pro',
@@ -1208,26 +1248,27 @@ const listings: GearListing[] = [
     styles: ['all-mountain', 'piste', 'backcountry'],
     levels: ['intermediate', 'advanced'],
     genders: ['male', 'female', 'unisex'],
-    temps: ['moderate'],
+    temps: ['spring', 'moderate'],
+    // Updated to the version Canadian shops sell (Black Gold installed + Silver Pink). Specs: salomon.com/en-ca/product/radium-pro-s-sigma-and-extra-lens-li6577/L47891000, checked 2026-11-05.
     specs: {
-      vlt: 35,
-      lensTint: 'Sigma Silver Pink',
-      lensShape: 'Toric',
-      lensTech: 'Sigma contrast-boost coating',
-      antiFog: 'Double lens + anti-fog treatment',
-      spareLens: 'Included (Sigma Light Blue, 52% VLT)',
-      fit: 'Medium / large',
+      vlt: 11,
+      lensTint: 'Sigma Black Gold (Cat. 3)',
+      lensShape: 'Spherical',
+      lensTech: 'Sigma contrast enhancement',
+      antiFog: 'Anti-fog treatment',
+      spareLens: 'Included (Sigma Silver Pink, 35% VLT, Cat. 2)',
+      fit: 'Small (reduced size, narrower faces)',
     },
     description:
-      'A do-everything mid-VLT toric lens with genuinely wide peripheral vision and a magnetic-free but very quick lens swap.',
+      'A frameless, spherical-lens goggle in a reduced size, shipped with Sigma Black Gold for sun and a Sigma Silver Pink lens for partly cloudy days.',
     matchReason:
-      'The most versatile VLT window there is — usable in bright sun and passable when clouds roll in.',
+      'Two lenses with an easy swap cover bright and mixed light; Salomon designs this smaller size for narrower faces.',
     // zh: needs review
     descriptionZh:
-      '一款全能型中等透光率的环面镜片，周边视野真的宽，不用磁吸但换镜片也很快。',
+      '无框球面镜片雪镜，尺寸较小，标配 Sigma Black Gold 晴天镜片，并附一片 Sigma Silver Pink 多云镜片。',
     // zh: needs review
     matchReasonZh:
-      '最百搭的透光率区间——大太阳下能用，云层飘过来也还过得去。',
+      '两片镜片可快速更换，覆盖强光与多变光线；Salomon 把这款小尺寸设计给脸型较窄的人。',
   },
   {
     id: 'goggle-oakley-line-miner',
@@ -1264,33 +1305,33 @@ const listings: GearListing[] = [
     id: 'goggle-burton-anon-m4',
     category: 'goggles',
     brand: 'Anon',
-    name: 'M4 Toric — Perceive Cloudy Pink',
+    name: 'M4 Toric — Perceive Variable Blue',
     priceTier: 'premium',
     activity: 'both',
     styles: ['freestyle', 'all-mountain', 'backcountry'],
     levels: ['advanced', 'expert'],
     genders: ['male', 'female', 'unisex'],
-    temps: ['freezing'],
+    temps: ['moderate', 'freezing'],
+    // Updated to the Black colourway Canadian shops sell (Variable Blue installed, Cloudy Pink bonus). Specs: burton.com/en-ca/products/anon-m4-goggles-toric-bonus-perceive-lens-mfi-face-mask-203551, checked 2026-11-05.
     specs: {
-      vlt: 53,
-      lensTint: 'Perceive Cloudy Pink',
+      vlt: 21,
+      lensTint: 'Perceive Variable Blue (S2)',
       lensShape: 'Toric',
-      lensTech: 'Perceive contrast + Magna-Tech magnetic swap',
-      antiFog: 'Integral Clarity Technology',
-      spareLens: 'Bonus lens included (tint varies by colourway)',
-      faceMask: 'MFI magnetic facemask included',
-      fit: 'Large',
+      lensTech: 'Perceive contrast + Magna-Tech magnetic lens change',
+      spareLens: 'Included (Perceive Cloudy Pink, 53% VLT, S1)',
+      faceMask: 'MFI magnetic face mask included',
+      fit: 'Regular or Low Bridge',
     },
     description:
-      'Magnetic lens changes in under five seconds, plus a magnetic facemask that seals to the frame and stops fogging at the chin.',
+      "Anon's magnetic toric goggle in the Black colourway: Perceive Variable Blue (21% VLT) installed, Perceive Cloudy Pink (53%) as the bonus lens, plus an MFI face mask.",
     matchReason:
-      'A high-VLT storm lens for flat light, with a bonus lens and a fog-stopping facemask in the box.',
+      'One goggle for mixed light, with a low-light lens that swaps in by magnet when the storm rolls in.',
     // zh: needs review
     descriptionZh:
-      '磁吸镜片五秒内就能换好，再加一个磁吸面罩贴紧镜框，下巴处不再起雾。',
+      'Anon 磁吸环面雪镜（黑色款）：标配 Perceive Variable Blue 镜片（透光率 21%），附送 Perceive Cloudy Pink（53%）备用镜片和 MFI 面罩。',
     // zh: needs review
     matchReasonZh:
-      '一片应对平光的高透光率暴雪镜片，盒里还附送备用镜片和防雾面罩。',
+      '一副雪镜应对多变光线，暴风雪来时用磁吸快速换上弱光镜片。',
   },
   {
     id: 'goggle-smith-io-mag-storm',
@@ -1390,35 +1431,36 @@ const listings: GearListing[] = [
   /*  JACKETS                                                         */
   /* ================================================================ */
   {
-    id: 'jacket-oakley-sub-temp-rc',
+    id: 'jacket-burton-reserve-gtx-insulated',
     category: 'jacket',
-    brand: 'Oakley',
-    name: 'Sub Temp RC GORE-TEX Jacket',
+    brand: 'Burton',
+    name: 'Reserve GORE-TEX 2L Insulated',
     priceTier: 'budget',
     activity: 'both',
     styles: ['all-mountain', 'freestyle', 'piste'],
     levels: ['beginner', 'intermediate', 'advanced'],
     genders: ['male', 'unisex'],
     temps: ['moderate', 'freezing'],
+    // Replaces the Oakley Sub Temp RC GORE-TEX (not stocked in Canada). Specs: burton.com/en-ca/products/mens-burton-reserve-gore-tex-2l-insulated-jacket-304111, checked 2026-11-05.
     specs: {
       warmth: 3,
-      insulation: '80 g body / 60 g sleeves synthetic',
+      insulation: '80 g ThermacoreEco synthetic',
       waterproofing: 'GORE-TEX 2L',
       seams: 'Fully taped',
-      pitZips: 'Yes — mesh-lined underarm vents',
-      powderSkirt: 'Removable',
-      weight: '620 g (M)',
+      pitZips: 'Mesh-lined pit zips',
+      powderSkirt: 'Stretch powder skirt',
+      hood: 'Helmet compatible',
     },
     description:
-      'A 2-layer GORE-TEX jacket with mid-weight synthetic insulation — 80 g through the body, 60 g in the sleeves — so it stays warm on the lift without bulk.',
+      "Burton's insulated GORE-TEX jacket: a fully taped 2-layer GORE-TEX shell over 80 g ThermacoreEco, with mesh-lined pit zips and a stretch powder skirt.",
     matchReason:
-      'A waterproof, moderately insulated resort jacket for typical winter days, with room for a mid-layer when it gets colder.',
+      'GORE-TEX storm protection with moderate warmth — one jacket for cold, wet resort days.',
     // zh: needs review
     descriptionZh:
-      '一件 2 层 GORE-TEX 外套，配中等重量的合成填充——身体 80 g、袖子 60 g，坐缆车够暖又不臃肿。',
+      'Burton 的保暖 GORE-TEX 夹克：全压胶双层 GORE-TEX 外层，内衬 80 g ThermacoreEco 保暖层，配网眼腋下拉链和弹力防雪裙。',
     // zh: needs review
     matchReasonZh:
-      '一件防水、中等保暖的雪场外套，适合大多数冬日，天更冷时里面还能加中间层。',
+      'GORE-TEX 级别的防风雨，加上适中的保暖——一件搞定寒冷潮湿的雪场日。',
   },
   {
     id: 'jacket-salomon-brilliant',
@@ -1455,32 +1497,33 @@ const listings: GearListing[] = [
     id: 'jacket-burton-covert',
     category: 'jacket',
     brand: 'Burton',
-    name: 'Covert 2.0 Insulated',
+    name: 'Covert 2L Insulated',
     priceTier: 'mid-range',
     activity: 'both',
     styles: ['freestyle', 'all-mountain', 'piste'],
     levels: ['beginner', 'intermediate', 'advanced'],
     genders: ['male', 'female', 'unisex'],
     temps: ['moderate', 'freezing'],
+    // Renamed successor of the Covert 2.0 (Burton calls it "the men's Covert 2.0 2L Jacket"). Specs: burton.com/en-ca/products/mens-burton-covert-2l-insulated-jacket-311191, checked 2026-11-05.
     specs: {
       warmth: 3,
-      insulation: '80 g ThermacoreECO synthetic',
-      waterproofing: 'DRYRIDE 2L 10K/5K',
-      seams: 'Critically taped',
+      insulation: '80 g ThermacoreEco synthetic',
+      waterproofing: 'DRYRIDE 2L, 10,000 mm / 5,000 g',
+      seams: 'Fully taped',
       pitZips: 'Mesh-lined pit zips',
-      powderSkirt: 'Removable',
-      weight: '810 g (M)',
+      powderSkirt: 'Removable waist gaiter',
+      hood: 'Helmet compatible',
     },
     description:
-      'The everyday resort jacket: relaxed fit, moderate insulation and every pocket you actually use, at a sane price.',
+      "Burton's renamed Covert 2.0: 80 g ThermacoreEco insulation under a fully taped DRYRIDE 2L shell (10K / 5K), with pit zips and a removable waist gaiter.",
     matchReason:
-      'A balanced mid-weight for typical -5 °C to 0 °C days, cut loose enough for a mid-layer when it gets colder.',
+      'A warm, simple resort jacket at an easy price — enough insulation for cold chairlifts without the bulk.',
     // zh: needs review
     descriptionZh:
-      '日常雪场外套：宽松版型、适中保暖，你真正会用到的口袋一个不少，价格也合理。',
+      'Burton 改名后的 Covert 2.0：80 g ThermacoreEco 保暖层，外层为全压胶 DRYRIDE 2L 面料（10K / 5K），带腋下拉链和可拆卸防雪裙。',
     // zh: needs review
     matchReasonZh:
-      '适合零下 5°C 到 0°C 这类常见天气的平衡款，版型够宽松，天冷时里面能加中间层。',
+      '温暖、简单、价格友好的雪场夹克——足以应付寒冷的缆车，又不臃肿。',
   },
   {
     id: 'jacket-burton-frostner-down',
@@ -1514,35 +1557,36 @@ const listings: GearListing[] = [
       '专为极寒天打造——缆车坐得久的日子，保暖比透气更重要。',
   },
   {
-    id: 'jacket-salomon-stance-3l',
+    id: 'jacket-rossignol-proclivity-3l',
     category: 'jacket',
-    brand: 'Salomon',
-    name: 'Stance 3L Shell',
+    brand: 'Rossignol',
+    name: 'Proclivity 3L Shell',
     priceTier: 'mid-range',
     activity: 'both',
     styles: ['backcountry', 'all-mountain'],
     levels: ['intermediate', 'advanced', 'expert'],
     genders: ['male', 'female', 'unisex'],
     temps: ['spring', 'moderate'],
+    // Replaces the Salomon Stance 3L Shell (not stocked in Canada). Specs: rossignol.com/ca-en/mens-proclivity-3l-shell-ski-jacket-RLPMJ12200.html, checked 2026-11-05.
     specs: {
       warmth: 1,
-      insulation: 'Uninsulated 3L shell',
-      waterproofing: 'AdvancedSkin Dry 3L 20k/20k',
-      seams: 'Fully taped',
-      pitZips: 'Full-length underarm vents',
-      pockets: 'Beacon pocket, pass pocket',
-      weight: '560 g (M)',
+      insulation: 'None (3-layer shell)',
+      waterproofing: '20K, 3-layer R-Shell Dry',
+      seams: 'Fully seam taped',
+      pitZips: 'Extended pit zips',
+      hood: 'Fixed, 3D adjustment',
+      fit: 'Relaxed',
     },
     description:
-      'A light, highly breathable 3-layer touring shell with full-length vents and a beacon pocket. Built to move.',
+      "Rossignol's freeride shell: 3-layer, fully seam-taped fabric rated 20K waterproof and windproof, with extended pit zips and a 3D-adjustable hood.",
     matchReason:
-      'For riders generating their own heat on the skin track who need breathability over insulation.',
+      "No insulation, so you layer it for hikes, storms and spring — developed with Rossignol's freeride athletes for steep terrain.",
     // zh: needs review
     descriptionZh:
-      '一件轻量、透气性极好的 3 层登山硬壳，全长腋下拉链，还有雪崩信标口袋。为运动而生。',
+      'Rossignol 的自由式滑雪硬壳：三层面料全压胶，防水 20K、防风，配加长腋下拉链和 3D 可调帽兜。',
     // zh: needs review
     matchReasonZh:
-      '适合在上山路线上自己发热、比起保暖更需要透气的人。',
+      '无填充，适合叠穿应对徒步、风雪和春季——与 Rossignol 自由式滑雪运动员共同开发，面向陡峭地形。',
   },
   {
     id: 'jacket-arcteryx-macai',
@@ -1703,64 +1747,64 @@ const listings: GearListing[] = [
       '适合初学者和刚入门中级的脱离范围——保护到位，又不会动不动就脱板。',
   },
   {
-    id: 'binding-atomic-warden-13',
+    id: 'binding-atomic-strive-14-mn',
     category: 'bindings',
     brand: 'Atomic',
-    name: 'Warden MNC 13',
+    name: 'Strive 14 MN',
     priceTier: 'mid-range',
-    activity: 'ski',
-    styles: ['all-mountain', 'freestyle'],
-    levels: ['intermediate', 'advanced'],
-    genders: ['male', 'unisex'],
-    specs: {
-      dinRange: '4–13',
-      weight: '890 g (pair)',
-      brakeWidth: '90–120 mm (adjustable)',
-      elasticity: 'High (18mm toe / 15mm heel travel)',
-      material: 'Aluminum toe piece, steel heel',
-      certification: 'ISO 9462 / TÜV certified',
-      soleCompatibility: 'Multi-Norm Certified — Alpine / GripWalk / touring (adjustable)',
-    },
-    description:
-      'A wide-range Multi-Norm binding that mounts almost anything in a boot rack, with enough elasticity to shrug off park landings.',
-    matchReason:
-      'A do-everything all-mountain binding for intermediate-to-advanced skiers who want one setup for groomers and park laps.',
-    // zh: needs review
-    descriptionZh:
-      '一副兼容范围很广的 Multi-Norm 固定器，鞋架上几乎任何雪靴都能装，弹性行程也足以扛住公园落地。',
-    // zh: needs review
-    matchReasonZh:
-      '全能型全山固定器，适合想一套装备同时滑压雪道和公园的中高级双板玩家。',
-  },
-  {
-    id: 'binding-marker-jester-16',
-    category: 'bindings',
-    brand: 'Marker',
-    name: 'Jester 16 ID',
-    priceTier: 'premium',
     activity: 'ski',
     styles: ['all-mountain', 'freestyle', 'backcountry'],
     levels: ['advanced', 'expert'],
     genders: ['male', 'unisex'],
+    // Replaces the Atomic Warden MNC 13 (atomic.com no longer lists a Warden). Specs: atomic.com/en-ca/products/strive-14-mn-ad0400-202600, checked 2026-11-05.
+    // levels follow Atomic's copy ("Pro-level stability", "most at home when it's charging hard"); Atomic states no ability rating.
     specs: {
-      dinRange: '6–16',
-      weight: '980 g (pair)',
-      brakeWidth: '90–130 mm (adjustable)',
-      elasticity: 'Very high (24mm toe / 20mm heel travel — Triple Pivot)',
-      material: 'Aluminum chassis, steel pins, Triple Pivot toe',
-      certification: 'ISO 9462 / TÜV certified',
-      soleCompatibility: 'Alpine / GripWalk (adjustable AFD)',
+      dinRange: '5–14',
+      weight: '1,002 g (single binding)',
+      brakeWidth: '90 / 100 / 115 / 130 mm',
+      material: 'Aluminium / PA',
+      certification: 'TÜV certified',
+      soleCompatibility: 'Multi-Norm: alpine (DIN), touring and WTR soles',
     },
     description:
-      'A freeride workhorse: a high-DIN Triple Pivot toe that holds through chattery snow and hucked landings without pre-releasing.',
+      "Atomic's multi-norm freeski binding: a low LDN toe for snow feel, a 3-Part Heel, release values 5–14 and manual toe height for alpine, touring and WTR soles.",
     matchReason:
-      'Built for expert skiers who ski aggressively across variable terrain and need retention that will not back off under load.',
+      "The Atomic Freeski team's binding, made for strong skiers who charge all-mountain, freeride and park terrain.",
     // zh: needs review
     descriptionZh:
-      '一副自由滑主力固定器：高 DIN 的 Triple Pivot 前端在烂雪抖动和大落地时都能锁住，不会提前脱板。',
+      'Atomic 的多标准自由式固定器：低重心 LDN 前座提升雪感，三段式后座，释放值 5–14，前座高度可手动调节，兼容高山、登山与 WTR 鞋底。',
     // zh: needs review
     matchReasonZh:
-      '为在多变地形里滑得很凶的专家级玩家打造，受力再大也不会松。',
+      'Atomic 自由式滑雪队选用的固定器，适合在全山地、野雪和公园里放开滑的强手。',
+  },
+  {
+    id: 'binding-marker-jester-x-16',
+    category: 'bindings',
+    brand: 'Marker',
+    name: 'Jester X 16 MWerks',
+    priceTier: 'premium',
+    activity: 'ski',
+    styles: ['all-mountain', 'freestyle', 'backcountry'],
+    levels: ['expert'],
+    genders: ['male', 'unisex'],
+    // Replaces the Marker Jester 16 ID (Marker's only current Jester). Specs: markerbindings.com/en-ca/p/jester-x-16-mwerks-bindings-2026 (2027 model), checked 2026-11-05.
+    specs: {
+      dinRange: '6–16',
+      weight: '1,130 g',
+      brakeWidth: '90 / 105 / 120 mm',
+      material: 'Triple Pivot Elite X toe, stainless steel AFD',
+      soleCompatibility: 'Alpine and GripWalk',
+    },
+    description:
+      "Marker's freeride binding: DIN 6–16, a Triple Pivot Elite X toe and a stainless-steel AFD gliding plate, for alpine and GripWalk soles.",
+    matchReason:
+      'Marker rates it for expert and competition skiers — a binding for charging big lines and the park.',
+    // zh: needs review
+    descriptionZh:
+      'Marker 的自由式固定器：DIN 6–16，Triple Pivot Elite X 前座和不锈钢 AFD 滑板，兼容高山与 GripWalk 鞋底。',
+    // zh: needs review
+    matchReasonZh:
+      'Marker 将它定位于专家级和比赛选手——为大线路和公园里的猛冲而生。',
   },
 
   /* ================================================================ */

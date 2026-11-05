@@ -13,12 +13,10 @@
  * After the ordinal level fit, the re-weighted rows and the asymmetric
  * budget filter: 0 of 864.
  *
- * Known gap (KNOWN_GAPS): since the nonexistent K2 Method 100 MV was hidden,
- * no budget or mid-range ski boot is rated advanced/expert — the two that are
- * (S/Pro Supra BOA 120, Hawx Ultra XTD 130) are premium, which the budget
- * filter keeps from budget riders. So the 36 expert/budget ski profiles get
- * the Hawx Prime 90. Fix the catalogue (e.g. the K2 Method Pro the audit
- * proposes), then delete the entry; the last test fails to remind you.
+ * Hiding the nonexistent K2 Method 100 MV (2026-11-04) briefly left no budget
+ * or mid-range ski boot rated advanced/expert, so expert/budget skiers got a
+ * beginner boot. The Dalbello Veloce Space 100 (Intermediate, Advanced), added
+ * 2026-11-05, closes that gap: 0 of 864 again, with no exceptions.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -33,18 +31,6 @@ interface Violation {
   pick: string;
   pickLevels: string;
 }
-
-/** Catalogue gaps the engine can't fix on its own — see the header. Matched against `profile` and `category`. */
-const KNOWN_GAPS: { profile: RegExp; category: GearCategory; why: string }[] = [
-  {
-    profile: /^ski\/[a-z]+\/expert\/[a-z-]+\/[a-z]+\/budget$/,
-    category: 'boots',
-    why: 'no budget/mid-range ski boot rated advanced or expert',
-  },
-];
-
-const isKnownGap = (violation: Violation) =>
-  KNOWN_GAPS.some((gap) => gap.category === violation.category && gap.profile.test(violation.profile));
 
 const findViolations = (): { violations: Violation[]; profiles: number; checks: number } => {
   const profiles = allProfiles();
@@ -86,18 +72,9 @@ describe('ability level steers hardgoods', () => {
       `level-fit violations: ${violatingProfiles} of ${profiles} profiles ` +
         `(${violations.length} of ${checks} profile × category checks)`,
     );
-    const unexpected = violations.filter((violation) => !isKnownGap(violation));
-    if (unexpected.length > 0) {
-      console.log(unexpected.slice(0, 12).map((v) => `  ${v.profile} ${v.category}: ${v.pick} [${v.pickLevels}]`).join('\n'));
+    if (violations.length > 0) {
+      console.log(violations.slice(0, 12).map((v) => `  ${v.profile} ${v.category}: ${v.pick} [${v.pickLevels}]`).join('\n'));
     }
-    expect(unexpected).toEqual([]);
-  });
-
-  it('every known catalogue gap is still real (delete the entry once it is fixed)', () => {
-    const { violations } = findViolations();
-    for (const gap of KNOWN_GAPS) {
-      const hits = violations.filter((v) => v.category === gap.category && gap.profile.test(v.profile));
-      expect(hits.length, gap.why).toBeGreaterThan(0);
-    }
+    expect(violations).toEqual([]);
   });
 });

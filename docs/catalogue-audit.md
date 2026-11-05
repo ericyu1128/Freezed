@@ -1,5 +1,8 @@
 # Catalogue audit — November 2026
 
+> 2026-11-05: 12 audited items were swapped or updated for Canadian availability, and one boot was added; see
+> `docs/catalogue-swap-2026-11-05.md`. The rows below describe the catalogue as it was audited.
+
 All 58 catalogue items were checked against the web on 2026-11-04 for two things:
 
 1. **Is it a current product?** It must be sold as a 2025/26 ("2026") or 2026/27 ("2027") model.

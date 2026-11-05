@@ -2,11 +2,11 @@
 
 exports[`top picks for reference riders > advanced park skier 1`] = `
 {
-  "bindings": "binding-atomic-warden-13 (94%)",
+  "bindings": "binding-atomic-strive-14-mn (89%)",
   "boots": "boot-salomon-spro-supra-120 (84%)",
   "goggles": "goggle-oakley-line-miner (100%)",
   "helmet": "helmet-oakley-mod3 (100%)",
-  "jacket": "jacket-salomon-stance-3l (95%)",
+  "jacket": "jacket-rossignol-proclivity-3l (95%)",
   "skis": "ski-salomon-qst-92 (100%)",
 }
 `;
@@ -14,10 +14,10 @@ exports[`top picks for reference riders > advanced park skier 1`] = `
 exports[`top picks for reference riders > beginner budget skier 1`] = `
 {
   "bindings": "binding-salomon-strive-10 (79%)",
-  "boots": "boot-atomic-hawx-prime-90 (100%)",
-  "goggles": "goggle-salomon-radium-pro (83%)",
+  "boots": "boot-k2-bfc-90 (100%)",
+  "goggles": "goggle-oakley-line-miner (81%)",
   "helmet": "helmet-k2-phase-pro (100%)",
-  "jacket": "jacket-oakley-sub-temp-rc (100%)",
+  "jacket": "jacket-burton-reserve-gtx-insulated (100%)",
   "skis": "ski-k2-disruption-78c (100%)",
 }
 `;
@@ -25,7 +25,7 @@ exports[`top picks for reference riders > beginner budget skier 1`] = `
 exports[`top picks for reference riders > beginner premium piste skier 1`] = `
 {
   "bindings": "binding-salomon-strive-10 (55%)",
-  "boots": "boot-atomic-hawx-prime-90 (80%)",
+  "boots": "boot-k2-bfc-90 (80%)",
   "goggles": "goggle-oakley-flight-deck-torch (95%)",
   "helmet": "helmet-oakley-mod5 (96%)",
   "jacket": "jacket-burton-covert (84%)",
@@ -35,9 +35,9 @@ exports[`top picks for reference riders > beginner premium piste skier 1`] = `
 
 exports[`top picks for reference riders > expert backcountry skier 1`] = `
 {
-  "bindings": "binding-marker-jester-16 (94%)",
+  "bindings": "binding-marker-jester-x-16 (94%)",
   "boots": "boot-atomic-hawx-ultra-130 (100%)",
-  "goggles": "goggle-burton-anon-m4 (100%)",
+  "goggles": "goggle-smith-io-mag-storm (100%)",
   "helmet": "helmet-oakley-mod5 (80%)",
   "jacket": "jacket-arcteryx-macai (95%)",
   "skis": "ski-black-crows-corvus (100%)",
@@ -48,8 +48,8 @@ exports[`top picks for reference riders > intermediate female snowboarder 1`] = 
 {
   "bindings": "binding-union-force (85%)",
   "boots": "boot-burton-ruler (93%)",
-  "goggles": "goggle-salomon-radium-pro (100%)",
-  "helmet": "helmet-smith-mission-mips (100%)",
+  "goggles": "goggle-oakley-line-miner (98%)",
+  "helmet": "helmet-smith-descend-mips (100%)",
   "jacket": "jacket-burton-covert (100%)",
   "skis": "board-salomon-assassin (96%)",
 }

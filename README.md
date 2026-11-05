@@ -5,7 +5,8 @@ Made by **Eric Yu**.
 
 Freezed takes your body metrics, ability, riding style, expected temperature and budget, calculates
 a real spec sheet (length, waist width, boot flex, lens VLT, jacket warmth), then scores a catalogue
-of 51 current items from Atomic, Völkl, Salomon, K2, Black Crows, Burton, Arc'teryx, Smith and Oakley
+of 52 current items from Atomic, Völkl, Salomon, K2, Black Crows, Burton, Arc'teryx, Smith, Oakley, Anon,
+Dalbello, Rossignol and Marker
 against it.
 
 ---
@@ -61,7 +62,7 @@ components/
   GearImage / PerformanceHexagon / LoadingState / Navbar / Footer / Logo / Snowfall / Icons
 lib/
   types.ts                All domain types
-  gearDatabase.ts         58 items with specs (7 hidden); prices merged in from data/prices.json
+  gearDatabase.ts         59 items with specs (7 hidden); prices merged in from data/prices.json
   retailers.ts            Retailer registry + buildRetailerUrl (the one link builder)
   pricing.ts              Region-aware best price / kit total helpers (never converts currency)
   matcherLogic.ts         Pure sizing engine, filtering, ranking and generated copy
@@ -80,6 +81,7 @@ scripts/                  prices-template.ts, prices-import.ts, ca-availability.
 docs/catalogue-audit.md   Fact-check of every catalogue item, with sources
 docs/price-check-*.md     Live price check: method, counts per retailer, matches to review
 docs/ca-availability.md   CA shops carrying each item, lowest first; flags unavailable top picks
+docs/catalogue-swap-*.md  Items swapped for Canadian availability: old → new, why, sources
 ```
 
 ---
@@ -347,9 +349,11 @@ discontinued or nonexistent (including the K2 Method 100 MV) stay in `lib/gearDa
 `lib/__tests__/hidden.test.ts` checks that the hidden set matches the audit and that no hidden item is a
 candidate for any of the 864 test profiles. Proposed replacements are listed in the audit.
 
-Hiding the K2 Method 100 MV left one gap: no budget or mid-range ski boot is rated advanced/expert, so
-expert skiers on a budget get the Atomic Hawx Prime 90. The level-fit test records this as a known gap
-(`KNOWN_GAPS`) until a real boot fills it.
+`docs/catalogue-swap-2026-11-05.md` records the swap that followed: the zero-Canadian-availability items with
+the most top picks were replaced by current models stocked at 2+ Canadian shops, with specs from the
+manufacturer's page. Zero-availability top picks went from 2,022 to 510 of 5,184. The swap also added the
+Dalbello Veloce Space 100 (rated intermediate/advanced), which closes the gap that hiding the K2 Method 100 MV
+had left for expert skiers on a budget. The level-fit test passes again with no exceptions.
 
 ---
 
