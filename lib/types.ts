@@ -68,9 +68,13 @@ export interface RetailerPrice {
   retailerId: RetailerId;
   /** `null` until someone has checked this retailer by hand. */
   price: number | null;
+  /** `price` is the lowest of a range (by size or colourway) — shown as "from". */
+  priceFrom: boolean;
   currency: Currency;
   /** ISO date (`YYYY-MM-DD`) the price was last checked, or `null` if never. */
   checkedAt: string | null;
+  /** Product page the price was read from, when checked; `link` points here instead of a search. */
+  sourceUrl: string | null;
   link: string;
 }
 

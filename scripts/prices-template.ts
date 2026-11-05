@@ -2,9 +2,10 @@
  * npm run prices:template [-- --force]
  *
  * Writes data/prices-template.csv: one row per catalogue item × retailer, with
- * the retailer search URL prefilled so each row can be clicked and checked.
- * Any price already in data/prices.json is prefilled too, so re-running after
- * an import gives you the current data back to update.
+ * the row's link prefilled (the checked product page, else the retailer
+ * search URL) so each row can be clicked and checked. Any price, "from" flag
+ * and source URL already in data/prices.json is prefilled too, so re-running
+ * after an import gives you the current data back to update.
  *
  * Refuses to overwrite an existing CSV (which may hold unsaved work) unless
  * --force is passed.
@@ -39,7 +40,9 @@ for (const item of gearDatabase) {
       retailer.region,
       retailer.currency,
       listing.price === null ? '' : listing.price.toFixed(2),
+      listing.priceFrom ? 'yes' : '',
       listing.checkedAt ?? '',
+      listing.sourceUrl ?? '',
       listing.link,
     ]);
   }
@@ -50,6 +53,7 @@ writeFileSync(TEMPLATE_PATH, toCsv(rows), 'utf8');
 const retailerCount = gearDatabase[0]?.prices.length ?? 0;
 console.log(
   `Wrote ${relative}: ${rows.length - 1} rows (${gearDatabase.length} items × ${retailerCount} retailers).\n` +
-    `Fill in "price" (number, no currency symbol) and "checkedAt" (YYYY-MM-DD) for each row you check,\n` +
-    `leave both blank for rows you haven't checked, then run "npm run prices:import".`,
+    `Fill in "price" (number, no currency symbol), "checkedAt" (YYYY-MM-DD) and "sourceUrl" (the product page)\n` +
+    `for each row you check, and "priceFrom" = yes when the price is the lowest of a size/colour range.\n` +
+    `Leave them blank for rows you haven't checked, then run "npm run prices:import".`,
 );

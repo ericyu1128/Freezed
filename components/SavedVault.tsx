@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import type { SavedSetup, UserStats } from '@/lib/types';
 import { deleteSavedSetup, loadSavedSetups, renameSavedSetup } from '@/lib/savedSetups';
 import { getGearById } from '@/lib/gearDatabase';
-import { formatPrice, kitTotal } from '@/lib/pricing';
+import { formatPrice, kitTotal, withFrom, type FromAffix } from '@/lib/pricing';
 import type { Region } from '@/lib/retailers';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { useRegion } from '@/lib/region/RegionContext';
@@ -62,13 +62,14 @@ function setupTotalLabel(
   setup: SavedSetup,
   region: Region,
   pricedOf: (priced: number, count: number) => string,
+  fromPrice: FromAffix,
 ): string | null {
   const items = setup.recommendations
     .map((summary) => getGearById(summary.itemId))
     .filter((item): item is NonNullable<typeof item> => item !== undefined);
   const kit = kitTotal(items, region);
   if (kit.priced === 0) return null;
-  const total = formatPrice(kit.total, kit.currency);
+  const total = withFrom(formatPrice(kit.total, kit.currency), kit.from, fromPrice);
   return kit.priced < kit.count ? `${total} ${pricedOf(kit.priced, kit.count)}` : total;
 }
 
@@ -249,7 +250,7 @@ export default function SavedVault({ onLoad, refreshToken }: SavedVaultProps) {
                                 {formatTimestamp(setup.timestamp)} ·{' '}
                                 {t.savedVault.itemsSummary(
                                   setup.recommendations.length,
-                                  setupTotalLabel(setup, region, t.dashboard.pricedOf),
+                                  setupTotalLabel(setup, region, t.dashboard.pricedOf, t.gearCard.fromPrice),
                                 )}
                               </p>
                             </div>

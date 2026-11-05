@@ -54,15 +54,19 @@ export interface KitTotal {
   /** How many of `count` items had at least one price in the region. */
   priced: number;
   count: number;
+  /** At least one best price is a "from" price, so the total is a "from" total. */
+  from: boolean;
 }
 
 export const kitTotal = (items: GearItem[], region: Region): KitTotal =>
   items.reduce<KitTotal>(
     (kit, item) => {
       const best = bestPriceFor(item, region);
-      return best === null ? kit : { ...kit, total: kit.total + best.price, priced: kit.priced + 1 };
+      return best === null
+        ? kit
+        : { ...kit, total: kit.total + best.price, priced: kit.priced + 1, from: kit.from || best.priceFrom };
     },
-    { total: 0, currency: REGION_CURRENCY[region], priced: 0, count: items.length },
+    { total: 0, currency: REGION_CURRENCY[region], priced: 0, count: items.length, from: false },
   );
 
 const AMOUNT = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -72,6 +76,16 @@ export const formatAmount = (amount: number): string => `$${AMOUNT.format(amount
 
 /** `549.99, 'CAD'` → `$549.99 CAD`. Always labelled, never converted. */
 export const formatPrice = (amount: number, currency: Currency): string => `${formatAmount(amount)} ${currency}`;
+
+/** The language's "from" wording around a price, e.g. `from $233.97 CAD` / `$233.97 CAD 起`. */
+export interface FromAffix {
+  before: string;
+  after: string;
+}
+
+/** Adds the "from" wording to an already formatted price when it is the low end of a range. */
+export const withFrom = (label: string, from: boolean, affix: FromAffix): string =>
+  from ? `${affix.before}${label}${affix.after}` : label;
 
 /** Formats a `YYYY-MM-DD` check date for display. Read as UTC so it never shifts a day. */
 export const formatCheckedDate = (isoDate: string, language: 'en' | 'zh'): string => {

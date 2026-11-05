@@ -8,10 +8,10 @@
  * `npm run prices:import` validates the filled-in CSV and rewrites the JSON.
  * Anything not yet checked is `null` and is never shown as a number.
  *
- * Retailer links are generated, not stored: every one is generated at module load as a live
- * search query against that retailer's own site (see `buildRetailerUrl` in
- * `retailers.ts`), so a link always lands on real results rather than a dead
- * product-detail URL.
+ * Retailer links are generated at module load (see `buildRetailerUrl` in
+ * `retailers.ts`): the product page a price was checked on (`sourceUrl` in
+ * data/prices.json) when there is one, otherwise a live search query against
+ * that retailer's own site, so an unchecked link still lands on real results.
  *
  * Product images are likewise generated, not stored: `buildGearImage` in
  * `gearImages.ts` draws each item from the very spec values listed below, so
@@ -30,11 +30,19 @@
 import type { GearItem, RetailerPrice } from './types';
 import { buildGearImage } from './gearImages';
 import { computePerformanceProfile } from './performanceProfile';
-import { buildRetailerUrl, RETAILER_IDS, RETAILERS } from './retailers';
+import { buildRetailerUrl, isRetailerUrl, RETAILER_IDS, RETAILERS, type RetailerId } from './retailers';
 import pricesJson from '../data/prices.json';
 
+/** One cell of `data/prices.json`. `priceFrom` and `sourceUrl` are optional so older files still read. */
+export interface PriceCell {
+  price: number | null;
+  priceFrom?: boolean;
+  checkedAt: string | null;
+  sourceUrl?: string | null;
+}
+
 /** Shape of `data/prices.json`: item id → retailer id → hand-checked price. */
-export type PriceTable = Record<string, Record<string, { price: number | null; checkedAt: string | null }>>;
+export type PriceTable = Record<string, Record<string, PriceCell>>;
 
 const priceTable = pricesJson as PriceTable;
 
@@ -1837,12 +1845,22 @@ const listings: GearListing[] = [
   },
 ];
 
-/** Defensive read of one price cell — anything malformed reads as unchecked. */
-const readPrice = (itemId: string, retailerId: string): Pick<RetailerPrice, 'price' | 'checkedAt'> => {
+/**
+ * Defensive read of one price cell — anything malformed reads as unchecked,
+ * "from" only counts on a real price, and a source URL off the retailer's own
+ * storefront is dropped.
+ */
+const readPrice = (
+  itemId: string,
+  retailerId: RetailerId,
+): Pick<RetailerPrice, 'price' | 'priceFrom' | 'checkedAt' | 'sourceUrl'> => {
   const entry = priceTable[itemId]?.[retailerId];
   const price = typeof entry?.price === 'number' && Number.isFinite(entry.price) && entry.price > 0 ? entry.price : null;
+  const priceFrom = price !== null && entry?.priceFrom === true;
   const checkedAt = typeof entry?.checkedAt === 'string' && entry.checkedAt ? entry.checkedAt : null;
-  return { price, checkedAt };
+  const sourceUrl =
+    typeof entry?.sourceUrl === 'string' && isRetailerUrl(retailerId, entry.sourceUrl) ? entry.sourceUrl : null;
+  return { price, priceFrom, checkedAt, sourceUrl };
 };
 
 /**
@@ -1850,20 +1868,23 @@ const readPrice = (itemId: string, retailerId: string): Pick<RetailerPrice, 'pri
  *
  * Every item carries one `RetailerPrice` per known retailer, in registry
  * order, priced or not — the UI filters to the selected region. Links are
- * generated here rather than stored, so every link is a live search on that
- * retailer's own site for the exact product. Cards render these with
- * `target="_blank" rel="noopener noreferrer sponsored"`.
+ * generated here: the checked product page when there is one, else a live
+ * search on that retailer's own site for the exact product. Cards render
+ * these with `target="_blank" rel="noopener noreferrer sponsored"`.
  */
 export const gearDatabase: GearItem[] = listings.map(({ searchTerm, ...item }) => ({
   ...item,
   image: buildGearImage(item),
   performance: computePerformanceProfile(item),
-  prices: RETAILER_IDS.map<RetailerPrice>((retailerId) => ({
-    retailerId,
-    currency: RETAILERS[retailerId].currency,
-    ...readPrice(item.id, retailerId),
-    link: buildRetailerUrl(retailerId, searchTerm ?? `${item.brand} ${item.name}`),
-  })),
+  prices: RETAILER_IDS.map<RetailerPrice>((retailerId) => {
+    const cell = readPrice(item.id, retailerId);
+    return {
+      retailerId,
+      currency: RETAILERS[retailerId].currency,
+      ...cell,
+      link: buildRetailerUrl(retailerId, searchTerm ?? `${item.brand} ${item.name}`, cell.sourceUrl),
+    };
+  }),
 }));
 
 /** Lookup helper. */

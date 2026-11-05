@@ -6,10 +6,10 @@
  * region, native currency and search-URL pattern. Nothing else in the app
  * hard-codes a retailer name or URL.
  *
- * Links are live search queries on each retailer's own site rather than
- * stored product URLs, so nothing rots into a dead product page. Every
- * pattern below was checked by hand in a browser on 2026-11-04 and returned
- * real results:
+ * Links are live search queries on each retailer's own site, except where a
+ * price was checked by hand on a product page: that page (`sourceUrl` in
+ * data/prices.json) is the link instead. Every search pattern below was
+ * checked by hand in a browser on 2026-11-04 and returned real results:
  *
  *   evo-ca           evo.com/en-ca/search?q=…            (prices in CAD)
  *   sportchek        sportchek.ca/en/search-results.html?q=…
@@ -158,12 +158,35 @@ export const toSearchTerm = (value: string): string =>
 export const buildSearchUrl = (retailerId: RetailerId, query: string): string =>
   RETAILERS[retailerId].searchUrl(encodeURIComponent(toSearchTerm(query)));
 
+/** First path segment when it is a locale (`en`, `en-CA`), else `''`. Tells evo.com/en-ca from evo.com. */
+const localeSegment = (url: URL): string => {
+  const first = url.pathname.split('/')[1] ?? '';
+  return /^[a-z]{2}(-[a-z]{2})?$/i.test(first) ? first.toLowerCase() : '';
+};
+
+/**
+ * Whether `value` is an https page on this retailer's own storefront: the
+ * same host as its search page and the same locale path, so a US evo.com
+ * product page can't stand in for evo.com/en-ca.
+ */
+export const isRetailerUrl = (retailerId: RetailerId, value: string): boolean => {
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    return false;
+  }
+  const search = new URL(RETAILERS[retailerId].searchUrl('x'));
+  return url.protocol === 'https:' && url.hostname === search.hostname && localeSegment(url) === localeSegment(search);
+};
+
 /**
  * The ONE function every outbound retailer link goes through. Returns the
- * plain search URL today.
+ * product page a price was checked on (`sourceUrl`) when there is one,
+ * otherwise the plain search URL.
  */
-export const buildRetailerUrl = (retailerId: RetailerId, query: string): string => {
-  const url = buildSearchUrl(retailerId, query);
+export const buildRetailerUrl = (retailerId: RetailerId, query: string, sourceUrl?: string | null): string => {
+  const url = sourceUrl && isRetailerUrl(retailerId, sourceUrl) ? sourceUrl : buildSearchUrl(retailerId, query);
   // AFFILIATE: wrap `url` in the retailer's affiliate deep link here (e.g. an
   // AvantLink / Impact redirect keyed by `retailerId`) once each program is approved.
   return url;

@@ -13,7 +13,7 @@ import {
   waistWidthLabel,
 } from '@/lib/matcherLogic';
 import { addSavedSetup } from '@/lib/savedSetups';
-import { formatAmount, formatPrice, kitTotal } from '@/lib/pricing';
+import { formatAmount, formatPrice, kitTotal, withFrom } from '@/lib/pricing';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { useRegion } from '@/lib/region/RegionContext';
 import { track } from '@/lib/analytics';
@@ -47,7 +47,8 @@ export default function Dashboard({
     recommendations.map((rec) => rec.item),
     region,
   );
-  const kitTotalLabel = kit.priced > 0 ? formatPrice(kit.total, kit.currency) : null;
+  const kitTotalLabel =
+    kit.priced > 0 ? withFrom(formatPrice(kit.total, kit.currency), kit.from, t.gearCard.fromPrice) : null;
 
   // Once per generated result (the ref also absorbs StrictMode's double effect in dev).
   const shownFor = useRef<string | null>(null);
@@ -155,8 +156,12 @@ export default function Dashboard({
             value={
               kit.priced > 0 ? (
                 <>
+                  {kit.from && t.gearCard.fromPrice.before}
                   {formatAmount(kit.total)}{' '}
-                  <span className="text-xs font-bold text-slate-400">{kit.currency}</span>
+                  <span className="text-xs font-bold text-slate-400">
+                    {kit.currency}
+                    {kit.from && t.gearCard.fromPrice.after}
+                  </span>
                 </>
               ) : (
                 '—'

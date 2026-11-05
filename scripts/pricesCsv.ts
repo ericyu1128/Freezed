@@ -22,7 +22,9 @@ export const COLUMNS = [
   'region',
   'currency',
   'price',
+  'priceFrom',
   'checkedAt',
+  'sourceUrl',
   'url',
 ] as const;
 

@@ -18,6 +18,7 @@ import {
   pricesForRegion,
   primaryLinkFor,
   sortForDisplay,
+  withFrom,
 } from '@/lib/pricing';
 import { categoryIcon, CheckIcon, ExternalIcon, SparkIcon } from './Icons';
 import GearImage from './GearImage';
@@ -242,7 +243,8 @@ export default function GearCard({
             <h4 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
               {t.gearCard.priceComparison}
             </h4>
-            {spread > 0 && bestPrice && (
+            {/* A "from" best price only holds for some sizes/colours, so it can't promise a saving. */}
+            {spread > 0 && bestPrice && !bestPrice.priceFrom && (
               <span className="text-[11px] font-medium text-emerald-300">
                 {t.gearCard.save(formatPrice(spread, bestPrice.currency))}
               </span>
@@ -276,7 +278,7 @@ export default function GearCard({
                             isBest ? 'text-emerald-200' : 'text-slate-200'
                           }`}
                         >
-                          {formatPrice(price.price, price.currency)}
+                          {withFrom(formatPrice(price.price, price.currency), price.priceFrom, t.gearCard.fromPrice)}
                         </span>
                         {price.checkedAt && (
                           <span className="text-[10px] text-slate-500">
@@ -437,7 +439,13 @@ export default function GearCard({
                         </span>
                       </span>
                       <span className="shrink-0 text-xs font-bold tabular-nums text-slate-400">
-                        {candidateBest ? formatPrice(candidateBest.price, candidateBest.currency) : '—'}
+                        {candidateBest
+                          ? withFrom(
+                              formatPrice(candidateBest.price, candidateBest.currency),
+                              candidateBest.priceFrom,
+                              t.gearCard.fromPrice,
+                            )
+                          : '—'}
                       </span>
                     </button>
                     {SHOW_RETAILER_LINKS && candidateLink && (
@@ -475,7 +483,7 @@ export default function GearCard({
             </p>
             {bestPrice ? (
               <p className="font-display text-xl font-black tabular-nums text-white">
-                {formatPrice(bestPrice.price, bestPrice.currency)}
+                {withFrom(formatPrice(bestPrice.price, bestPrice.currency), bestPrice.priceFrom, t.gearCard.fromPrice)}
                 <span className="ml-1.5 text-xs font-medium text-slate-500">
                   {t.gearCard.at} {getRetailer(bestPrice.retailerId).name}
                 </span>

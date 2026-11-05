@@ -179,6 +179,8 @@ export interface Dictionary {
     checkPrice: string;
     noPriceYet: string;
     checkedOn: (date: string) => string;
+    /** Wording around a price that is the lowest of a range (by size or colourway). */
+    fromPrice: { before: string; after: string };
     viewAtRetailer: (product: string, retailer: string) => string;
     affiliateDisclosure: string;
   };
@@ -513,6 +515,7 @@ export const en: Dictionary = {
     checkPrice: 'Check price →',
     noPriceYet: 'No price yet',
     checkedOn: (date) => `checked ${date}`,
+    fromPrice: { before: 'from ', after: '' },
     viewAtRetailer: (product, retailer) => `View ${product} at ${retailer} (opens in a new tab)`,
     affiliateDisclosure: 'Some links may be affiliate links — Freezed may earn a commission at no extra cost to you.',
   },
@@ -851,6 +854,8 @@ export const zh: Dictionary = {
     checkPrice: '查看价格 →',
     noPriceYet: '暂无价格',
     checkedOn: (date) => `核价于 ${date}`,
+    // zh: needs review
+    fromPrice: { before: '', after: ' 起' },
     viewAtRetailer: (product, retailer) => `在 ${retailer} 查看 ${product}(在新标签页打开)`,
     affiliateDisclosure: '部分链接可能是联盟推广链接——你通过它购买时，Freezed 可能获得佣金，你无需额外付费。',
   },
