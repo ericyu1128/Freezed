@@ -39,10 +39,6 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark">
-      <head>
-        {/* TODO remove after AvantLink verification */}
-        <script type="text/javascript" src="https://classic.avantlink.com/affiliate_app_confirm.php?mode=js&authResponse=7b7eb792d04f7d28e4ad2b9685e9142acfcb4544"></script>
-      </head>
       <body className="min-h-screen">
         <AnalyticsProvider />
         <LanguageProvider>
