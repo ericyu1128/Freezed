@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit",
     "prices:template": "tsx scripts/prices-template.ts",
     "prices:import": "tsx scripts/prices-import.ts",
+    "availability:report": "tsx scripts/ca-availability.ts",
     "test": "vitest run"
   },
   "dependencies": {
